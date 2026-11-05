@@ -1,6 +1,6 @@
 # SD-card plugins
 
-CrossPoint keeps service integrations off the firmware. A plugin is a folder on
+КвестБук Читалка (PlayTale) keeps service integrations off the firmware. A plugin is a folder on
 the SD card; the firmware provides three generic, scheme-neutral surfaces that
 plugins compose. Adding or updating a plugin never requires a firmware build,
 and the firmware carries no vendor names, URLs, or file-format knowledge.
@@ -54,8 +54,11 @@ not silently disable an existing setup. Turning plugins off does not
 delete or rename any plugin files; turning it back on makes them discoverable
 again.
 
-Plugin Hub is optional and is not required for sideloaded plugins. The native
-Hub is considered available when the first matching `pluginhub` directory has a
+Plugin Hub is optional and is not required for sideloaded plugins. It is an
+upstream-hosted service that this fork will replace (see the manual-install note
+below); the install path described here is what the current firmware implements.
+The native Hub is considered available when the first matching `pluginhub`
+directory has a
 `device.json` and is not quarantined by `.installing`; `manifest.json`,
 `plugin.js`, and `README.md` are not required for native availability. When
 plugins are enabled, no native Hub is available, and the installer has not
@@ -72,9 +75,12 @@ discover, and update plugins** entry. Selecting it offers:
 The **Hide** preference persists across reboots. Setting **Settings → Connectivity →
 Plugins** to **Enabled** clears it, which brings the installer entry back.
 
-For users who prefer manual installation, Plugin Hub can be downloaded directly
-from <https://github.com/crosspoint-reader/crosspoint-plugin-hub/releases>. Copy or
-extract the `pluginhub` folder so it ends up at one of these supported locations:
+For users who prefer manual installation, Plugin Hub can currently be downloaded
+from <https://github.com/crosspoint-reader/crosspoint-plugin-hub/releases>. That
+release URL and the Plugin Hub service behind it are upstream-hosted and are
+pending replacement by this fork; the contract below is what the firmware
+implements today. Copy or extract the `pluginhub` folder so it ends up at one of
+these supported locations:
 `/.crosspoint/plugins/pluginhub/`, `/plugins/pluginhub/`, or
 `/.plugins/pluginhub/`.
 
@@ -96,7 +102,8 @@ endpoints (`/api/relay`, `/api/crypto`, `/api/fetch`, `/api/plugin-fs`). See
 `docs/webserver-endpoints.md` for the endpoints and the sd-plugins repository
 for the JS contract.
 
-`plugin.js` must call `CrossPoint.registerPlugin(fn)` while the script runs,
+`plugin.js` must call `CrossPoint.registerPlugin(fn)` (the browser JS global, not
+renamed yet) while the script runs,
 not after an `await` or from a timer; a later call is ignored. A script that has
 not loaded after 30 seconds, or an `fn` that throws or returns a rejected
 promise, shows "Failed to load plugin." A script that arrives after the 30
@@ -178,13 +185,13 @@ Hub is the first consumer that motivated this contract, but these are generic
 plugin-system capabilities, not Plugin Hub-specific flags. These values are part
 of the plugin-system contract, not hardware detection.
 
-| Value | Stock CrossPoint value | Purpose |
+| Value | Value on PlayTale (unchanged from upstream) | Purpose |
 |---|---|---|
 | `firmware_family` | `crosspoint` | Broad compatibility family. Forks that intentionally keep the same plugin contract can advertise the same family. |
 | `plugin_api` | `1` | Numeric plugin contract level for requirements that need a minimum firmware API generation. |
 | `plugin_capabilities` | comma-separated names below | Fine-grained feature advertisement. A catalog entry may require one or more capabilities without hard-coding a firmware version. |
 
-Stock CrossPoint currently advertises these catalog capabilities:
+PlayTale currently advertises these catalog capabilities:
 
 | Capability | What it means | Why it exists in the plugin system |
 |---|---|---|
@@ -217,7 +224,7 @@ download filename/username/password; and sidecar path/body.
 |---|---|---|
 | `{token}` | contents of the token file at `token.path` | template fields |
 | `{cfg.KEY}` | value of `KEY` in the flat JSON config file at `config.file` | template fields |
-| `{firmware_family}` | stable firmware family (`crosspoint` on stock CrossPoint) | template fields |
+| `{firmware_family}` | stable firmware family (`crosspoint` on PlayTale; not renamed yet) | template fields |
 | `{firmware_version}` | current `CROSSPOINT_VERSION` value | template fields |
 | `{plugin_api}` | numeric plugin API level | template fields |
 | `{plugin_capabilities}` | comma-separated advertised capability names | template fields |

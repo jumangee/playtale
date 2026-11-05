@@ -1,6 +1,6 @@
 # Hypher Binary Tries
 
-CrossPoint embeds the exact binary automata produced by
+КвестБук Читалка (PlayTale) embeds the exact binary automata produced by
 [Typst's `hypher`](https://github.com/typst/hypher). 
 
 ## File layout

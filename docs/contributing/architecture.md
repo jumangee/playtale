@@ -1,6 +1,11 @@
 # Architecture Overview
 
-CrossPoint is firmware for the Xteink X4 (unaffiliated with Xteink), built with PlatformIO targeting the ESP32-C3 microcontroller.
+PlayTale is the firmware behind КвестБук Читалка, built with PlatformIO. The
+Xteink X4 (ESP32-C3, unaffiliated with Xteink) remains the resource baseline:
+its RAM, flash, and panel limits shape most decisions. Several ESP32-S3 boards
+are also built from this repository: Xteink X4 Pro, Xteink X4 Classic, Seeed
+reTerminal Sticky, and M5Stack Paper Mono. The Xteink X3 is discontinued and
+unsupported (its environment may still compile).
 
 At a high level, it is firmware that uses an activity-driven application architecture loop with persistent settings/state, SD-card-first caching, and a rendering pipeline optimized for e-ink constraints.
 
@@ -136,7 +141,7 @@ Notes:
 
 Two singletons are central:
 
-- `src/CrossPointSettings.h` (`SETTINGS`): user preferences and behavior flags
+- `src/CrossPointSettings.h` (`SETTINGS`): user preferences and behavior flags (the source file names are not renamed yet; display names are resolved through `STR_CROSSPOINT`)
 - `src/CrossPointState.h` (`APP_STATE`): runtime/session state such as current book and sleep context
 
 Typical persisted areas on SD:
@@ -219,4 +224,3 @@ When editing related source assets, regenerate via normal build steps/scripts.
 Before implementing larger ideas, check:
 
 - [SCOPE.md](../../SCOPE.md)
-- [GOVERNANCE.md](../../GOVERNANCE.md)

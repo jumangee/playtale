@@ -2,7 +2,7 @@
 
 ### Hardware Specs
 
-* MCUs: ESP32-C3 (X3/X4, single-core RISC-V @ 160MHz), ESP32-S3
+* MCUs: ESP32-C3 (X4, single-core RISC-V @ 160MHz), ESP32-S3
   (including Sticky, X4 Pro, X4 Classic, Paper Mono, and Metalio E-Ink 4,
   dual-core Xtensa LX7), and classic ESP32 on SDK boards such as M5Paper v1.1
 * RAM: ~380KB usable on ESP32-C3 (VERY LIMITED - primary project constraint)
@@ -11,7 +11,8 @@
 * X4 baseline flash: 16MB (Instruction storage and static data)
 * X4 baseline display: 800x480 E-Ink (Slow refresh, monochrome, 1-2s full update)
   * Framebuffer: 48,000 bytes (800 × 480 ÷ 8)
-* X3 display: 792x528; framebuffer: 52,272 bytes (792 × 528 ÷ 8)
+* X3 display: 792x528; framebuffer: 52,272 bytes (792 × 528 ÷ 8). The X3 is
+  discontinued and unsupported; keep its numbers only as inherited reference.
 * Storage: SD Card (Used for books and aggressive caching)
 
 Check `platformio.ini`, the selected SDK `BoardConfig`, and `lib/hal/` for the
@@ -20,10 +21,15 @@ and PSRAM capabilities. S3 does not by itself guarantee usable PSRAM or touch;
 X4 Classic is a button-only board. Keep C3 operation viable when adding a
 capability available only on richer boards.
 
-CrossPoint's checked-in build and release targets are `default` (X3/X4),
-`sticky`, `x4pro`, `x4c`, `papermono`, and `metalio_eink4`. Inspect the current
-workflow matrices for coverage. Additional SDK profiles are not automatically
-CrossPoint release targets or evidence of device verification.
+Supported release targets are `default` (X4, ESP32-C3), `sticky`, `x4pro`, `x4c`,
+and `papermono`. Inspect the current workflow matrices for coverage.
+
+The Xteink X3 is discontinued and unsupported, but its build environment still
+compiles. Do not treat X3 support as a requirement, and do not remove its
+environment without an explicit request. The `metalio_eink4`, `eego_a4`, and
+`picco` environments also build but are not supported targets. Additional SDK
+profiles are not automatically release targets or evidence of device
+verification.
 
 Budget internal RAM and PSRAM separately with `HalMemory::getInternalHeap()`
 and `getPsramHeap()`, including `largestBlockBytes`; a combined free-heap

@@ -1,114 +1,148 @@
-# Project Vision & Scope: CrossPoint Reader
+# Project Vision & Scope: PlayTale («КвестБук Читалка»)
 
-The goal of CrossPoint Reader is to create an efficient, open-source reading experience for ESP32-based e-reader devices. Xteink hardware (X3, X4) is where the project started and remains a primary target, but CrossPoint is explicitly broadening to support the wider ecosystem of small ESP32 e-ink readers. We believe a dedicated e-reader should do one thing exceptionally well: **facilitate focused reading.**
+PlayTale is the open-source firmware behind **КвестБук Читалка**, an e-reader for ESP32-based devices.
+It targets the Xteink X4 and other FreeInk-supported boards, and it exists to do one thing
+exceptionally well: **let someone read at length, comfortably, on cheap e-ink hardware.**
+
+It serves two kinds of long-form content. Only the first works today; the second is the
+project's goal and is not implemented:
+
+- **Books** — EPUB 2/3, plus TXT and Markdown through the same reflowable pipeline, and XTC for
+  pre-rendered pages. **Shipped.**
+- **Storygames** — interactive gamebooks. The author writes the rules, the reader makes choices, and
+  the plot continues from the author's transition map and game parameters. Storygames will be
+  distributed by КвестБук and run on the device. **Planned** — see `ROADMAP.md`.
 
 ## 1. Core Mission
 
-To provide a lightweight, high-performance firmware that maximizes the potential of ESP32-based e-reader hardware, prioritizing legibility, performance, and usability over "swiss-army-knife" functionality.
+Provide a lightweight, high-performance firmware that maximizes the potential of ESP32 e-reader
+hardware, prioritizing legibility, performance, and usability over "swiss-army-knife" functionality.
 
-CrossPoint is **not** a kitchen-sink firmware, and it is **not** Xteink-only. We want clean, maintainable code that the community can build on, and that runs across the range of ESP32 e-reader devices (ESP32-C3, ESP32-S3, and adjacent variants). Every accepted change should make that goal easier, not harder. Device-specific code should live behind the HAL / SDK boundary so the reader core stays portable.
+PlayTale is **not** a kitchen-sink firmware. It wants clean, maintainable code, and it runs across the
+supported range of ESP32 e-reader devices. Every accepted change should make that goal easier, not
+harder. Device-specific code lives behind the HAL / SDK boundary so the reader core stays portable.
 
-## 2. Guiding Principle: Fill Gaps the Stock Firmware Leaves
+## 2. Guiding Principle: One Excellent Reading Experience
 
-CrossPoint exists to do the things the stock firmware does poorly or not at all. New work is evaluated against that delineator:
+PlayTale is a fork of CrossPoint Reader, and it deliberately narrows the product rather than widening
+it. New work is evaluated against that:
 
-* **Does the stock firmware already do this well?** We should hit that bar or surpass it 
-* **Is another popular CrossPoint fork already solving this well?** If yes, we generally defer to that fork if it's not part of the core reading experience. e.g. stats
-* **Does this directly improve the reading experience or the firmware's long-term maintainability?** If no, it is out of scope.
+* **Does it improve reading a book or playing a storygame?** If it serves a different use case, it is
+  out of scope.
+* **Does it fit the X4's resource ceiling?** The ESP32-C3 sets the budget. A feature that cannot fit
+  the C3 baseline is either board-gated or not accepted.
+* **Does it stay maintainable by its human owner?** Prefer the simplest design that meets the real
+  requirement.
 
-## 3. Current Focus
+## 3. The Single Online Source
 
-We are intentionally narrowing scope to consolidate the codebase as we open it up to more ESP32 e-reader devices.
+**КвестБук (`quest-book.ru`) is the only intended online source of content and accounts.** This
+replaces the upstream project's blanket freeze on network connectors with a positive rule:
 
-During this period, the priorities are:
+* Books and storygames are obtained from КвестБук. Download and account integration with it are the
+  roadmap's destination, not a side quest.
+* **Do not add new third-party connectors.** No new sync engines, cloud-storage clients, or remote
+  file servers beyond КвестБук.
+* **OPDS stays supported as it is today.** It is generic, already shipped, and useful for local and
+  self-hosted libraries. What is closed is adding *new protocols or services*, not maintaining the
+  existing generic one.
+* **The CrossPoint Sync and KOReader sync paths currently shipped are temporary.** They exist in the
+  code today and are documented as current behavior. The plan is to replace the CrossPoint Sync
+  account with a КвестБук account for tracking game experience (see `ROADMAP.md`).
 
-* **Memory footprint:** Reducing DRAM usage and heap fragmentation. The ESP32-C3 is the tightest target and sets the ceiling, but the gains benefit every ESP32 variant we run on. 
-* **Flash footprint:** Trimming binary size to leave room for additional device targets and features. 
-* **Code cleanup:** Refactoring, removing dead code, tightening abstractions, and improving readability. 
-* **Reading experience:** EPUB parsing and rendering, typography, hyphenation, line spacing, font handling, and legibility improvements.
+## 4. Current Focus
 
-### Temporarily Closed Areas
+The codebase was inherited with a large surface area. The priorities are:
 
-PRs in the following areas will be closed until this notice is lifted. Adding these now makes the cleanup and multi-device work materially harder:
+* **Memory footprint:** Reducing DRAM usage and heap fragmentation. The C3 is the tightest target and
+  sets the ceiling, but the gains benefit every ESP32 variant.
+* **Flash footprint:** Trimming binary size. Storygames need an XML parser and a scripting engine, and
+  both must fit.
+* **Code cleanup:** Refactoring, removing dead code, tightening abstractions, and improving
+  readability.
+* **Book reading experience:** EPUB parsing and rendering, typography, hyphenation, line spacing, font
+  handling, and legibility.
 
-* **New themes.** The existing theming surface is frozen. 
-* **New external network connectors.** This includes sync engines, cloud storage clients, remote file access, and any new "talk to a server" feature. Fixes and improvements to the *existing* OPDS support (usability, performance, compatibility with more catalogs) remain in scope and welcome; what is closed is adding entirely new protocols or connectors. We now have our own CrossPoint KOSync server which gives us a way to sync to 3rd party systems like Hardcover at an API level instead of bloating the firmware. If you're interested in helping here, the sync server is also open source.
+## 5. Supported Devices
 
-If you are unsure whether your idea falls into one of these categories, open a Discussion first.
+* **Xteink X4** (ESP32-C3) — the resource baseline and primary target.
+* **Xteink X4 Pro**, **Xteink X4 Classic**, **Seeed reTerminal Sticky**, **M5Stack Paper Mono**.
 
-## 4. Scope
+The **Xteink X3** is no longer produced and is not a target. Its build environment still exists and may
+still compile, but it is not released, not tested, and not supported; treat it as unmaintained.
+
+The **Metalio E-Ink 4**, **EEGO A4**, and **Boox Picco** environments likewise still build but are not
+supported targets.
+
+## 6. Scope
 
 ### In-Scope
 
-*Features that directly improve the core reading experience or the firmware's maintainability.*
+*Features that directly improve reading a book or a storygame, or the firmware's maintainability.*
 
-* **EPUB Rendering & Optimization:** Improvements to the rendering engine, CSS/image handling, and parsing performance. 
-* **Typography & Legibility:** Custom font support, hyphenation, line and paragraph spacing, margins. 
-* **E-Ink Driver Refinement:** Reducing full-screen flashes (ghosting management) and improving general rendering. 
-* **Reading UX:** Bookmarks, progress tracking, button mapping, page navigation, and other in-reader interactions. 
-* **Library Management:** Simple, intuitive ways to organize and navigate a local book collection. 
-* **Memory, Flash, and Code Quality:** Refactors and cleanups that reduce resource use or improve maintainability, even without a user-visible feature.
+* **EPUB Rendering & Optimization:** Improvements to the rendering engine, CSS/image handling, and
+  parsing performance.
+* **Typography & Legibility:** Custom font support, hyphenation, line and paragraph spacing, margins.
+* **E-Ink Driver Refinement:** Reducing full-screen flashes (ghosting management) and improving
+  general rendering.
+* **Reading UX:** Bookmarks, progress tracking, button mapping, page navigation, and other in-reader
+  interactions.
+* **Library Management:** Simple, intuitive ways to organize and navigate a local collection.
+* **Storygames:** Reading them, the format that carries them, the runtime that executes their rules,
+  and downloading them from КвестБук.
+* **КвестБук integration:** Downloading books and storygames, and the КвестБук account.
+* **Memory, Flash, and Code Quality:** Refactors and cleanups that reduce resource use or improve
+  maintainability, even without a user-visible feature.
 
 ### Out-of-Scope
 
 *Rejected because they compromise the device's stability, maintainability, or core mission.*
 
-* **Interactive Apps:** No notepads, calculators, or games. These belong in other forks and are not part of CrossPoint's focus. 
-* **Writing / Authoring Tools:** No typed notes, journals, or editors. Input hardware and RAM are wrong for this, and other forks already explore this space. 
-* **Active Connectivity:** No RSS readers, news aggregators, or web browsers. Background Wi-Fi drains the battery and complicates the single-core CPU. 
-* **PDF Rendering:** PDFs are fixed-layout documents, so rendering them requires displaying pages as images rather than reflowable text, resulting in constant panning and zooming that makes for a poor reading experience on e-ink. Out of scope on the current hardware class.
+* **General-purpose interactive apps:** No notepads, calculators, or unrelated games. Storygames are
+  the deliberate exception and the reason the runtime exists.
+* **Writing / Authoring Tools:** No typed notes, journals, or editors. Input hardware and RAM are
+  wrong for this.
+* **Active Connectivity:** No RSS readers, news aggregators, or web browsers. Background Wi-Fi drains
+  the battery and complicates the single-core CPU.
+* **PDF Rendering:** PDFs are fixed-layout documents, so rendering them requires displaying pages as
+  images rather than reflowable text, resulting in constant panning and zooming that makes for a poor
+  reading experience on e-ink.
 
-### CrossPoint as a downstream foundation
+## 7. PlayTale as a downstream foundation
 
-CrossPoint is also used as a foundation for downstream forks with different
-product goals. Supporting that ecosystem does not expand CrossPoint's own
-product scope, but narrowly scoped, product-neutral improvements to existing
-low-level infrastructure may still be accepted when they are broadly reusable
-and do not impose substantial new dependencies, resource cost, or maintenance
-burden on CrossPoint itself.
+PlayTale is itself a fork, and it may serve as a foundation for further forks. Supporting that is not
+part of PlayTale's own product goal, but broadly reusable, product-neutral improvements to low-level
+infrastructure may still be accepted when they do not impose new dependencies, resource cost, or
+maintenance burden.
 
-Downstream-specific UI, policy, workflows, and feature semantics remain out of
-scope. If a reusable primitive cannot be cleanly separated from the downstream
-feature that needs it, that work belongs in the downstream fork unless
-CrossPoint independently chooses to adopt it.
+Downstream-specific UI, policy, workflows, and feature semantics remain out of scope. If a reusable
+primitive cannot be cleanly separated from the downstream feature that needs it, that work belongs in
+the downstream fork.
 
-## 5. Calls to Action
+## 8. Upstream Relationship
 
-These are the areas where contributor help is most valuable right now. If you want to take one of these on, open a Discussion or issue first so we can coordinate.
+PlayTale tracks the upstream CrossPoint Reader project as a source of fixes. PlayTale does not send
+changes upstream and does not publish releases into the upstream project's channels. Because the two
+products now diverge in mission, some upstream documents and workflows were removed from this fork;
+`ROADMAP.md` records what replaced them.
 
-### Theme System: Move Themes Off-Firmware
+## 9. Calls to Action
 
-We want to abstract themes out of the firmware entirely so they no longer consume flash, and instead load from the SD card. This directly supports the current focus on flash footprint and code cleanup.
+These are the areas where help is most valuable right now.
 
-* **Status:** [@itsthisjustin](https://github.com/itsthisjustin) plans to take this on eventually but is very open to someone else claiming it sooner. 
-* **Why it matters:** Every built-in theme costs flash that we would rather spend on rendering, fonts, or future device support. SD-loaded themes also let users customize without rebuilding firmware. It also leads to SD font loading for better language support in the UI. 
-* **How to claim:** Comment on the relevant Discussion (or open one) before starting.
+### The Storygame Runtime
 
-### Identifying Other Stock-Firmware Gaps
+The XML parser exists (expat is already vendored and used by the EPUB parsers). The scripting engine
+does not exist, and nothing suitable is vendored. Choosing and sizing one for the C3's 380 KB budget is
+the critical path for storygames. See `ROADMAP.md`.
 
-We want help cataloguing things the stock firmware (and other popular CrossPoint forks) handle poorly or not at all, so future work has a clear target list. Particularly interested in:
+### Font and Hyphenation Footprint
 
-* **RTL (right-to-left) text support:** Arabic, Hebrew, Persian, and similar scripts. 
-* **Languages with poor stock and fork coverage:** Especially those that need shaping, complex layout, or non-Latin font work that nobody is handling well today. 
-* **Other gaps:** Rendering edge cases, accessibility issues, input quirks, anything stock does badly and existing forks have not fixed.
+Built-in hyphenation data costs flash that the reader core and the storygame runtime both need. Moving
+it to the SD card, analogous to the existing font downloader, frees that budget.
 
-If you can read or use the device in one of these languages, your feedback (even without code) is genuinely useful. Open a Discussion with concrete examples (screenshots, sample EPUBs, expected vs actual behavior) and we will prioritize from there.
+### Identifying Stock-Firmware Gaps
 
-## 6. Funding and Contributor Sustainability
-
-CrossPoint uses [Royalty.dev](https://royalty.dev) (yes, a product built by [@itsthisjustin](https://github.com/itsthisjustin)) to fund contributors. There has been some tension in the community around this, so the intent is being clarified here directly.
-
-**Why we do this:**
-
-* To maintain long-term interest from contributors and maintainers, in direct response to substantial community requests for a way to give back. 
-* To motivate contributors to invest in the *core* project rather than spinning up competing forks. 
-* To help pay for new ESP32 devices so we can port CrossPoint to additional hardware. 
-* To give the project a credible long-term path to sustainability.
-
-**How it works:**
-
-* Funds are distributed automatically to contributors based on impact to the codebase and tenure on the project. 
-* Over **$600** was raised in the first few hours after opening up funding, which is a signal the demand is real. 
-* The exact scoring methodology is published at <https://app.royalty.dev/transparency>.
-
-**This is not fixed in stone.** The weighting, eligibility, and distribution rules can be tweaked as we learn what works for this project. If you have concerns or suggestions about how funds are allocated, open a Discussion. The goal is a system that fairly recognizes the people doing the work, not a perfect one on day one.
+Help cataloguing what the stock firmware handles poorly or not at all, so future work has a clear
+target list, particularly in RTL and non-Latin scripts. Concrete examples (screenshots, sample EPUBs,
+expected vs actual behavior) are genuinely useful, with or without code.

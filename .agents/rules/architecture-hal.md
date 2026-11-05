@@ -90,3 +90,24 @@ Consult the contract being changed:
   normalize user paths and escape filenames through existing helpers.
 - Protected reads: inspect `Epub` and pinned SDK `ContentProtection` before changing
   decrypt-on-read/key handling. Keep service activation policy in plugins.
+
+### Reader formats and the storygame runtime
+
+Format detection is extension-based and centralized. Register a new content kind by
+extending the predicates in `lib/FsHelpers/FsHelpers.cpp`, the library filter in
+`lib/LibraryIndex/LibraryBuilder.cpp` (`isLibraryBookFile`), and the reader dispatch in
+`src/activities/reader/ReaderActivity.cpp` (`create()`), plus the cache/progress helpers
+in `src/util/` that map a path to cached state. Do not scatter extension checks through
+activities.
+
+Storygames are planned, not implemented. When that work starts:
+
+- **XML parsing reuses the vendored expat** (`lib/expat/`, already used by the EPUB
+  parsers). Add a parser for the storygame schema on top of `lib/XmlParserUtils/`;
+  do not add a second XML library. Keep the existing entity-security flags
+  (`XML_GE=0`) and the small input-buffer setting unless a measured need changes them.
+- **The scripting engine is an open decision.** Nothing suitable is vendored. Any
+  engine must fit the ESP32-C3 baseline, and its worst-case RAM and flash cost belong in
+  the change that adds it, not in a later cleanup.
+- Storygame state is per-game persistent data. Follow the cache-format versioning rules
+  in [generated-files-cache.md](generated-files-cache.md#cache-file-format-versioning).

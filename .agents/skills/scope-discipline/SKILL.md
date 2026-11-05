@@ -5,19 +5,24 @@ description: Dedicated e-reader feature scope. Use when adding features, activit
 
 # Scope Discipline
 
-The mission: do one thing exceptionally well, focused reading on constrained
-hardware. `SCOPE.md` is the source of truth for what is in and out. Read it
-before adding surface. This is the gate to run before writing a new feature.
+The mission: do one thing exceptionally well, long-form reading on constrained
+hardware — books and authored storygames. `SCOPE.md` is the source of truth for
+what is in and out. Read it before adding surface. This is the gate to run before
+writing a new feature.
 
 ## The gate
 
 Before adding a feature, activity, lib, setting, or dependency, answer in order:
 
-1. **Is it in `SCOPE.md`?** Explicitly out: interactive apps (notepad,
-   calculator, games), active connectivity (RSS, news, browser), media/audio
-   playback. If it is out, say so and stop.
-2. **Does it materially improve focused reading?** If the benefit is
-   "nice to have" or serves a different use case, it is out. This is not a PDA.
+1. **Is it in `SCOPE.md`?** Explicitly out: general-purpose interactive apps
+   (notepad, calculator, unrelated games), writing/authoring tools, active
+   connectivity (RSS, news, browser), media/audio playback, PDF rendering, and
+   new third-party network connectors beyond КвестБук. Storygames are the
+   deliberate exception to the interactive-app exclusion — they are the product,
+   not an add-on. If it is out, say so and stop.
+2. **Does it materially improve reading a book or playing a storygame?** If the
+   benefit is "nice to have" or serves a different use case, it is out. This is
+   not a PDA.
 3. **What resources does it need?** Account for steady-state and peak RAM,
    the largest required heap block, Flash/OTA slot headroom, and SD storage.
    Keep shared code within the C3 baseline. Check internal RAM and PSRAM
@@ -67,7 +72,8 @@ choice; otherwise pick a sensible fixed default.
 ## Self-review
 
 - [ ] Checked against `SCOPE.md`; not on the out-of-scope list.
-- [ ] Stated the concrete reading benefit, not a generic "useful."
+- [ ] Stated the concrete reading or storygame benefit, not a generic "useful."
+- [ ] If it touches the network, it serves КвестБук (`quest-book.ru`) rather than adding a third-party connector.
 - [ ] Accounted for RAM, largest-block, Flash/OTA, storage, power, and maintenance costs and explained why the reading benefit wins.
 - [ ] Labeled estimates, measurements, and pending device checks.
 - [ ] Defined network/task lifetimes, retry limits, sleep behavior, and failure/exit cleanup.

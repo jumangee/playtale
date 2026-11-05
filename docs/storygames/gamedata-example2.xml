@@ -1,0 +1,1431 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<book guid="f4ecf517-10d2-11f1-b78c-002590e2f74e">
+  <article id="mitril">
+    <script type="onload"><![CDATA[var mitrilSetup = (function(rawSetup) {
+	function parseMixBoolean(value) {
+		if (value === 'true') return true;
+		if (value === 'false') return false;
+		return parseInt(value);
+	}
+
+	var setup = {
+		groups: {},
+		items: {},
+		functions: {},
+		checkpoints: [],
+		len: 58 ,
+		ends: 8 ,
+		prod: 1 ,
+		index: 'game18397',
+		game_id: 18397
+	};
+	
+	var groups = rawSetup['keywords'];
+	if (groups) {
+		for (var g = 0; g < groups.length; g++) {
+			var group = groups[g];
+			group.type = 'k';
+			group.visible = parseMixBoolean(group.visible);
+			group.limit = parseMixBoolean(group.limit);
+			setup.groups[group.uid] = group;
+			var items = group['items'];
+			var list = [];
+			if (items) {
+				for (var i = 0; i < items.length; i++) {
+					var item = items[i];
+					item.group = group.uid;
+					item.start = parseMixBoolean(item.start);
+					item.limit = (item.limit && item.limit > 0) ? parseInt(item.limit) : 0;
+					setup.items[item.uid] = item;
+					list.push(item.uid);
+				}
+			}
+			group.items = list;
+		}
+	}
+	groups = rawSetup['resources'];
+	if (groups) {
+		for (var g = 0; g < groups.length; g++) {
+			var group = groups[g];
+			group.type = 'r';
+			group.visible = parseMixBoolean(group.visible);
+			group.limit = parseMixBoolean(group.limit);
+			setup.groups[group.uid] = group;
+			var items = group['items'];
+			var list = [];
+			if (items) {
+				for (var i = 0; i < items.length; i++) {
+					var item = items[i];
+					item.group = group.uid;
+					item.start = parseMixBoolean(item.start);
+					setup.items[item.uid] = item;
+					list.push(item.uid);
+				}
+			}
+			group.items = list;
+		}
+	}
+
+	if (rawSetup['functions']) {
+		for (var f = 0; f < rawSetup['functions'].length; f++) {
+			var func = rawSetup['functions'][f];
+			setup.functions[func['func_uid']] = JSON.parse(func['func_script']);
+		}
+	}
+
+	if (rawSetup['soundtrack']) {
+		setup.soundtrack = {
+			type: rawSetup['soundtrack']['type'],
+			owner: rawSetup['soundtrack']['owner'],
+			list: rawSetup['soundtrack']['list'],
+			key: rawSetup['soundtrack']['key']
+		};
+	}
+	if (rawSetup['checkpoints']) {
+		setup.checkpoints = rawSetup['checkpoints'].slice();
+	}
+
+	rawSetup = undefined;
+	return setup;
+})({"keywords":[{"name":"\u0418\u043d\u0432\u0435\u043d\u0442\u0430\u0440\u044c","uid":"76f54b05-6c47-4f15-9fcf-e12816a5a833","visible":"true","limit":"false","items":[{"name":"\u041d\u043e\u0436","uid":"e633f5b0-330d-4cc6-8872-ec227af415b3","start":"true"},{"name":"\u0424\u043b\u044f\u0433\u0430 \u0441 \u0432\u043e\u0434\u043e\u0439","uid":"4fa71413-5538-4d9a-a068-88f47a4dd0de","start":"true"},{"name":"\u0417\u0430\u043f\u0435\u0447\u0430\u0442\u0430\u043d\u043d\u044b\u0439 \u043b\u0430\u0440\u0435\u0446","uid":"d562f71d-658e-436b-ab4d-3917a204be30","start":"true"},{"name":"\u0412\u0435\u0440\u0435\u0432\u043a\u0430 \u0441 \u043a\u0440\u044e\u043a\u043e\u043c","uid":"1aa36136-8d6c-435d-8ac8-d54db140ccd7","start":"false"},{"name":"\u0411\u043e\u0442\u0438\u043d\u043a\u0438","uid":"ca452792-e64c-468d-ab89-1030788bfeea","start":"false"},{"name":"\u041b\u0435\u0447\u0435\u0431\u043d\u0430\u044f \u043c\u0430\u0437\u044c","uid":"dfc1fe3a-fb15-4ef9-9df4-4f3f89be9ec1","start":"false"},{"name":"\u0421\u0432\u0435\u0442\u044f\u0449\u0438\u0435\u0441\u044f \u0433\u0440\u0438\u0431\u044b","uid":"70cf61b2-73a3-4865-8beb-f004c978749b","start":"false"},{"name":"\u041f\u0443\u0441\u0442\u0430\u044f \u0444\u043b\u044f\u0433\u0430","uid":"3e52cc61-9b5e-4e08-8518-a68b26992504","start":"false"},{"name":"\u0410\u043c\u0443\u043b\u0435\u0442 \u041a\u0430\u043f\u0438\u0442\u0430\u043d\u0430","uid":"6bfd80a2-9b7c-4a90-b6be-78541d4245dc","start":"false"}]},{"name":"\u041a\u043b\u044e\u0447\u0435\u0432\u044b\u0435 \u0441\u043b\u043e\u0432\u0430","uid":"0cf2a6ec-87dc-479f-93eb-d4e6210b6324","visible":"true","limit":"false","items":[{"name":"\u0421\u0442\u0430\u0440\u044b\u0439 \u043a\u0443\u0440\u0433\u0430\u043d","uid":"df46fe9a-da7f-443b-89ba-e9b7758a740c","start":"false"}]},{"name":"\u0414\u043e\u0441\u0442\u0438\u0436\u0435\u043d\u0438\u044f","uid":"e562dca1-0f96-4de1-862b-982f4b373653","visible":"true","limit":"false","items":[{"name":"\u0416\u0435\u0440\u0442\u0432\u0430 \u043f\u0443\u0442\u0438","uid":"608f45f0-be5d-49b7-b662-d4fb79fb1efb","start":"false"}]},{"name":"\u041e\u0441\u043e\u0431\u0435\u043d\u043d\u043e\u0441\u0442\u0438","uid":"ad3ac182-2faa-4463-9dfb-94aadcd6882e","visible":"true","limit":"false","items":[{"name":"\u041f\u0435\u0447\u0430\u0442\u044c \u0414\u0440\u0435\u0432\u043d\u0438\u0445","uid":"7754ac3a-2256-4fd0-8d78-50d3357fa883","start":"false"},{"name":"\u0411\u043b\u0430\u0433\u043e\u0441\u043b\u043e\u0432\u043b\u0435\u043d\u0438\u0435 \u043e\u0442\u0447\u0430\u044f\u0432\u0448\u0438\u0445\u0441\u044f","uid":"cb429136-8e43-4c46-aadf-cc7f7efd60f0","start":"false"},{"name":"\u041f\u0440\u0438\u0433\u043b\u0430\u0448\u0435\u043d\u0438\u0435 \u0440\u0430\u0437\u0431\u043e\u0439\u043d\u0438\u043a\u043e\u0432","uid":"998857ac-f89c-400f-a0de-d239d95e49f4","start":"false"}]}],"resources":[{"name":"\u0420\u0435\u0441\u0443\u0440\u0441\u044b","uid":"f02e5f0a-4ba7-49f5-9ece-4895a46cb609","visible":"true","limit":"false","items":[{"name":"\u041f\u0430\u0435\u043a","uid":"339557a2-47a9-4bec-9e6c-f3bf5b56fd13","start":"3","limit":"0"},{"name":"\u0414\u0435\u043d\u044c\u0433\u0438","uid":"1ebf7476-e6f1-47c3-8077-d0195a09f7a3","start":"20","limit":"0"},{"name":"\u0416\u0438\u0437\u043d\u044c","uid":"4716a4f8-19e9-42b3-a806-fc8c722f7f0a","start":"10","limit":"0"},{"name":"\u041e\u0447\u043a\u0438 \u043f\u043e\u0431\u0435\u0434\u044b","uid":"784bdead-c5d3-4352-b920-ddc920203103","start":"0","limit":"0"}]}],"functions":[{"func_name":"\u041e\u0447\u043a\u0438 \u0434\u043e\u0441\u0442\u0438\u0436\u0435\u043d\u0438\u044f","func_uid":"06464fea-359f-47c0-a0c0-67a851e65c9a","func_script":"[{\"class\":\"add\",\"type\":\"r\",\"val\":\"784bdead-c5d3-4352-b920-ddc920203103\",\"amnt\":0,\"param\":\"339557a2-47a9-4bec-9e6c-f3bf5b56fd13\"},{\"class\":\"add\",\"type\":\"r\",\"val\":\"784bdead-c5d3-4352-b920-ddc920203103\",\"amnt\":0,\"param\":\"1ebf7476-e6f1-47c3-8077-d0195a09f7a3\"},{\"class\":\"add\",\"type\":\"r\",\"val\":\"784bdead-c5d3-4352-b920-ddc920203103\",\"amnt\":0,\"param\":\"4716a4f8-19e9-42b3-a806-fc8c722f7f0a\"},{\"class\":\"add\",\"type\":\"r\",\"val\":\"784bdead-c5d3-4352-b920-ddc920203103\",\"amnt\":0,\"param\":\"4716a4f8-19e9-42b3-a806-fc8c722f7f0a\"}]"}],"achis":[{"achi_id":"1","achi_title":"\u0421\u043f\u0430\u0441\u0438\u0442\u0435\u043b\u044c \u0433\u043e\u0440\u043e\u0434\u0430","achi_artefact":"","achi_ico":"ach_f09e9ea1cffbf2001b4bd43f622391a4.jpg"},{"achi_id":"2","achi_title":"\u0411\u0435\u0441\u043a\u043e\u0440\u044b\u0441\u0442\u043d\u044b\u0439 \u043a\u0443\u0440\u044c\u0435\u0440","achi_artefact":"","achi_ico":"ach_2b0c86d27cc5c5bbc3981972141b7c64.jpg"},{"achi_id":"3","achi_title":"\u041f\u0440\u0435\u0434\u0430\u0442\u0435\u043b\u044c","achi_artefact":"","achi_ico":"ach_f45a73d31c7ef18182547a7d6098327e.jpg"}],"settings":[{"type":"export","name":"pdf","value":"true"},{"type":"defaults","name":"action-style","value":"1"},{"type":"game","name":"scores","value":"784bdead-c5d3-4352-b920-ddc920203103"},{"type":"game","name":"metagame","value":""}],"tags":["6","36","65"],"fixtickets":{"1":[2268,2269,2274,2275,2276,2277]}});
+
+function mitrilController() {
+
+	var tpls = {};
+	var saveGameTimer;
+	var lastSaveData;
+	var self = this;
+
+	if (!mitrilSetup.prod) {
+		$('.end-go-edit').attr('href', '/online/edit/' + mitrilSetup.game_id + '/').fadeIn();
+	}
+	$('.btn-error-report').show();
+	$('.ticket-is_prod').val(mitrilSetup.prod);
+
+	$('.display-properties').slideDown();
+
+	if (mitrilSetup.soundtrack) {
+		var snd = mitrilSetup.soundtrack;
+		$.ajax({
+			url: '/online/mitril/soundtrack/',
+			data: snd,
+			dataType: 'json',
+			method: 'GET',
+			success: function(response) {
+				var ost = $('.soundtrack');
+				if (response.result == 'ok') {
+					$('iframe', ost).attr('src', response.data.message);
+					ost.fadeIn();
+				} else {
+					ost.remove();
+				}
+			}
+		});
+	}
+
+	this.ver = 1.4;
+
+	this.getGameID = function() {
+		return mitrilSetup.game_id;
+	}
+
+	this.isProd = function() {
+		return mitrilSetup.prod == 1;
+	}
+
+	var parser = new exprEval.Parser({
+        operators: {
+          'add': true,
+          'concatenate': false,
+          'conditional': true,
+          'divide': true,
+          'factorial': false,
+          'multiply': true,
+          'power': true,
+          'remainder': true,
+          'subtract': true,
+          'logical': true,
+          'comparison': true,
+          'in': true,
+          'assignment': false
+        }
+      });
+	  
+	///
+
+	function checkExpression(items, expr) {
+		if (expr.type === 's' && expr.val) {
+            var script = expr.val;
+			console.log('------------------------------------->-');
+			console.log(script);
+            if (script.length > 2 && script.length < 2000) {
+                var values = {};
+                $.each(mitrilSetup.items, function(uid) {
+                    var item = this; //mitrilSetup.items[uid];
+					var group = mitrilSetup.groups[item.group];
+                    if (item && group) {
+						console.log(group.name + '/' + item.name + '=' + items[uid]);
+                        values[group.type + uid.replace(/-/g, '')] = items[uid] ? items[uid] : 0;
+                    }
+                });
+				console.log('-<-------------------------------------');
+                try {
+                    var expr = parser.parse(script);
+                    return expr.evaluate(values) ? true : false;
+                } catch (e) {
+                }
+            }
+            return false;
+		}
+		
+		var value = items[expr.val];
+
+		if (expr.type === 'k' && value) {
+			return true;
+		}
+
+		if (expr.type === 'r') {
+			if (!value) value = 0;
+			var count;
+			if (isNaN(expr.amnt)) {
+				var v = items[expr.amnt];
+				count = v !== undefined ? v : 0;
+			} else {
+				count = expr.amnt;
+			}
+			if (expr.eq) {
+				return value == count; // && count > 0;	// 06.12.2021
+			}
+			return value >= count;
+		}
+
+		return false;
+	}
+
+	this.checkCondition = function(items, cond, crit) {
+		var modeAND = true;
+		if (cond && cond.or) { //&& cond.c instanceof Array
+			if (cond.or) {
+				modeAND = false;
+			}
+			cond = cond.c;
+		}
+
+		if (!modeAND) {
+			// OR
+			for (var c = 0; c < cond.length; c++) {
+				var expr = cond[c];
+				if (checkExpression(items, expr) === crit) {
+					return true;
+				}
+			}
+			return false;
+		}
+		for (var c = 0; c < cond.length; c++) {
+			var expr = cond[c];
+			if (checkExpression(items, expr) !== crit) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	this.getGroupResourceCount = function(items, uid) {
+		var result = 0;
+		var group = mitrilSetup.groups[uid];
+		if (!group) {
+			return 0;
+		}
+
+		for (var i = 0; i < group.items.length; i++) {
+			var uid = group.items[i];
+			var value = items[uid];
+			if (value) {
+				if (group.type == 'k') {
+					result++;
+				} else {
+					result += Math.abs(value);
+				}
+			}
+		}
+
+		return result;
+	}
+
+	function executeIncTask(items, task) {
+		var uid = task.val;
+		var libItem = mitrilSetup.items[uid];
+		if (!libItem) return false;
+
+		var group = mitrilSetup.groups[libItem.group];
+		if (!group) return false;
+
+		var count = parseInt(task.amnt);
+		if (!count || isNaN(count)) count = 1;
+
+		if (group.limit !== false) {
+			var stored = mitril.getGroupResourceCount(items, group.uid);
+			if (stored + count > group.limit) {
+				if (task.type == 'k') {
+					return true;
+				}
+				count = Math.max(group.limit - stored, 0);
+			}
+		}
+
+		if (task.type == 'k') {
+			items[uid] = true;
+			return true;
+		}
+
+		if (task.type == 'r') {
+			if (!items[uid]) {
+				items[uid] = 0;
+			}
+
+			var curVal = items[uid];
+			if (libItem.limit > 0 && (curVal + count > libItem.limit)) {
+				count = Math.max(libItem.limit - curVal, 0);
+			}
+
+			items[uid] += count;
+			return true;
+		}
+
+		return false;
+	}
+
+	function checkGroupSpaceTask(items, task) {
+		var uid = task.val;
+		var libItem = mitrilSetup.items[uid];
+		if (!libItem) return false;
+
+		var group = mitrilSetup.groups[libItem.group];
+		if (!group) return false;
+
+		if (group.limit !== false) {
+			var stored = mitril.getGroupResourceCount(items, group.uid);
+			if (stored < group.limit) {
+				return true;
+			}
+		}
+
+		return true;
+	}
+
+	function executeSetTask(items, task) {
+		var uid = task.val;
+		var libItem = mitrilSetup.items[uid];
+		if (!libItem) return false;
+
+		var group = mitrilSetup.groups[libItem.group];
+		if (!group) return false;
+
+		var count = parseInt(task.amnt);
+		if (isNaN(count)) count = 0;
+
+		if (task.type == 'k') {
+			return false;
+		}
+		
+		var itemLimit = parseInt(libItem.limit);
+		if (isNaN(itemLimit)) count = 0;
+		
+		if (itemLimit > 0) {
+			items[uid] = Math.min(itemLimit, group.limit > 0 ? (count - mitril.getGroupResourceCount(items, group.uid) - group.limit) : count );
+			return true;
+		}
+
+		if (group.limit !== false) {
+			var oldValue = items[uid];
+			items[uid] = count;
+			var stored = mitril.getGroupResourceCount(items, group.uid);
+			if (stored > group.limit) {
+				items[uid] -= (stored - group.limit);
+			}
+		} else {
+			items[uid] = count;
+		}
+
+		return true;
+	}
+
+	function executeDecTask(items, task) {
+		var uid = task.val;
+		var libItem = mitrilSetup.items[uid];
+		if (!libItem) return false;
+
+		if (task.type == 'k') {
+			items[uid] = false;
+			return true;
+		}
+
+		if (task.type == 'r') {
+			var count = parseInt(task.amnt);
+			if (!count || isNaN(count)) count = 1;
+
+			if (!items[uid]) {
+				items[uid] = 0;
+			}
+
+			items[uid] -= count;
+			if (items[uid] < 0) { // MIN!!!
+				items[uid] = 0;
+			}
+			return true;
+		}
+
+		return false;
+	}
+
+	// remove all keys of group
+	function executeDelTask(items, task) {
+		var uid = task.val;
+		var libGroup = mitrilSetup.groups[uid];
+		if (!libGroup) return false;
+
+		if (task.type == 'r') {
+			return false;
+		}
+
+		var groupItems = libGroup.items;
+		for (var i = 0; i < groupItems.length; i++) {
+			delete items[groupItems[i]];
+		}
+
+		return true;
+	}
+	
+	// set 0 all res of group
+	function executeNlgTask(items, task) {
+		var libGroup = mitrilSetup.groups[task.val];
+		if (!libGroup) return false;
+
+		if (task.type == 'k') {
+			return false;
+		}
+
+		var groupItems = libGroup.items;
+		for (var i = 0; i < groupItems.length; i++) {
+			delete items[groupItems[i]];
+		}
+
+		return true;
+	}
+
+	function rnd(min, max) {
+		return Math.min(max, Math.min(max, Math.floor(Math.random() * (max - min + 1)) + min));
+	}
+
+	function getRandom(min, max) {
+		var results = [];
+		var throws = rnd(5, 10);
+		for (var i = 0; i < throws; i++) {
+			results.push(rnd(min, max));
+		}
+		return results[rnd(0, throws - 1)];
+	}
+
+	// checkpoint
+	function executeSaveTask(items, task) {
+		var checkpoint = task.val;
+		var self = this;
+		if (checkpoint && lastSaveData) {
+			$.ajax({
+				url: '/online/mitril/savegame/',
+				data: {
+					game_id: mitrilSetup.game_id,
+					prod: mitrilSetup.prod,
+					checkpoint: checkpoint,
+					savedata: lastSaveData,
+					testuid: window.playerInfo ? window.playerInfo.testuid : undefined
+				},
+				method: 'POST',
+				dataType: 'json',
+				success: function(response) {
+					if (response.result == 'ok') {
+						items[checkpoint] = true;
+						jsIQ.triggerEvent('update_charsheet', {
+							update: true
+						});
+					}
+				}
+			});
+			return true;
+		}
+
+		return false;
+	}
+
+	// add one random key of group
+	function executeRndTask(items, task) {
+		var uid = task.val;
+		var libGroup = mitrilSetup.groups[uid];
+		if (!libGroup) return false;
+
+		if (task.type == 'r') {
+			return false;
+		}
+
+		var groupItems = libGroup.items;
+		var pos = getRandom(0, groupItems.length - 1);
+		items[groupItems[pos]] = true;
+
+		return true;
+	}
+
+	function executeGotoTask(items, task) {
+		var uid = task.val;
+		jsIQ.showArticle(uid);
+		return true;
+	}
+
+	function executeBackTask(items, task) {
+		if (vars.lastarticle) {
+			jsIQ.showArticle(vars.lastarticle);
+			vars.lastarticle = null;
+			return true;
+		}
+		return false;
+	}
+
+	function executeAchiTask(items, task) {
+		var achi = task.val;
+		if (achi > 0 && achi < 5) {
+			$.ajax({
+				url: '/online/mitril/achi/add/',
+				method: 'POST',
+				dataType: 'json',
+				data: {
+					game_id: mitrilSetup.game_id,
+					prod: mitrilSetup.prod,
+					achi_id: achi,
+					testuid: window.playerInfo ? window.playerInfo.testuid : undefined
+				},
+				success: function(response) {
+					if (response.result != 'error') {
+						// announce
+						var achi = response.data;
+						var msg = '<div style="overflow: hidden; margin-top: 0.5em"><img src="/online/player/mitril/images/' + achi.achi_ico + '" style="float:left; margin-right: 1em; height: 50px;"><h5>' + achi.achi_title + '</h5></div>';
+						if (window.showNotification) {
+							showNotification('<div class="alert alert-success text-dark" role="alert"><h4 class="alert-heading m-0">Получено достижение!</h4><p style="font-size:95%">'+ msg + (response.result == 'fake' ? '\n<i>Внимание! Достижения анонимных пользователей не сохраняются</i>' : '')+'</p></div>');
+						} /*else {
+							$.growl({
+								title: "Получено достижение!",
+								message: ,
+								duration: 10000,
+								size: 'large',
+								style: 'warning'
+							});
+						}*/
+					}
+				}
+			});
+		}
+
+		return true;
+	}
+
+	function executeAddResTask(items, task) {
+		if (task.type == 'k') {
+			return false;
+		}
+
+		var uid = task.val;
+		var libItem = mitrilSetup.items[uid];
+		if (!libItem) return false;
+
+		var group = mitrilSetup.groups[libItem.group];
+		if (!group) return false;
+
+		var count = items[task.param];
+		if (!count) {
+			return true;
+		}
+
+		if (group.limit !== false) {
+			var stored = mitril.getGroupResourceCount(items, group.uid);
+			if (stored + count > group.limit) {
+				if (task.type == 'k') {
+					return true;
+				}
+				count = Math.max(group.limit - stored, 0);
+			}
+		}
+
+		if (!items[uid]) {
+			items[uid] = 0;
+		}
+
+		var curVal = items[uid];
+		if (libItem.limit > 0 && (curVal + count > libItem.limit)) {
+			count = Math.max(libItem.limit - curVal, 0);
+		}
+
+		items[uid] += count;
+		return true;
+	}
+
+	function executeSubResTask(items, task) {
+		if (task.type == 'k') {
+			return false;
+		}
+
+		var uid = task.val;
+		var libItem = mitrilSetup.items[uid];
+		if (!libItem) return false;
+
+		var count = items[task.param];
+		if (!count) {
+			return true;
+		}
+
+		if (!items[uid]) {
+			items[uid] = 0;
+		}
+
+		items[uid] -= count;
+		if (items[uid] < 0) { // MIN!!!
+			items[uid] = 0;
+		}
+		return true;
+	}
+
+	function executeMlpResTask(items, task) {
+		if (task.type == 'k') {
+			return false;
+		}
+
+		var uid = task.val;
+		var libItem = mitrilSetup.items[uid];
+		if (!libItem) return false;
+
+		var group = mitrilSetup.groups[libItem.group];
+		if (!group) return false;
+
+		var count = items[task.param];
+		if (!count) {
+			items[uid] = 0;
+			return true;
+		}
+
+		var result = items[uid] ? (items[uid] * count) : 0;
+		items[uid] = result;
+
+		if (group.limit !== false) {
+			var stored = mitril.getGroupResourceCount(items, group.uid);
+			if (stored > group.limit) {
+				result -= group.limit - stored;
+			}
+		}
+
+		if (libItem.limit > 0 && (result > libItem.limit)) {
+			result = libItem.limit; // - result;
+		}
+
+		items[uid] = result;
+		return true;
+	}
+
+	function executeDivResTask(items, task) {
+		if (task.type == 'k') {
+			return false;
+		}
+
+		var uid = task.val;
+		var libItem = mitrilSetup.items[uid];
+		if (!libItem) return false;
+
+		var group = mitrilSetup.groups[libItem.group];
+		if (!group) return false;
+
+		var count = items[task.param];
+		if (!count) {
+			items[uid] = 0;
+			return true;
+		}
+
+		var result = items[uid] ? (Math.round(items[uid] / count)) : 0;
+
+		items[uid] = result;
+		return true;
+	}
+
+	function executeEqlResTask(items, task) {
+		if (task.type == 'k') {
+			return false;
+		}
+
+		var uid = task.val;
+		var libItem = mitrilSetup.items[uid];
+		if (!libItem) return false;
+
+		var group = mitrilSetup.groups[libItem.group];
+		if (!group) return false;
+
+		var count = items[task.param];
+		if (!count) {
+			items[uid] = 0;
+			return true;
+		}
+
+		items[uid] = count;
+
+		if (group.limit !== false) {
+			var stored = mitril.getGroupResourceCount(items, group.uid);
+			if (stored > group.limit) {
+				count -= group.limit - stored;
+			}
+		}
+
+		if (libItem.limit > 0 && (count > libItem.limit)) {
+			count -= libItem.limit - count;
+		}
+
+		items[uid] = count;
+		return true;
+	}
+
+	function executeRndResTask(items, task) {
+		if (task.type == 'k') {
+			return false;
+		}
+
+		var uid = task.val;
+		var libItem = mitrilSetup.items[uid];
+		if (!libItem) return false;
+
+		var group = mitrilSetup.groups[libItem.group];
+		if (!group) return false;
+
+		var count = getRandom(1, items[task.param]);
+
+		if (group.limit !== false) {
+			var stored = mitril.getGroupResourceCount(items, group.uid);
+			if (stored + count > group.limit) {
+				if (task.type == 'k') {
+					return true;
+				}
+				count = Math.max(group.limit - stored, 0);
+			}
+		}
+
+		if (!items[uid]) {
+			items[uid] = 0;
+		}
+
+		var curVal = items[uid];
+		if (libItem.limit > 0 && (curVal + count > libItem.limit)) {
+			count = Math.min(libItem.limit - curVal, 0);
+		}
+
+		items[uid] += count;
+		return true;
+	}
+
+	function executeRndRemResTask(items, task) {
+		if (task.type == 'k') {
+			return false;
+		}
+
+		var uid = task.val;
+		var libItem = mitrilSetup.items[uid];
+		if (!libItem) return false;
+
+		var group = mitrilSetup.groups[libItem.group];
+		if (!group) return false;
+
+		var count = getRandom(1, items[task.param]);
+
+		if (!items[uid]) {
+			items[uid] = 0;
+		}
+
+		items[uid] = Math.max(items[uid] - count, 0);
+		return true;
+	}
+
+	function executeRndGResTask(items, task) {
+		if (task.type == 'k') {
+			return false;
+		}
+
+		var uid = task.val;
+		var group = mitrilSetup.groups[uid];
+		if (!group) return false;
+		var groupItems = group.items;
+		var pos = getRandom(0, groupItems.length - 1);
+
+		var count = getRandom(1, items[task.param]);
+		var uid = groupItems[pos];
+		var libItem = mitrilSetup.items[uid];
+
+		if (group.limit !== false) {
+			var stored = mitril.getGroupResourceCount(items, group.uid);
+			if (stored + count > group.limit) {
+				count = Math.max(group.limit - stored, 0);
+			}
+		}
+
+		if (!items[uid]) {
+			items[uid] = 0;
+		}
+
+		var curVal = items[uid];
+		if (libItem.limit > 0 && (curVal + count > libItem.limit)) {
+			count = Math.max(libItem.limit - curVal, 0);
+		}
+
+		items[uid] += count;
+		return true;
+	}
+
+	function executeRndRemGResTask(items, task) {
+		if (task.type == 'k') {
+			return false;
+		}
+
+		var uid = task.val;
+		var group = mitrilSetup.groups[uid];
+		if (!group) return false;
+		var groupItems = group.items;
+		var pos = getRandom(0, groupItems.length - 1);
+		var count = getRandom(1, items[task.param]);
+		var uid = groupItems[pos];
+		var libItem = mitrilSetup.items[uid];
+
+		if (!items[uid]) {
+			items[uid] = 0;
+		}
+
+		items[uid] = Math.max(items[uid] - count, 0);
+		return true;
+	}
+
+	function executeIfTask(items, task) {
+		var ifOpnd = $.parseJSON(task.type === '64' ? Base64.decode(task.val) : task.val);
+
+		if (!ifOpnd) return false;
+
+		var cond = ifOpnd['action_if'];
+		if (cond && cond.length > 2) {
+			var r = mitril.checkCondition(items, JSON.parse(cond), true);
+			if (!r) {
+				return true;
+			}
+		}
+
+		cond = ifOpnd['action_ifnot'];
+		if (cond && cond.length > 2) {
+			var r = mitril.checkCondition(items, JSON.parse(cond), false);
+			if (!r) {
+				return true;
+			}
+		}
+
+		mitril.script(items, JSON.parse(ifOpnd['action_script']));
+
+		return true;
+	}
+
+	function executeFunTask(items, task) {
+		var script = mitrilSetup.functions[task.val];
+		if (!script) return false;
+
+		mitril.script(items, script);
+
+		return true;
+	}
+	
+	this.executeCleanTask = function(items, task) {
+		for (var uid in items) {
+			if (mitrilSetup.hasOwnProperty(uid)) continue;
+			delete items[uid];
+		}
+		for (var uid in mitrilSetup.items) {
+			if (mitrilSetup.hasOwnProperty(uid)) continue;
+			var item = mitrilSetup.items[uid];
+			if (item.start) {
+				items[item.uid] = item.start;
+			}
+		}
+
+		return true;
+	}
+
+	function executeTask(items, task) {
+		switch (task.class) {
+			case 'inc': {
+				return executeIncTask(items, task);
+			}
+			case 'dec': {
+				return executeDecTask(items, task);
+			}
+			case 'goto': {
+				return executeGotoTask(items, task);
+			}
+			case 'set': {
+				return executeSetTask(items, task);
+			}
+			case 'del': {
+				return executeDelTask(items, task);
+			}
+			case 'rnd': {
+				return executeRndTask(items, task);
+			}
+			case 'back': {
+				return executeBackTask(items, task);
+			}
+			case 'achi': {
+				return executeAchiTask(items, task);
+			}
+			case 'save': {
+				setTimeout(function() {
+					executeSaveTask(items, task);
+				}, 500);
+				return true;
+			}
+			case 'add': {
+				return executeAddResTask(items, task);
+			}
+			case 'sub': {
+				return executeSubResTask(items, task);
+			}
+			case 'mlp': {
+				return executeMlpResTask(items, task);
+			}
+			case 'div': {
+				return executeDivResTask(items, task);
+			}
+			case 'eql': {
+				return executeEqlResTask(items, task);
+			}
+			case 'rnr': {
+				return executeRndResTask(items, task);
+			}
+			case 'rng': {
+				return executeRndGResTask(items, task);
+			}
+			case 'rrr': {
+				return executeRndRemResTask(items, task);
+			}
+			case 'rrg': {
+				return executeRndRemGResTask(items, task);
+			}
+			case 'if': {
+				return executeIfTask(items, task);
+			}
+			case 'fun': {
+				return executeFunTask(items, task);
+			}
+			case 'nul': {
+				return self.executeCleanTask(items, task);
+			}
+			case 'nlg': {
+				return executeNlgTask(items, task);
+			}
+		}
+		return true;
+	}
+
+	function getItemChangesList(olditems, newitems) {
+		var result = [];
+
+		$.each(mitrilSetup.items, function(uid) {
+			var oldval = olditems[uid];
+			var newval = newitems[uid];
+			if (oldval !== newval) {
+				var itemInfo = mitrilSetup.items[uid];
+				var itemGroup = mitrilSetup.groups[itemInfo.group];
+				if (!itemGroup.visible) {
+					return;
+				}
+				var title = itemGroup.name + '/' + itemInfo.name;
+				var diff;
+				if (itemGroup.type === 'k') {
+					diff = (!newval) ? ('<strike>' + title + '</strike>') : ('<b>' + title + '</b>');
+				} else {
+					if (!oldval) oldval = 0;
+					if (!newval) {
+						diff = '<strike>' + title + '</strike>';
+					} else {
+						diff = newval > oldval ? '+' : '';
+						diff = '' + title + ': <b>' + (diff + (newval - oldval)) + '</b> (' + newval + ')';
+					}
+				}
+				result.push(diff);
+			}
+		});
+		return result;
+	}
+
+	this.scriptWrap = function(varslink, script) {
+		var oldItems = $.extend({}, varslink.items);
+		var history = $('#charsheet-change-history');
+		this.script(varslink.items, script);
+		var changes = getItemChangesList(oldItems, varslink.items);
+		if (changes.length) {
+			$.each(changes, function() {
+				history.append('<div class="charsheet-changed-item"><i class="fad fa-edit"></i> ' + this + '</div>');
+			});
+			history.stop().animate({
+				scrollTop: history.prop('scrollHeight')
+			}, 500);
+		}
+		jsIQ.triggerEvent('update_charsheet', {
+			update: true
+		}); /* real update charsheet! */
+		this.saveGame(jsIQ.current_article.title, varslink);
+		setTimeout(function() {
+			jsIQ.renderArticle();
+		}, 250);
+		return true;
+	}
+
+	this.script = function(items, script) {
+		if (!script || !(script instanceof Array)) return false;
+		for (var s = 0; s < script.length; s++) {
+			var task = script[s];
+			if (!executeTask(items, task)) {
+				return false;
+			}
+		}
+		//jsIQ.triggerEvent('update_charsheet', {update: true});                  /* real update charsheet! */
+		return true;
+	}
+
+	this.getCharsheetData = function(items) {
+		var result = [];
+		var groups = mitrilSetup.groups;
+		for (var g in groups) {
+			if (!groups.hasOwnProperty(g)) continue;
+			var group = groups[g];
+			if (!group.visible || !group.items || !group.items.length) continue;
+			var list = [];
+			var stored = 0;
+			for (var i = 0; i < group.items.length; i++) {
+				var uid = group.items[i];
+				var value = vars.items[uid];
+				if (value) {
+					var item = mitrilSetup.items[uid];
+					list.push({
+						name: item.name,
+						uid: uid,
+						value: value
+					});
+					stored += value;
+				}
+			}
+			if (list.length > 0) {
+				result.push({
+					name: group.name,
+					uid: group.uid,
+					type: group.type,
+					visible: group.visible,
+					limit: group.limit,
+					stored: stored,
+					items: list
+				});
+			}
+		}
+
+		var checkpoints = mitrilSetup.checkpoints;
+		if (checkpoints) {
+			var cpArr = [];
+			for (var c = 0; c < checkpoints.length; c++) {
+				var checkpoint = checkpoints[c];
+				var visited = null;
+				for (var v = 0; v < checkpoint.vars.length; v++) {
+					var variant = checkpoint.vars[v];
+					if (vars.items[checkpoint.uid + '--' + variant.uid] == true) {
+						visited = variant;
+						break;
+					}
+				}
+				if (visited) {
+					for (var d = 0; d < c; d++) {
+						if (cpArr[d].available === 'preview') {
+							// skipped
+							cpArr[d].available = 'skipped';
+						}
+					}
+				}
+				cpArr.push({
+					name: checkpoint.name + (visited ? (': ' + visited.name) : ''),
+					uid: (visited ? (checkpoint.uid + '--' + visited.uid) : undefined),
+					type: 'checkpoint',
+					available: visited ? 'available' : 'preview'
+				});
+			}
+			result = result.concat(cpArr);
+		}
+		return result;
+	}
+
+	this.getTpl = function(id) {
+		if (tpls[id]) {
+			return tpls[id].clone();
+		}
+		tpls[id] = $('.mitril-tpl > .' + id).clone();
+		return tpls[id].clone();
+	}
+
+	this.restartGame = function(callback) {
+		if (confirm('Начать игру с начала?')) {
+			$.ajax({
+				url: '/online/mitril/restart/',
+				data: {
+					game_id: mitrilSetup.game_id,
+					prod: mitrilSetup.prod,
+					testuid: window.playerInfo ? window.playerInfo.testuid : undefined
+				},
+				method: 'POST',
+				success: function() {
+					if (callback) {
+						callback();
+					}
+				}
+			});
+		}
+	}
+
+	this.getSavegame = function(callback) {
+		$.ajax({
+			url: '/online/mitril/loadgame/',
+			data: {
+				game_id: mitrilSetup.game_id,
+				prod: mitrilSetup.prod,
+				testuid: window.playerInfo ? window.playerInfo.testuid : undefined
+			},
+			dataType: 'json',
+			method: 'POST',
+			success: function(response) {
+				if (response.result == 'ok' && response.data) {
+					callback(response.data);
+					return;
+				}
+				callback(false);
+			}
+		});
+	}
+
+	this.loadCheckpoint = function(checkpoint_uid) {
+		$.ajax({
+			url: '/online/mitril/loadgame/',
+			data: {
+				game_id: mitrilSetup.game_id,
+				checkpoint: checkpoint_uid,
+				prod: mitrilSetup.prod
+			},
+			dataType: 'json',
+			method: 'POST',
+			success: function(response) {
+				if (response.result == 'ok' && response.data) {
+					$('.mitril-game-end').hide();
+					result = response.data;
+					vars.items = result.savedata;
+					vars.steps = parseInt(result.steps);
+					if (!vars.steps || isNaN(vars.steps)) vars.steps = 0;
+					if (result.lastarticle) vars.lastarticle = result.lastarticle;
+					jsIQ.showArticle(result.article);
+					jsIQ.triggerEvent('update_charsheet', {
+						update: true
+					});
+				}
+			}
+		});
+	}
+
+	this.saveGame = function(article, vars) {
+		var save = {
+			article: article,
+			savedata: vars.items ? $.extend({}, vars.items) : undefined,
+			steps: vars.steps
+		};
+		if (vars.lastarticle) {
+			save.lastarticle = vars.lastarticle;
+		}
+
+		lastSaveData = JSON.stringify(save);
+		mitrilJs.prepareTicketData(save);
+
+		clearTimeout(saveGameTimer);
+		saveGameTimer = setTimeout(function() {
+			mitrilJs.uploadSavegame(mitrilSetup.game_id, mitrilSetup.prod, lastSaveData);
+		}, 250);
+	}
+
+	this.checkGameEnd = function(vars) {
+		var self = this;
+		$('.mitril-game-end').hide();
+		setTimeout(function() {
+			if (jsIQ.current_article && jsIQ.current_article.title != 'mitril' &&
+				$('.actionContainer.Visible', jsIQ.containers.actions).length === 0
+			) {
+				mitrilJs.gameEnd(mitrilSetup, {
+					steps: vars.steps
+				});
+			}
+		}, 500);
+	}
+
+	$('.end-go-restart').unbind().attr('href', '#').click(function() {
+		window.mitril.restartGame(function() {
+			window.location.reload();
+		});
+		return false;
+	});
+
+	var triggers = jsIQ.getArticle('_mitril_triggers');
+	if (triggers.length === 1 && $('action', triggers).length) {
+		jsIQ.addEventHandler('before_render_article', function(params, vars, process) {
+			jsIQ.current_article.appendArticle(triggers);
+			process.next();
+		});
+	}
+
+	var colors = ['white', 'silver', 'gray', 'black', 'red', 'maroon', 'yellow', 'olive', 'lime', 'green', 'aqua', 'teal', 'blue', 'navy', 'fuchsia', 'purple'];
+
+	var bbcode = [];
+
+	bbcode['^(===) (.+) (===)\\n'] = '<h4><b>$2</b></h4>';
+	bbcode['^(==) (.+) (==)\\n'] = '<h4>$2</h4>';
+
+	bbcode['\\n'] = '<div class="text-breaker"><br/></div>';
+	bbcode['--'] = '—';
+	bbcode['\\[b\\]'] = '<b>';
+	bbcode['\\[/b\\]'] = '</b>';
+	bbcode['\\[u\\]'] = '<u>';
+	bbcode['\\[/u\\]'] = '</u>';
+	bbcode['\\[i\\]'] = '<i>';
+	bbcode['\\[/i\\]'] = '</i>';
+	bbcode['\\[list\\]'] = '<ul>';
+	bbcode['\\[/list\\]'] = '</ul>';
+	bbcode['\\[\\*\\]'] = '<li>';
+	bbcode['\\[/\\*\\]'] = '</li>';
+	bbcode['\\[color=([A-Z,a-z,0-9,\\$,\\#]+)\\](.+?)\\[/color\\]'] = function() {
+		var c = arguments[1];
+		if (colors.indexOf(c) > -1) {
+			return '<span style="color:' + c + '">' + arguments[2] + '</span>';
+		}
+		return arguments[2];
+	};
+	bbcode['\\[sup\\](.+?)\\[/sup\\]'] = '<sup>$1</sup>';
+	bbcode['\\[player\\]'] = playerInfo.name;
+	bbcode['\\[url=((?:(?:https?:\\/\\/)?(?:[\\da-z\\.-]+)\\.(?:[a-z\\.]{2,6})(?:[\\/\\w0-9\\?\\=\\-\\.-]*)*\\/?))\\](.+?)\\[/url\\]'] = '<a href="$1" target="_blank">$2</a>';
+	//bbcode['&#34'] = '"';
+
+	this.getBBCode = function() {
+		return bbcode;
+	}
+
+	this.prepareText = function(text) {
+		for (var i in bbcode)
+			text = text.replace(new RegExp(i, 'gm'), bbcode[i]);
+		return text;
+	}
+
+	return this;
+}
+
+window.mitril = new mitrilController();
+
+window.mitril.getSavegame(function(result) {
+	if (!result) {
+		vars.items = {};
+		window.mitril.executeCleanTask(vars.items);
+		vars.steps = 0;
+		jsIQ.showArticle("acc5841f-02ad-11f1-b78c-002590e2f74e");
+		jsIQ.triggerEvent('update_charsheet', {
+			update: true
+		});
+	} else {
+		vars.items = result.savedata;
+		vars.steps = parseInt(result.steps);
+		if (!vars.steps || isNaN(vars.steps)) vars.steps = 0;
+		if (result.lastarticle) vars.lastarticle = result.lastarticle;
+		if (result.article) {
+			jsIQ.showArticle(result.article, {
+				noPreLoadScript: true
+			});
+		} else {
+			jsIQ.showArticle("acc5841f-02ad-11f1-b78c-002590e2f74e");
+		}
+		jsIQ.triggerEvent('update_charsheet', {
+			update: true
+		});
+	}
+});]]></script>
+  </article>
+  <handlers>
+    <handler name="update_charsheet"><![CDATA[var params = env.params;
+if (params && params.update) {
+    var charsheet = mitril.getCharsheetData(vars.items);
+    var ctx = mitril.getTpl('charsheet');
+    var checkpoints = [];
+    for (var g = 0; g < charsheet.length; g++) {
+        var group = charsheet[g];
+        if (group.type == 'checkpoint') {
+            checkpoints.push(group);
+            continue;
+        }
+        if (!group.visible) continue;
+
+        var html = mitril.getTpl('charsheet-group');
+
+        $('.g-name', html).html( group.name );
+        if (group.limit !== false) {
+            $('.g-limit', html).html( group.limit );
+            $('.g-stored', html).html( group.stored );  /* mitril.getGroupResourceCount(vars.items, group.uid) */
+        } else {
+            $('.g-size', html).remove();
+        }
+        var itemsHtml = $('.g-items', html);
+        var items = group.items;
+        for (var i = 0; i < items.length; i++) {
+            var item = items[i];
+            var itemHtml = mitril.getTpl('charsheet-item-' + group.type);
+            $('.i-name', itemHtml).html( item.name );
+            $('.i-uid', itemHtml).html( item.uid );
+            $('.i-value', itemHtml).html( item.value );
+            itemsHtml.append(itemHtml);
+        }
+        ctx.append( html );
+    }
+    $('#charsheet-data').html('').append( ctx );
+
+    if (checkpoints.length > 0) {
+        var ctx = mitril.getTpl('charsheet-checkpoints');
+        var html = $('.cp-list', ctx);
+        var visited = 0;
+        for (var c = 0; c < checkpoints.length; c++) {
+            var checkpoint = checkpoints[c];
+            var item = mitril.getTpl('charsheet-checkpoint');
+            $('.cp-icon', item).not('.'+checkpoint.available).hide();
+            if (checkpoint.available !== 'preview') {
+                visited++;
+            }
+            var link = $('.cp-label', item).html(checkpoint.name);
+            (function (a, uid) {
+                a.click(function() {
+                    if (uid) {
+                        mitril.loadCheckpoint(uid);
+                    }
+                    return false;
+                });
+            })(link, checkpoint.available === 'available' ? checkpoint.uid : false);
+
+            html.append( item );
+        }
+        var progress = Math.round( ( visited / ( checkpoints.length + 0.3) ) * 100 );
+        $('.progress-value', ctx).html();
+        $('.progress-bar', ctx).width(progress + '%');
+        $('#charsheet-data').append( ctx );
+    }
+}
+
+process.next();]]></handler>
+    <handler name="on_render_images"><![CDATA[$('.mitril-image', jsIQ.containers.text).remove();
+
+var images = env.params.images;
+if (images && images.length > 0) {
+    var image = images[0];
+    image = $('<div class="mitril-image '+image.name+'"><img src="'+image.src+'" style="width: 100%"/></div');
+    jsIQ.containers.text.prepend( image );
+}
+
+process.next();]]></handler>
+    <handler name="on_article_preload"><![CDATA[if (env.params && window.mitril) {
+    if ( env.params.article && env.params.article.title != 'mitril' ) {
+        /*var save = {
+            article: env.params.article.title,
+            savedata: vars.items ? $.extend({}, vars.items) : undefined,
+            steps: vars.steps
+        };
+        if (vars.lastarticle) {
+            save.lastarticle = vars.lastarticle;
+        }
+
+        window.mitril.saveGame(save);*/
+
+        window.mitril.saveGame(env.params.article.title, vars);
+
+        vars.steps++;
+    }
+}
+process.next();]]></handler>
+    <handler name="on_text_render"><![CDATA[/*
+PARSE TEXT, SYNCED!
+*/
+
+var ctx = env.params.container;
+if (ctx) {
+    /*$.each(getTextNodes(env.params.text.link), function() {
+      //var oldText = env.params.text.text;
+      //var text = window.mitril.prepareText(env.params.text.text);
+      //if (text !== oldText) {
+        //$(this).parent().html( window.mitril.prepareText( env.params.text.text ) );
+      //}
+    });*/
+    env.params.text.link.html( window.mitril.prepareText( env.params.text.text ) );
+}
+
+process.next();]]></handler>
+    <handler name="before_article_unload"><![CDATA[
+	mitrilJs.articleFadeAnimStart();
+
+	if (env.params.current) {
+		vars.lastarticle = env.params.current;
+	} else {
+		vars.lastarticle = null;
+	}
+
+process.next();]]></handler>
+    <handler name="on_render_article"><![CDATA[if (window.mitril) {
+		mitril.checkGameEnd(vars);
+	}
+	process.next();
+	]]></handler>
+    <handler name="after_article_loaded"><![CDATA[mitrilJs.articleFadeAnimEnd(null, null, process);]]></handler>
+    <handler name="jsiq_init_done"><![CDATA[jsIQ.addEventHandler('on_action_render', function(params, vars, process)	{
+    if (params.container && params.container.is('.Visible')) {
+        params.container.prepend('<small><i class="a-hover far fa-check-circle mr-2"></i><i class="a-unhover far fa-circle mr-2"></i></small>');
+    }
+
+    process.next();
+});
+
+process.next();]]></handler>
+  </handlers>
+<article id="acc5841f-02ad-11f1-b78c-002590e2f74e"><text>Город Варунда, обычно шумный и полный жизни, сегодня напоминает растревоженный улей. У причалов теснятся корабли, готовые к отплытию, а на рынках торговцы сбивают цены на всё, что нельзя унести с собой. Ветер с севера несёт непривычный холод и запах гари, хотя там нет пожарищ — только мёртвый Рейскен.</text><img name="article-img1">/online/player/mitril/images/acc5841f-02ad-11f1-b78c-002590e2f74e97c148e771344ed1b216e419a0e74a0b.png</img><action class="btnBlue" goto="e92aa4d5-02ad-11f1-b78c-002590e2f74e">Вы стоите в конторе торговца Элрика, разглядывая потертую карту.</action></article><article id="0a75127a-02ae-11f1-b78c-002590e2f74e"><text>Рынок Велгара — это хаос отчаяния и спекуляции. Одни распродают имущество за бесценок, другие наживаются на страхе. Вы пробираетесь через толпу, оценивая предложения. 
+В углу площади вы видите группу беженцев из Стромгарда — семью с детьми, сидящих на голой земле. Старшая девочка пытается продать самодельные куколки за гроши.
+Вот что привлекает ваше внимание:
+1. Прочные дорожные ботинки из буйволиной кожи (5 серебряных). Продавец клянётся, что они "не скользят и не натирают".
+2. Глиняная банка с "Целебной мазью знахаря Громана" (8 серебряных). Табличка гласит: "Заживляет раны, отводит гниль".
+3. Дополнительный мешок сушёной баранины и сухарей (2 серебряных).
+...У вас 20 серебряных. Что вы выберете?</text><img name="article-img0">/online/player/mitril/images/0a75127a-02ae-11f1-b78c-002590e2f74ea2996b102834f784aff273353e2b7e33.jpg</img><script type="local1001_878700610"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"r","val":"1ebf7476-e6f1-47c3-8077-d0195a09f7a3","amnt":5}], true);]]></script><script type="local1002_948426634"><![CDATA[return !mitril.checkCondition(vars.items, [{"type":"k","val":"ca452792-e64c-468d-ab89-1030788bfeea","amnt":null}], false);]]></script><script type="local1003_807455977"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"ca452792-e64c-468d-ab89-1030788bfeea","amnt":null},{"class":"dec","type":"r","val":"1ebf7476-e6f1-47c3-8077-d0195a09f7a3","amnt":5}]);]]></script><action class="btnBlue" if="local1001_878700610" ifnot="local1002_948426634" do="local1003_807455977" goto="29456d0c-02ae-11f1-b78c-002590e2f74e">Купить ботинки. Перейдите к 4. [Деньги -5, +Ботинки]</action><script type="local1004_854304530"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"r","val":"1ebf7476-e6f1-47c3-8077-d0195a09f7a3","amnt":8}], true);]]></script><script type="local1005_799573981"><![CDATA[return !mitril.checkCondition(vars.items, [{"type":"k","val":"dfc1fe3a-fb15-4ef9-9df4-4f3f89be9ec1","amnt":null}], false);]]></script><script type="local1006_673869991"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"dfc1fe3a-fb15-4ef9-9df4-4f3f89be9ec1","amnt":null},{"class":"dec","type":"r","val":"1ebf7476-e6f1-47c3-8077-d0195a09f7a3","amnt":8}]);]]></script><action class="btnBlue" if="local1004_854304530" ifnot="local1005_799573981" do="local1006_673869991" goto="2951f120-02ae-11f1-b78c-002590e2f74e">Купить мазь. Перейдите к 5. [Деньги -8, +Мазь]</action><script type="local1007_121779764"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"r","val":"1ebf7476-e6f1-47c3-8077-d0195a09f7a3","amnt":2}], true);]]></script><script type="local1008_774540480"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"r","val":"339557a2-47a9-4bec-9e6c-f3bf5b56fd13","amnt":1},{"class":"dec","type":"r","val":"1ebf7476-e6f1-47c3-8077-d0195a09f7a3","amnt":2}]);]]></script><action class="btnBlue" if="local1007_121779764" do="local1008_774540480" goto="2952265e-02ae-11f1-b78c-002590e2f74e">Купить провизию. Перейдите к 6. [Деньги -2, Паёк +1]</action><action class="btnBlue" goto="0a81e97d-02ae-11f1-b78c-002590e2f74e">Потратить время впустую. Ничего не покупать и выйти в путь. Перейдите к 2.</action><script type="local1009_712572201"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"r","val":"1ebf7476-e6f1-47c3-8077-d0195a09f7a3","amnt":20}], true);]]></script><action class="btnBlue" if="local1009_712572201" goto="a449a3ae-0422-11f1-b78c-002590e2f74e">· Отдать все свои деньги беженцам. Перейдите к 56.</action></article><article id="0a81e97d-02ae-11f1-b78c-002590e2f74e"><text>Главная Дорога, широкая и наезженная, петляет между холмов. Первые несколько часов пути спокойны. Вы встречаете лишь несколько повозок, спешно движущихся на юг. К вечеру вы сворачиваете в придорожную рощу, чтобы разбить лагерь. Вы находите старое кострище у валуна, покрытого мхом. Ночь наступает быстро, и с ней приходит тревожная тишина, нарушаемая лишь шелестом листьев. Посреди ночи вы просыпаетесь от низкого рычания. В темноте, на опушке леса, светятся несколько пар желтых глаз. 
+- Чертовы волки, - зло шепчете вы. 
+Они не Пожиратели, но явно голодны и опасны.</text><img name="article-img0">/online/player/mitril/images/0a81e97d-02ae-11f1-b78c-002590e2f74ea583b163e7056a835ad05dd26cac126a.jpg</img><script type="local1001_854437518"><![CDATA[mitril.scriptWrap(vars, [{"class":"dec","type":"r","val":"339557a2-47a9-4bec-9e6c-f3bf5b56fd13","amnt":1}]);]]></script><action class="btnBlue" do="local1001_854437518" goto="5c8e9e6e-02ae-11f1-b78c-002590e2f74e">Бросить им одну из своих пайков, чтобы отвлечь и выиграть время. Перейдите к 7.</action><action class="btnBlue" goto="5c8f0c5c-02ae-11f1-b78c-002590e2f74e">Срочно разжечь большой костёр и начать громко кричать, стуча по котелку. Перейдите к 8.</action><script type="local1002_740314218"><![CDATA[mitril.scriptWrap(vars, [{"class":"dec","type":"r","val":"4716a4f8-19e9-42b3-a806-fc8c722f7f0a","amnt":1}]);]]></script><action class="btnBlue" do="local1002_740314218" goto="5c83055b-02ae-11f1-b78c-002590e2f74e">Тихо, не делая резких движений, собрать вещи и отступить глубже в лес, пожертвовав отдыхом. Перейдите к 9.</action></article><article id="1880c4ab-02b1-11f1-b78c-002590e2f74e"><text>Работа грязная, но не сложная. Вы с фермером вдвоём поднимаете телегу, ставите временную заплатку на ось и закрепляете колесо. Старик благодарен. 
+— Спасибо, добрый человек. Бери, — он протягивает вам свёрток из прочной пеньковой верёвки с железным крюком на конце. — И совет: выше по течению, у левого берега, есть отмель. Там спокойнее. Да хранят тебя духи дорог.</text><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"1aa36136-8d6c-435d-8ac8-d54db140ccd7"},{"class":"dec","type":"r","val":"4716a4f8-19e9-42b3-a806-fc8c722f7f0a","amnt":1}]);]]></script><action class="btnBlue" goto="24ad13f8-02b1-11f1-b78c-002590e2f74e">Перейдите к 14.</action></article><article id="18903bab-02b1-11f1-b78c-002590e2f74e"><text>Поиски занимают несколько часов. Солнце уже высоко, когда вы находите узкий перекат, где река разделяется на рукава, и по крупным камням можно перепрыгнуть. Это рискованно, но вы справляетесь, лишь окунув ногу в воду. Однако усталость и потеря времени дают о себе знать.</text><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"dec","type":"r","val":"4716a4f8-19e9-42b3-a806-fc8c722f7f0a","amnt":1}]);]]></script><action class="btnBlue" goto="24ad13f8-02b1-11f1-b78c-002590e2f74e">Перейдите к 14.</action></article><article id="1891128a-02b1-11f1-b78c-002590e2f74e"><text>Вы решаете не медлить. Сняв сапоги и повесив их на шею, вы осторожно входите в ледяную воду. Течение сильнее, чем кажется! На середине реки вы оступаетесь на скользком камне. Вода накрывает вас с головой, холод парализует. Вас проносит несколько метров, пока вы не цепляетесь за корягу и не выкатываетесь на противоположный берег, весь в синяках. Фляга выскользнула и уплыла.</text><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"dec","type":"r","val":"4716a4f8-19e9-42b3-a806-fc8c722f7f0a","amnt":2},{"class":"dec","type":"k","val":"4fa71413-5538-4d9a-a068-88f47a4dd0de"}]);]]></script><action class="btnBlue" goto="24ad13f8-02b1-11f1-b78c-002590e2f74e">Перейдите к 14.</action></article><article id="24ad13f8-02b1-11f1-b78c-002590e2f74e"><text>Дорога ныряет под сень древнего леса. Воздух здесь мгновенно становится холоднее и тише. Птицы не поют. Солнечные лучи с трудом пробиваются сквозь плотный полог, создавая зелёный полумрак. Это Лес Теней — место, где даже до катастрофы путешественники старались не задерживаться. Теперь же, говорят, Пожиратели здесь — обычное дело. Нужно решить, как пересечь эту чащу.</text><img name="article-img0">/online/player/mitril/images/24ad13f8-02b1-11f1-b78c-002590e2f74e24692b936516e2b463e3e2fe8516b48c.jpg</img><action class="btnBlue" goto="a0bf6b65-02b1-11f1-b78c-002590e2f74e">Идти быстро и прямо по угадываемой тропе старой дороги, рискуя встречей. Перейдите к 15.</action><script type="local1001_350262545"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"r","val":"339557a2-47a9-4bec-9e6c-f3bf5b56fd13","amnt":1}], true);]]></script><action class="btnBlue" if="local1001_350262545" goto="a0bf0ab9-02b1-11f1-b78c-002590e2f74e">Двигаться медленно, краясь по самому краю леса, где больше света. Перейдите к 16.</action><script type="local1002_885969901"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"1aa36136-8d6c-435d-8ac8-d54db140ccd7","amnt":null}], true);]]></script><action class="btnBlue" if="local1002_885969901" goto="a08de38b-02b1-11f1-b78c-002590e2f74e">Если у вас есть Верёвка с крюком, можно попробовать найти и использовать старую охотничью тропу, проходящую выше по склону. Перейдите к 17.</action></article><article id="29456d0c-02ae-11f1-b78c-002590e2f74e"><text>Ботинки сидят как влитые. Подбитые гвоздями подошвы обещают уверенность на любом грунте. Вы чувствуете себя готовым к долгой дороге.</text><action class="btnBlue" goto="0a75127a-02ae-11f1-b78c-002590e2f74e">Перейдите к 3.</action></article><article id="2951f120-02ae-11f1-b78c-002590e2f74e"><text>Мазь густая, с резким запахом трав и дёгтя. Знахарь бормочет что-то о "силе земли, неподвластной магии". Вы прячете банку в сумку.</text><action class="btnBlue" goto="0a75127a-02ae-11f1-b78c-002590e2f74e">Перейдите к 3.</action></article><article id="2952265e-02ae-11f1-b78c-002590e2f74e"><text>Вы пополняете свои припасы. Еды теперь должно хватить с запасом.</text><action class="btnBlue" goto="0a75127a-02ae-11f1-b78c-002590e2f74e">Перейдите к 3.</action></article><article id="4691a59a-02b4-11f1-b78c-002590e2f74e"><text>— У меня только пять, — говорите вы, показывая монеты. — Остальное нужно на еду до Стромгарда. — Вы смотрите главарю прямо в глаза. Он долго смотрит на вас, затем плюет.
+— Вали. И чтоб духу твоего здесь не было. — Он забирает пять монет.</text><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"dec","type":"r","val":"1ebf7476-e6f1-47c3-8077-d0195a09f7a3","amnt":5}]);]]></script><action class="btnBlue" goto="a9bf23bd-02b3-11f1-b78c-002590e2f74e">Перейдите к 30.</action></article><article id="469d4955-02b4-11f1-b78c-002590e2f74e"><text>Вы не раздумывая выхватываете нож. Бандиты не ожидали такого. Вы раните первого, ударив по руке. Второй бьёт вас дубиной по плечу, боль пронзает тело, но вы удерживаетесь на ногах. Видя ваше упорство, третий отступает, увлекая за собой раненого. Вы остаётесь победителем, тихо ругаясь на онемевшее плечо [Жизнь -3]. Главное, кости целы, да и на земле остаётся небольшой мешочек, оброненный бандитами.</text><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"dec","type":"r","val":"4716a4f8-19e9-42b3-a806-fc8c722f7f0a","amnt":3},{"class":"inc","type":"r","val":"1ebf7476-e6f1-47c3-8077-d0195a09f7a3","amnt":5}]);]]></script><action class="btnBlue" goto="a9bf23bd-02b3-11f1-b78c-002590e2f74e">Перейдите к 30.</action></article><article id="469de715-02b4-11f1-b78c-002590e2f74e"><text>— Умный, — усмехается главарь, подбирая кошелёк. — Катись отсюда. И никому ни слова. — Бандиты растворяются среди камней. Вы целы, но ограблены.</text><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"dec","type":"r","val":"1ebf7476-e6f1-47c3-8077-d0195a09f7a3","amnt":10}]);]]></script><action class="btnBlue" goto="a9bf23bd-02b3-11f1-b78c-002590e2f74e">Перейдите к 30.</action></article><article id="5c83055b-02ae-11f1-b78c-002590e2f74e"><text>Тишина — ваш союзник. Вы медленно отползаете, затем встаёте и уходите, стараясь не шуметь. Сердце колотится, адреналин бьёт в виски. Вы идёте несколько часов в темноте, прежде чем решаетесь снова остановиться. Отдых плохой, силы на исходе.</text><action class="btnBlue" goto="6878d33a-02ae-11f1-b78c-002590e2f74e">Перейдите к 10.</action></article><article id="5c8e9e6e-02ae-11f1-b78c-002590e2f74e"><text>Вы отламываете кусок сушёного мяса и швыряете его в сторону от лагеря. Волки с рыком набрасываются на дар, затеяв короткую драку. Пока они заняты, вы быстро собираетесь и уходите, оставляя их позади.</text><action class="btnBlue" goto="6878d33a-02ae-11f1-b78c-002590e2f74e">Перейдите к 10.</action></article><article id="5c8f0c5c-02ae-11f1-b78c-002590e2f74e"><text>Вы подбрасываете в тлеющие угли сухих веток, и пламя взмывает вверх. Громкие крики и металлический лязг пугают зверей. Жёлтые глаза исчезают во тьме. Вы проводите остаток ночи у яркого огня, немного взволнованно, но в безопасности.</text><action class="btnBlue" goto="6878d33a-02ae-11f1-b78c-002590e2f74e">Перейдите к 10.</action></article><article id="5e92cb99-02b5-11f1-b78c-002590e2f74e"><text>Перед вами расстилается гигантская, потрескавшаяся равнина — русло древней реки. Это лабиринт из глиняных каньонов, солончаков и обожжённых солнцем плато. Карта здесь почти бесполезна. Ветер гуляет по ущельям, поднимая облака едкой солёной пыли. Нужно найти проход на север.</text><img name="article-img0">/online/player/mitril/images/5e92cb99-02b5-11f1-b78c-002590e2f74e2c9f7162a3b75b7c54a6dd707e7ebded.jpg</img><action class="btnBlue" goto="7143f9e6-02b5-11f1-b78c-002590e2f74e">Попытаться идти по самому крупному высохшему руслу. Перейдите к 35.</action><action class="btnBlue" goto="7144becc-02b5-11f1-b78c-002590e2f74e">Забраться на высокий утёс, чтобы осмотреться и наметить путь. Перейдите к 36.</action><script type="local1001_862823204"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"70cf61b2-73a3-4865-8beb-f004c978749b","amnt":null}], true);]]></script><action class="btnBlue" if="local1001_862823204" goto="71373314-02b5-11f1-b78c-002590e2f74e">Если у вас есть Светящиеся грибы, их можно растолочь и оставлять метки на камнях, чтобы не ходить по кругу. Перейдите к 37.</action></article><article id="6878d33a-02ae-11f1-b78c-002590e2f74e"><text>К полудню следующего дня вы достигаете реки Трески. Перед вами — печальное зрелище. Деревянный мост, служивший много лет, частично обрушен. Быстрые коричневые воды яростно бьют в уцелевшие опоры. На этом берегу стоит телега с поломанным колесом. Рядом, потирая поясницу, стоит пожилой фермер.
+— Эх, беда, — кряхтит он, заметив вас. — Мост еле держится, а у меня ось сломана. Положение... Могу одолжить верёвку с крюком, если поможешь колесо на место поставить. А иначе — вброд пытаться, но течение нынче бешеное. Или вдоль берега искать, где перейти.</text><img name="article-img0">/online/player/mitril/images/6878d33a-02ae-11f1-b78c-002590e2f74eb164a092f8729e779c9f40bbf0f69fa1.jpg</img><script type="local1001_391621678"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"1aa36136-8d6c-435d-8ac8-d54db140ccd7","amnt":null}]);]]></script><action class="btnBlue" do="local1001_391621678" goto="1880c4ab-02b1-11f1-b78c-002590e2f74e">Помочь починить телегу, чтобы получить верёвку. Перейдите к 11.</action><action class="btnBlue" goto="1891128a-02b1-11f1-b78c-002590e2f74e">Попытаться перейти вброд самостоятельно, не теряя времени. Перейдите к 12.</action><action class="btnBlue" goto="18903bab-02b1-11f1-b78c-002590e2f74e">Пойти вдоль реки в поисках более безопасного места. Перейдите к 13.</action></article><article id="6b49530e-0984-11f1-b78c-002590e2f74e"><text>Чтож, этот поход закончен, и вы, довольный заработком и собой, отправляетесь в Хауграв (до  Исафера значительно дальше) нехоженными тропами, а возвращаться в Варурду было бы совсем уж плохой идеей. 
+Удастся вам туда добраться, или нет - это уже не эта история...</text><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"achi","val":3},{"class":"fun","type":"f","val":"06464fea-359f-47c0-a0c0-67a851e65c9a"}]);]]></script></article><article id="712276e1-02b6-11f1-b78c-002590e2f74e"><text>Спуск с использованием верёвки проходит безопасно. Вы сэкономили силы и драгоценное время, избежав блужданий.</text><action class="btnBlue" goto="89b90964-02b5-11f1-b78c-002590e2f74e">Перейдите к 38.</action></article><article id="71373314-02b5-11f1-b78c-002590e2f74e"><text>Вы раздавливаете гриб и пальцем рисуете стрелу на камне. Слабый свет держится несколько минут, но этого достаточно, чтобы не сбиться. Вы движетесь уверенно, оставляя метки на развилках, и находите оптимальный путь через лабиринт. К сожалению, грибов у вас больше не осталось.</text><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"dec","type":"k","val":"70cf61b2-73a3-4865-8beb-f004c978749b"}]);]]></script><action class="btnBlue" goto="89b90964-02b5-11f1-b78c-002590e2f74e">Перейдите к 38.</action></article><article id="7143f9e6-02b5-11f1-b78c-002590e2f74e"><text>Русло извивается, раздваивается, приводит в тупик. Вы блуждаете несколько часов под палящим солнцем. Жажда становится невыносимой.  В конце концов, вам удаётся найти выход.</text><script type="local1001_371294546"><![CDATA[mitril.scriptWrap(vars, [{"class":"dec","type":"r","val":"4716a4f8-19e9-42b3-a806-fc8c722f7f0a","amnt":2}]);]]></script><action class="btnBlue" do="local1001_371294546" goto="89b90964-02b5-11f1-b78c-002590e2f74e">Перейдите к 38. (-2 Жизни)</action><script type="local1002_361315325"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"4fa71413-5538-4d9a-a068-88f47a4dd0de","amnt":null}], true);]]></script><script type="local1003_125989766"><![CDATA[mitril.scriptWrap(vars, [{"class":"dec","type":"k","val":"4fa71413-5538-4d9a-a068-88f47a4dd0de","amnt":null},{"class":"inc","type":"k","val":"3e52cc61-9b5e-4e08-8518-a68b26992504","amnt":null}]);]]></script><action class="btnBlue" if="local1002_361315325" do="local1003_125989766" goto="89b90964-02b5-11f1-b78c-002590e2f74e">Напиться воды из фляги и перейдите к 38. (-1 Жизни)</action></article><article id="7144becc-02b5-11f1-b78c-002590e2f74e"><text>Подъём на утёс крут и опасен. Камни сыплются из-под ног. На полпути вы оступаетесь! Если у вас есть Верёвка с крюком, вы успеваете зацепиться и избегаете падения. С вершины открывается чёткий вид на единственный проход.</text><script type="local1001_505700337"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"1aa36136-8d6c-435d-8ac8-d54db140ccd7","amnt":null}], true);]]></script><action class="btnBlue" if="local1001_505700337" goto="712276e1-02b6-11f1-b78c-002590e2f74e">Если есть Верёвка: перейдите к 39</action><script type="local1002_607553674"><![CDATA[mitril.scriptWrap(vars, [{"class":"dec","type":"r","val":"4716a4f8-19e9-42b3-a806-fc8c722f7f0a","amnt":2}]);]]></script><action class="btnBlue" do="local1002_607553674" goto="89b90964-02b5-11f1-b78c-002590e2f74e">Если нет Верёвки: вы падаете, Жизнь -2, затем перейдите к 38</action></article><article id="76e3b8a4-041a-11f1-b78c-002590e2f74e"><text>Спуск в долину проходит в гнетущей тишине. Воздух густой, им тяжело дышать. Главные ворота крепости распахнуты настежь. Перед ними, прислонившись к камню, стоит человек в потрёпанной, но некогда добротной кольчуге и плаще капитана стражников. Это капитан Горан. Его лицо измождено, но глаза горят надеждой.
+— Живой? И... не маг? — его хриплый голос полон удивления. — Изгой-курьер? Ларец принёс?</text><img name="article-img0">/online/player/mitril/images/76e3b8a4-041a-11f1-b78c-002590e2f74e93bf2873bccf42413c04b93425582df1.jpg</img><script type="local1001_125293889"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"d562f71d-658e-436b-ab4d-3917a204be30","amnt":null}], true);]]></script><script type="local1002_244544150"><![CDATA[return !mitril.checkCondition(vars.items, [{"type":"k","val":"cb429136-8e43-4c46-aadf-cc7f7efd60f0","amnt":null}], false);]]></script><text if="local1001_125293889" ifnot="local1002_244544150">Вы молча протягиваете ларец. Он быстро вскрывает сложный замок и просматривает пергаменты внутри. Его лицо мрачнеет.
+— Приказ об эвакуации... и отчёт об эксперименте Архимага. То, что я и боялся увидеть. — Он смотрит на вас. — Тень сгущается с каждым часом. Мне нужно уводить оставшихся. Но в цитадели ещё есть люди, раненные, напуганные. Без Изгоя, который может вести их сквозь эти... стаи... мы все погибнем. Поможешь вывести последних?</text><script type="local1003_689428119"><![CDATA[return !mitril.checkCondition(vars.items, [{"type":"k","val":"d562f71d-658e-436b-ab4d-3917a204be30","amnt":null}], false);]]></script><text ifnot="local1003_689428119"/><script type="local1004_590289843"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"cb429136-8e43-4c46-aadf-cc7f7efd60f0","amnt":null},{"type":"k","val":"d562f71d-658e-436b-ab4d-3917a204be30","amnt":null}], true);]]></script><text if="local1004_590289843">Капитан Горан смотрит на вас. Если у вас есть особенность "Благословение отчаявшихся" (вы отдали деньги беженцам) и при этом у вас НЕТ денег (0 серебряных), он замечает вашу потрёпанную, но чистую сумку и решительный взгляд.
+— Ты пришёл без гроша, но не с пустыми руками. Что случилось?</text><script type="local1005_695580463"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"d562f71d-658e-436b-ab4d-3917a204be30","amnt":null}], true);]]></script><script type="local1006_372852657"><![CDATA[return !mitril.checkCondition(vars.items, [{"type":"k","val":"cb429136-8e43-4c46-aadf-cc7f7efd60f0","amnt":null}], false);]]></script><script type="local1007_818212872"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"6bfd80a2-9b7c-4a90-b6be-78541d4245dc","amnt":null},{"class":"inc","type":"r","val":"1ebf7476-e6f1-47c3-8077-d0195a09f7a3","amnt":15}]);]]></script><action class="btnBlue" if="local1005_695580463" ifnot="local1006_372852657" do="local1007_818212872" goto="8b4adb32-041a-11f1-b78c-002590e2f74e">Согласиться помочь без лишних слов. Перейдите к 46.</action><script type="local1008_142238861"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"d562f71d-658e-436b-ab4d-3917a204be30","amnt":null}], true);]]></script><script type="local1009_809644560"><![CDATA[return !mitril.checkCondition(vars.items, [{"type":"k","val":"cb429136-8e43-4c46-aadf-cc7f7efd60f0","amnt":null}], false);]]></script><action class="btnBlue" if="local1008_142238861" ifnot="local1009_809644560" goto="8b4adc66-041a-11f1-b78c-002590e2f74e">Вежливо, но твёрдо попросить оплату за дополнительный и смертельно опасный труд. Перейдите к 47.</action><script type="local1010_145250113"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"d562f71d-658e-436b-ab4d-3917a204be30","amnt":null}], true);]]></script><script type="local1011_720276307"><![CDATA[return !mitril.checkCondition(vars.items, [{"type":"k","val":"cb429136-8e43-4c46-aadf-cc7f7efd60f0","amnt":null}], false);]]></script><action class="btnBlue" if="local1010_145250113" ifnot="local1011_720276307" goto="8b3eeacf-041a-11f1-b78c-002590e2f74e">Отказаться. Ваш контракт выполнен — ларец доставлен. Перейдите к 48.</action><script type="local1012_608420751"><![CDATA[return !mitril.checkCondition(vars.items, [{"type":"k","val":"d562f71d-658e-436b-ab4d-3917a204be30","amnt":null}], false);]]></script><action class="btnBlue" ifnot="local1012_608420751" goto="e5b4d67d-0421-11f1-b78c-002590e2f74e">Солгать, что потерял его в пути. Перейдите к 54.</action><script type="local1013_659109178"><![CDATA[return !mitril.checkCondition(vars.items, [{"type":"k","val":"d562f71d-658e-436b-ab4d-3917a204be30","amnt":null}], false);]]></script><action class="btnBlue" ifnot="local1013_659109178" goto="e5a7ef5b-0421-11f1-b78c-002590e2f74e">Честно рассказать о сделке. Перейдите к 55.</action><script type="local1014_679600368"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"cb429136-8e43-4c46-aadf-cc7f7efd60f0","amnt":null},{"type":"k","val":"d562f71d-658e-436b-ab4d-3917a204be30","amnt":null}], true);]]></script><action class="btnBlue" if="local1014_679600368" goto="a9c3fbfc-0424-11f1-b78c-002590e2f74e">«Помог тем, кому было хуже.» Перейдите к 57.</action></article><article id="89b90964-02b5-11f1-b78c-002590e2f74e"><text>Вы, наконец, выбираетесь из палящего ада Дельты. Перед вами открывается вид на чёрные зубцы гор. Между ними — узкая щель: Ущелье Призраков, последняя преграда перед долиной Рейскена.</text><action class="btnBlue" goto="9044b258-02b5-11f1-b78c-002590e2f74e">Перейдите к 40.</action></article><article id="8b3eeacf-041a-11f1-b78c-002590e2f74e"><text>Вы качаете головой. 
+— Мой контракт — доставить ларец. Он у вас. 
+Капитан смотрит на вас с разочарованием, но кивает. 
+— Что ж... Спасибо за это. Путь обратно будет не легче. — Он поворачивается и уходит в зияющую черноту ворот, чтобы спасать своих людей в одиночку. 
+Вы разворачиваетесь и идёте обратно, к Велгару, с  тяжёлым камнем на душе. Вы сделали свою работу. Ни больше, ни меньше.</text><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"fun","type":"f","val":"06464fea-359f-47c0-a0c0-67a851e65c9a"}]);]]></script></article><article id="8b4adb32-041a-11f1-b78c-002590e2f74e"><text>Вы киваете. Вместе с капитаном вы пробираетесь в охваченную Тенью цитадель, находите последних двенадцать выживших — стражников, горожан, ребёнка. Вы идёте впереди, ведя их, как живой щит. Пожиратели скользят рядом, иногда почти касаясь людей, но игнорируя вас. Вы проводите группу через город и ущелье к относительной безопасности. Капитан, на прощание, сжимает ваше плечо.
+— Ты спас не только нас. Ты дал королевству надежду. — Он снимает с шеи простой стальной амулет в форме башни. — Это не магический. Это символ. Носи его. И это... твоя награда. — Он даёт вам тяжёлый кошелёк.  Ваше путешествие завершено. Вы — герой, чья история станет легендой.</text><img name="article-img1">/online/player/mitril/images/8b4adb32-041a-11f1-b78c-002590e2f74ef997182901d845689e3ca17398eec2d9.jpg</img><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"fun","type":"f","val":"06464fea-359f-47c0-a0c0-67a851e65c9a"},{"class":"achi","val":2}]);]]></script></article><article id="8b4adc66-041a-11f1-b78c-002590e2f74e"><text>— У меня почти ничего нет, — честно говорит капитан. — Только это. — Он снимает с пальца серебряный перстень с небольшим тёмным камнем. — И даю слово: если выживу, долг верну вдвойне. Вы соглашаетесь. Работа опасна, но вы справляетесь, выводя людей. Капитан сдерживает слово, отдавая перстень и немного денег из запасов цитадели.  Вы выполнили работу и получили плату. Честная сделка в бесчестное время.</text><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"fun","type":"f","val":"06464fea-359f-47c0-a0c0-67a851e65c9a"}]);]]></script></article><article id="9044b258-02b5-11f1-b78c-002590e2f74e"><text>Ущелье мрачно даже при дневном свете. Высокие, почти сходящиеся стены отбрасывают глубокую тень. Ветер, врываясь в узкий проход, воет, как призрак. Под ногами хрустит щебень. Воздух здесь странно трещит, когда вы проходите через него, волосы странно встают на голове, пугая вас.</text><img name="article-img0">/online/player/mitril/images/9044b258-02b5-11f1-b78c-002590e2f74e4d013d0e3837c3f3cfdf75c0c512bf91.jpg</img><script type="local1001_521294849"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"r","val":"4716a4f8-19e9-42b3-a806-fc8c722f7f0a","amnt":4}], true);]]></script><action class="btnBlue" if="local1001_521294849" goto="a69e8054-02b6-11f1-b78c-002590e2f74e">Пройдти ущелье как можно быстрее, не задерживаясь. Перейдите к 41.</action><script type="local1002_885566700"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"r","val":"339557a2-47a9-4bec-9e6c-f3bf5b56fd13","amnt":1},{"type":"r","val":"4716a4f8-19e9-42b3-a806-fc8c722f7f0a","amnt":4}], true);]]></script><action class="btnBlue" if="local1002_885566700" goto="a69e8860-02b6-11f1-b78c-002590e2f74e">Двигаться осторожно, внимательно смотря под ноги и на стены. Перейдите к 42.</action><script type="local1003_542383813"><![CDATA[return !mitril.checkCondition(vars.items, [{"type":"r","val":"4716a4f8-19e9-42b3-a806-fc8c722f7f0a","amnt":4}], false);]]></script><action class="btnBlue" ifnot="local1003_542383813" goto="a691aa7f-02b6-11f1-b78c-002590e2f74e">Если ваше здоровье сильно истощено (Жизнь &lt; 4), можно попробовать найти опасный обход по осыпающемуся склону. Перейдите к 43.</action></article><article id="90681e59-0423-11f1-b78c-002590e2f74e"><text>Главарь смотрит на вас, и, несмотря на вопли остальных, предлагающих проверить ваши вещи, мотает головой:
+- Проходи. Если надоест мотаться по дорогам, возвращайся. И приводи всех, кого спасешь.</text><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"998857ac-f89c-400f-a0de-d239d95e49f4"}]);]]></script><action class="btnBlue" goto="a9bf23bd-02b3-11f1-b78c-002590e2f74e">Перейдите в 30.</action></article><article id="9f2e2437-02b3-11f1-b78c-002590e2f74e"><text>Вы обходите курган с востока. Здесь тихо и безлюдно. С наступлением сумерек вы замечаете у самого подножия холма слабое, мерцающее голубоватое свечение. Подойдя ближе, вы видите, что это не духи, а редкие грибы со светящимися шляпками. Они растут на разломанных древних камнях с высеченными узорами. Вы аккуратно срезаете несколько грибов ножом. Они могут быть ценны алхимикам.</text><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"70cf61b2-73a3-4865-8beb-f004c978749b"}]);]]></script><action class="btnBlue" goto="a9bf23bd-02b3-11f1-b78c-002590e2f74e">Перейдите к 30.</action></article><article id="9f3c9b0d-02b3-11f1-b78c-002590e2f74e"><text>Обход отнимает целый лишний день. Вы идёте по бездорожью, тратя силы и припасы.</text><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"dec","type":"r","val":"339557a2-47a9-4bec-9e6c-f3bf5b56fd13","amnt":1}]);]]></script><action class="btnBlue" goto="a9bf23bd-02b3-11f1-b78c-002590e2f74e">Перейдите к 30.</action></article><article id="9f3d005b-02b3-11f1-b78c-002590e2f74e"><text>Вы крадётесь между валунов у подножия кургана. 
+Почти у самой вершины склона ваша нога соскальзывает, и вы с шумом скатываетесь вниз, поднимая гравий. Почти сразу из-за камней появляются трое оборванных, грязных людей с дубинами и ржавыми тесаками. Глаза одного из них цепляются за прочный ларец у вас за спиной.
+— Ну что, путник, — хрипит самый крупный. — Плати за проезд. Кошелёк на землю. Быстро. Или, может, то, что в ящичке, ценнее монет?</text><img name="article-img0">/online/player/mitril/images/9f3d005b-02b3-11f1-b78c-002590e2f74e1ade4973be3c4f1744f3aa63a39b2683.jpg</img><script type="local1001_414426951"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"r","val":"1ebf7476-e6f1-47c3-8077-d0195a09f7a3","amnt":10}], true);]]></script><action class="btnBlue" if="local1001_414426951" goto="469de715-02b4-11f1-b78c-002590e2f74e">Отдать все деньги (10 серебряных). Перейдите к 31. [Деньги -10]</action><action class="btnBlue" goto="469d4955-02b4-11f1-b78c-002590e2f74e">Попытаться дать отпор с оружием в руках. Перейдите к 32.</action><script type="local1002_274234594"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"r","val":"1ebf7476-e6f1-47c3-8077-d0195a09f7a3","amnt":5}], true);]]></script><action class="btnBlue" if="local1002_274234594" goto="4691a59a-02b4-11f1-b78c-002590e2f74e">Попытаться договориться, отдав только половину. Перейдите к 33.</action><action class="btnBlue" goto="bcfa5f6c-0420-11f1-b78c-002590e2f74e">«В ларце — секреты Стромгарда. Они стоят дороже золота.» (Предложить сделку). Перейдите к 53.</action><script type="local1003_734280745"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"cb429136-8e43-4c46-aadf-cc7f7efd60f0","amnt":null}], true);]]></script><action class="btnBlue" if="local1003_734280745" goto="90681e59-0423-11f1-b78c-002590e2f74e">"У меня нет денег. Я возвращаюсь в Стормгард, чтобы спаси оставшихся там людей". Перейдите к 70.</action></article><article id="a08de38b-02b1-11f1-b78c-002590e2f74e"><text>Вы находите заросшую, но всё ещё различимую тропу, которая идёт по склону холма, огибая самую глухую часть леса. В одном месте тропа обрывается небольшим уступом. Вы закидываете крюк на дерево выше и безопасно спускаетесь. На дне небольшого оврага вы замечаете странное каменное образование, похожее на грубо вырезанную арку, почти скрытую мхом. От неё исходит лёгкое, едва уловимое свечение. Вы не встретили ни одной тени.</text><action class="btnBlue" goto="ae195dc4-02b1-11f1-b78c-002590e2f74e">Перейдите к 21.</action></article><article id="a0bf0ab9-02b1-11f1-b78c-002590e2f74e"><text>Двигаясь по опушке, вы делаете большой крюк. Вы слышите из глубины леса странные шёпоты, похожие на перекрёстный ветер, но не видите угроз. Однако такая осторожность отнимает время и силы. Желудок напоминает о себе, и вы вынуждены перекусить.</text><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"dec","type":"r","val":"339557a2-47a9-4bec-9e6c-f3bf5b56fd13","amnt":1}]);]]></script><action class="btnBlue" goto="ae195dc4-02b1-11f1-b78c-002590e2f74e">Перейдите к 21.</action></article><article id="a0bf6b65-02b1-11f1-b78c-002590e2f74e"><text>Вы шагаете быстро, стараясь не оглядываться. Туман стелется между стволами. Внезапно, впереди, из тени старого дуба, выплывает бесформенное пятно тьмы. Оно не имеет чётких очертаний, просто поглощает свет вокруг себя. Это Пожиратель. Он замирает, перекрывая тропу. Вы не чувствуете магии, но ощущаете ледяной озноб. Он игнорирует вас, но путь закрыт.</text><action class="btnBlue" goto="e9de9e2a-02b1-11f1-b78c-002590e2f74e">Резко свернуть с тропы в чащу, пытаясь обойти. Перейдите к 18.</action><action class="btnBlue" goto="e9dd911d-02b1-11f1-b78c-002590e2f74e">Бросить что-нибудь в сторону, чтобы отвлечь (например, паёк). Перейдите к 19.</action><action class="btnBlue" goto="e9ceec63-02b1-11f1-b78c-002590e2f74e">Сделать глубокий вдох и медленно, не отводя взгляда, пройти прямо сквозь него. Перейдите к 20.</action></article><article id="a449a3ae-0422-11f1-b78c-002590e2f74e"><text>Вы подходите к семье и молча вкладываете весь свой аванс — 20 серебряных — в руку ошеломлённой матери. «На еду и кров», — только и говорите вы. Она пытается что-то сказать, заплакать, но вы уже уходите, чувствуете странную лёгкость. У вас не осталось денег, но есть три пайка, нож и фляга. И чувство, что вы поступили правильно.</text><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"dec","type":"r","val":"1ebf7476-e6f1-47c3-8077-d0195a09f7a3","amnt":20},{"class":"inc","type":"k","val":"cb429136-8e43-4c46-aadf-cc7f7efd60f0"}]);]]></script><action class="btnBlue" goto="0a81e97d-02ae-11f1-b78c-002590e2f74e">Перейдите к 2.</action></article><article id="a691aa7f-02b6-11f1-b78c-002590e2f74e"><text>Обход — это риск. Вы карабкаетесь по осыпающемуся склону. Если на вас есть Ботинки, они обеспечивают отличное сцепление.</text><script type="local1001_748900922"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"ca452792-e64c-468d-ab89-1030788bfeea","amnt":null}], true);]]></script><script type="local1002_955508342"><![CDATA[mitril.scriptWrap(vars, [{"class":"dec","type":"r","val":"4716a4f8-19e9-42b3-a806-fc8c722f7f0a","amnt":1}]);]]></script><action class="btnBlue" if="local1001_748900922" do="local1002_955508342" goto="c1d6d036-02b6-11f1-b78c-002590e2f74e">Если есть Ботинки: Жизнь -1. Перейдите к 44.</action><script type="local1003_705167352"><![CDATA[return !mitril.checkCondition(vars.items, [{"type":"k","val":"ca452792-e64c-468d-ab89-1030788bfeea","amnt":null}], false);]]></script><script type="local1004_784746852"><![CDATA[mitril.scriptWrap(vars, [{"class":"dec","type":"r","val":"4716a4f8-19e9-42b3-a806-fc8c722f7f0a","amnt":3}]);]]></script><action class="btnBlue" ifnot="local1003_705167352" do="local1004_784746852" goto="c1d6d036-02b6-11f1-b78c-002590e2f74e">Если нет Ботинок: вы поскальзываетесь и катитесь вниз, Жизнь -3]. Перейдите к 44.</action></article><article id="a69e8054-02b6-11f1-b78c-002590e2f74e"><text>Вы почти бежите. На выходе из ущелья раздаётся громкий треск! Сверху обваливается град камней размером с кулак. Один больно бьёт вас по спине, другой — по ноге. Вы падаете, но затем встаёте и выползаете на свет.</text><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"dec","type":"r","val":"4716a4f8-19e9-42b3-a806-fc8c722f7f0a","amnt":2}]);]]></script><action class="btnBlue" goto="c1d6d036-02b6-11f1-b78c-002590e2f74e">Вы падаете, но затем встаёте и выползаете на свет. [Жизнь -2]. Перейдите к 44.</action></article><article id="a69e8860-02b6-11f1-b78c-002590e2f74e"><text>Вы идёте медленно. В одном месте замечаете, что основная тропа завалена, но выше есть узкая полка. Вы идёте по ней. Путь безопаснее, но гораздо длиннее. Приходится сделать привал и перекусить.</text><script type="local1001_152267145"><![CDATA[mitril.scriptWrap(vars, [{"class":"dec","type":"r","val":"339557a2-47a9-4bec-9e6c-f3bf5b56fd13","amnt":1}]);]]></script><action class="btnBlue" do="local1001_152267145" goto="c1d6d036-02b6-11f1-b78c-002590e2f74e">Приходится сделать привал и перекусить. [Паёк -1]. Перейдите к 44.</action></article><article id="a9bf23bd-02b3-11f1-b78c-002590e2f74e"><text>Вы покидаете мрачную тень Старого Кургана. Впереди — последний большой этап: Высохшая Дельта.</text><action class="btnBlue" goto="5e92cb99-02b5-11f1-b78c-002590e2f74e">Перейдите к 34.</action></article><article id="a9c3fbfc-0424-11f1-b78c-002590e2f74e"><text>Вы коротко объясняете, что отдали всё беженцам у ворот Варурда. Капитан Горан задумывается, а затем медленно кивает. «Значит, ларец ты нёс не ради денег. Хорошо. Лучше такой проводник, чем целый отряд наёмников-магов». Он не предлагает вам денег и не просит помочь с эвакуацией за плату. Он говорит иначе: «Люди в цитадели сломлены. Им нужна не столько защита, сколько надежда. Человек, который отдал последнее другим... Ты можешь дать им эту надежду. Пойдёшь со мной? Не как наёмник. Как человек».
+Вы соглашаетесь. Вы ведёте людей не потому, что вас наняли, и не потому, что вы герой. Вы идёте, потому что это правильно. Вас не окружает ореол славы, и вас не ждёт богатая награда. 
+Но когда вы выводите последнего ребёнка из города, мать, та самая, которой вы отдали деньги, узнаёт вас. Она не говорит ни слова. Она просто кланяется. И в этом поклоне — благодарность целого города, которого больше нет. Вы остаётесь помогать выжившим строить новое поселение. Вы не курьер и не герой легенд. Вы — просто человек, который остался человеком, когда мир вокруг обезумел. И в новом мире, который родится из пепла, именно такие люди будут его основой.</text><img name="article-img1">/online/player/mitril/images/a9c3fbfc-0424-11f1-b78c-002590e2f74e48cdbda6af76120444e124cc28c1c81f.jpg</img><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"achi","val":1},{"class":"fun","type":"f","val":"06464fea-359f-47c0-a0c0-67a851e65c9a"}]);]]></script></article><article id="ae195dc4-02b1-11f1-b78c-002590e2f74e"><text>Лес остаётся позади. Перед вами, на перекрёстке дорог, стоит постоялый двор «Последний Рубеж». Это массивное, неуютное здание из тёмного камня. Дым из трубы — единственный признак жизни на многие мили вокруг. Внутри пахнет дымом, пивом и потом. Хозяин, бородатый детина с шрамом через глаз, мрачно смотрит на вас:
+— Комнат нет. Место в сарае — 2 серебряных. Похлёбка — 3. А информация... информация сейчас дороже хлеба. Пять серебряных.</text><img name="article-img0">/online/player/mitril/images/ae195dc4-02b1-11f1-b78c-002590e2f74e402bbc61b829f936e7b1aaf24e062a16.jpg</img><script type="local1001_901151611"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"r","val":"1ebf7476-e6f1-47c3-8077-d0195a09f7a3","amnt":2}], true);]]></script><action class="btnBlue" if="local1001_901151611" goto="e4da8927-02b2-11f1-b78c-002590e2f74e">Заплатить за ночлег в сарае. Перейдите к 22. [Деньги -2]</action><script type="local1002_601593895"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"r","val":"1ebf7476-e6f1-47c3-8077-d0195a09f7a3","amnt":3}], true);]]></script><action class="btnBlue" if="local1002_601593895" goto="e4da3701-02b2-11f1-b78c-002590e2f74e">Купить еду. Перейдите к 23. [Деньги -3]</action><script type="local1003_413907321"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"r","val":"1ebf7476-e6f1-47c3-8077-d0195a09f7a3","amnt":5}], true);]]></script><action class="btnBlue" if="local1003_413907321" goto="e4d9c38c-02b2-11f1-b78c-002590e2f74e">Купить информацию. Перейдите к 24. [Деньги -5]</action><action class="btnBlue" goto="e4cac802-02b2-11f1-b78c-002590e2f74e">Вежливо отказаться и уйти, экономя ресурсы. Перейдите к 25.</action></article><article id="bcfa5f6c-0420-11f1-b78c-002590e2f74e"><text>Бандиты переглядываются. Главарь прищуривается. «Секреты? Мне нужна еда и сталь, а не секреты».
+— В нём отчёты об эксперименте, который погасил Реликт, — говорите вы, понизив голос, и напуская значительности на себя и свое дикое вранье. Главное, чтобы вам поверили сейчас, а пока они вскроют ларец, уже не важно будет, что они там найдут. — Тот, кто это поймёт, сможет контролировать Тень. Или создавать её. Представляешь, какая это власть? Цена — безопасный проход и доля с будущих прибылей.
+Идея власти над ужасом, который вселяет страх, оказывается сильнее жадности к монетам. «Ладно, — кивает главарь. — Оставляй ларец. И говори, где искать того, кто за это заплатит».
+Вы отдаёте ларец и указываете им на определённых людей из совета Варурды, которым, как вы думаете, будут заинтересованы в таких знаниях. Бандиты пропускают вас. Вы теряете ларец, но получаете их «покровительство» и небольшую сумму на дорогу. Ваша миссия провалена, но вы живы и при деньгах.</text><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"dec","type":"k","val":"d562f71d-658e-436b-ab4d-3917a204be30"},{"class":"inc","type":"r","val":"1ebf7476-e6f1-47c3-8077-d0195a09f7a3","amnt":5}]);]]></script><action class="btnBlue" goto="a9bf23bd-02b3-11f1-b78c-002590e2f74e">Перейдите к 30, если решаете все же добраться до Рейскена.</action><action class="btnBlue" goto="6b49530e-0984-11f1-b78c-002590e2f74e">Если вы хотите заняться другими делами, то 99.</action></article><article id="c1d6d036-02b6-11f1-b78c-002590e2f74e"><text>Вы выходите из ущелья. Перед вами, внизу, лежит долина. И в её центре — Рейскен. Город мёртв. Над ним не просто тьма, а пульсирующее чёрно-багровое марево, искажающее очертания башен и стен. Даже море в глубокой бухте, на берегу которой он стоит, кажется не синим, а черным. Тишина отсюда кажется громче любого шума. Ваш путь подходит к концу.</text><img name="article-img0">/online/player/mitril/images/c1d6d036-02b6-11f1-b78c-002590e2f74eea5ceae43333984a9f4b29d42eb27ea9.jpg</img><action class="btnBlue" goto="76e3b8a4-041a-11f1-b78c-002590e2f74e">Перейдите к 45.</action></article><article id="d2fd489a-041a-11f1-b78c-002590e2f74e"><text>Ваше путешествие заканчивается здесь, в безвестности.</text><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"608f45f0-be5d-49b7-b662-d4fb79fb1efb"},{"class":"fun","type":"f","val":"06464fea-359f-47c0-a0c0-67a851e65c9a"}]);]]></script></article><article id="e4cac802-02b2-11f1-b78c-002590e2f74e"><text>Вы киваете и выходите. Ночь застаёт вас в открытом поле. Вы устраиваетесь под одиноким деревом. Ночь холодная, ветреная, и вы постоянно просыпаетесь. Отдых плохой.</text><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"dec","type":"r","val":"4716a4f8-19e9-42b3-a806-fc8c722f7f0a","amnt":1}]);]]></script><action class="btnBlue" goto="ef8402dc-02b2-11f1-b78c-002590e2f74e">Перейдите к 26.</action></article><article id="e4d9c38c-02b2-11f1-b78c-002590e2f74e"><text>Хозяин наклоняется ближе, его голос становится шепотом: «Впереди Старый Курган. Там теперь банда ошивается. Говорят, сбежавшие солдаты. Живут грабежом. И ещё... если увидишь у кургана синие огоньки — не подходи. Это не огни. Духи старые там водятся, с ума сведут».</text><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"dec","type":"r","val":"1ebf7476-e6f1-47c3-8077-d0195a09f7a3","amnt":5},{"class":"inc","type":"k","val":"df46fe9a-da7f-443b-89ba-e9b7758a740c"}]);]]></script><action class="btnBlue" goto="ef8402dc-02b2-11f1-b78c-002590e2f74e">Перейдите к 26.</action></article><article id="e4da3701-02b2-11f1-b78c-002590e2f74e"><text>Похлёбка жидкая, но горячая и сытная. Вы съедаете её, чувствуя, как тепло разливается по телу. Это лучше, чем сухой паёк. [Считайте, что сохранили 1 порцию пайка].</text><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"dec","type":"r","val":"1ebf7476-e6f1-47c3-8077-d0195a09f7a3","amnt":3},{"class":"inc","type":"r","val":"339557a2-47a9-4bec-9e6c-f3bf5b56fd13","amnt":1}]);]]></script><action class="btnBlue" goto="ef8402dc-02b2-11f1-b78c-002590e2f74e">Перейдите к 26.</action></article><article id="e4da8927-02b2-11f1-b78c-002590e2f74e"><text>Сарай полон сена и пахнет лошадьми, но здесь сухо и нет сквозняков. Вы снимаете мокрую обувь и крепко спите, впервые за несколько дней. Утром чувствуете себя отдохнувшим.</text><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"dec","type":"r","val":"1ebf7476-e6f1-47c3-8077-d0195a09f7a3","amnt":2},{"class":"inc","type":"r","val":"4716a4f8-19e9-42b3-a806-fc8c722f7f0a","amnt":1}]);]]></script><action class="btnBlue" goto="ef8402dc-02b2-11f1-b78c-002590e2f74e">Перейдите к 26.</action></article><article id="e5a7ef5b-0421-11f1-b78c-002590e2f74e"><text>Вы признаётесь во всём. Капитан Горан в ярости. «Ты продал нашу последнюю надежду шайке грабителей?!» Он хватается за меч, но его останавливает видение разрушенного города за спиной. «Убирайся. И молись, чтобы я никогда не нашёл тебя. Или этих твоих «партнёров».» Вы бежите из долины, осознавая глубину своего падения. Вы — не просто неудачник. Вы — предатель, чьё имя будет проклято во всем королевстве Сторкиа.</text><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"fun","type":"f","val":"06464fea-359f-47c0-a0c0-67a851e65c9a"},{"class":"achi","val":3}]);]]></script></article><article id="e5b4d67d-0421-11f1-b78c-002590e2f74e"><text>Вы говорите, что ларец утонул в реке или был потерян при нападении Пожирателей. Глаза капитана темнеют от разочарования и подозрения. Он не верит вам, но доказательств нет. Он отворачивается. «Что ж. Путь обратный знаешь». Вы возвращаетесь в Велгар с деньгами, добытыми предательством. Через несколько недель до вас доходят слухи о новой банде, которая использует какие-то странные устройства и наводит ужас на окрестности. Вы понимаете, что сделали. Ваша совесть будет вашей единственной спутницей до конца дней.</text><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"fun","type":"f","val":"06464fea-359f-47c0-a0c0-67a851e65c9a"},{"class":"achi","val":3}]);]]></script></article><article id="e92aa4d5-02ad-11f1-b78c-002590e2f74e"><text>Вы стоите в конторе торговца Элрика, разглядывая потертую карту. Элрик, человек с усталыми глазами, кладёт на стол массивный ларец, окованный сталью.
+— Неделю нет вестей. Капитан Горан — последний, кто ещё держался там. В этом — приказы и... кое-что ещё. То, что нельзя доверить магу. Пожиратели выпивают их силу первыми. А вы, Изгои, им не интересны. — Он откашлялся, смутившись. — Аванс — двадцать серебряных. Держись Главной Дороги. И не нанимай магическую охрану — в Тени она бесполезна. Только свой ум, ноги и вот это. — Он указал на ларец.
+Вы выходите на улицу. Солнце уже клонится к западу. У главных ворот города столпотворение: семьи с узлами, торговые караваны, несколько стражников, пытающихся навести порядок. Ваш путь лежит на север, а потом на восток, в самое сердце надвигающейся Тени.</text><img name="article-img0">/online/player/mitril/images/e92aa4d5-02ad-11f1-b78c-002590e2f74e9f142174cb4ca0b7a70128bb9cc6c8fb.jpg</img><action class="btnBlue" goto="0a81e97d-02ae-11f1-b78c-002590e2f74e">Тщательно проверить снаряжение и сразу отправиться в путь, пока светит солнце. Перейдите к 2.</action><action class="btnBlue" goto="0a75127a-02ae-11f1-b78c-002590e2f74e">Вернуться на рынок. Возможно, получится найти что-то полезное перед дорогой. Перейдите к 3.</action></article><article id="_mitril_triggers"><text/><script type="local1001_364181456"><![CDATA[return !mitril.checkCondition(vars.items, [{"type":"r","val":"4716a4f8-19e9-42b3-a806-fc8c722f7f0a","amnt":1}], false);]]></script><action class="btnBlue" ifnot="local1001_364181456" goto="d2fd489a-041a-11f1-b78c-002590e2f74e">ЖИЗНЬ становится равным или меньше 0, вы погибаете. Ваше путешествие заканчивается здесь, в безвестности. Конец.</action></article><article id="e9ceec63-02b1-11f1-b78c-002590e2f74e"><text>Это самый странный опыт в вашей жизни. Вы делаете шаг в холодную, плотную темноту. Вас пронизывает до костей ледяной холод, в ушах звучит далёкий крик. Вы ничего не видите, но чувствуете, как что-то скользит вокруг, не касаясь. Через три шага вы выходите на свет. Тень остаётся позади. Вы живы и невредимы физически, но нервы напряжены до предела.</text><action class="btnBlue" goto="ae195dc4-02b1-11f1-b78c-002590e2f74e">Перейдите к 21.</action></article><article id="e9dd911d-02b1-11f1-b78c-002590e2f74e"><text>Вы бросаете кусок провизии в сторону от твари. Паёк с шумом падает в листву. Пожиратель не шелохнулся. Еда его не интересует. Однако шум привлёк внимание! Из-за соседнего дерева выплывает вторая тень, больше первой. Паника охватывает вас. Вы резко разворачиваетесь и бежите, не разбирая дороги. В спешке вы роняете что-то из сумки.</text><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"dec","type":"r","val":"4716a4f8-19e9-42b3-a806-fc8c722f7f0a","amnt":1},{"class":"dec","type":"k","val":"dfc1fe3a-fb15-4ef9-9df4-4f3f89be9ec1"},{"class":"dec","type":"r","val":"339557a2-47a9-4bec-9e6c-f3bf5b56fd13","amnt":1}]);]]></script><action class="btnBlue" goto="ae195dc4-02b1-11f1-b78c-002590e2f74e">Перейдите к 21.</action></article><article id="e9de9e2a-02b1-11f1-b78c-002590e2f74e"><text>Чаща густая и колючая. Вы спотыкаетесь о скрытый корень и с глухим стуком падаете, подвернув ногу. Острая боль пронзает лодыжку. Стиснув зубы, вы поднимаетесь и, хромая, уходите прочь от того места. Тень осталась позади, но травма замедлит вас.</text><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"dec","type":"r","val":"4716a4f8-19e9-42b3-a806-fc8c722f7f0a","amnt":2}]);]]></script><action class="btnBlue" goto="ae195dc4-02b1-11f1-b78c-002590e2f74e">Перейдите к 21.</action></article><article id="ef8402dc-02b2-11f1-b78c-002590e2f74e"><text>Дорога ведёт к подножию огромного, поросшего травой холма — Старого Кургана. Место дышит древностью и тоской. Согласно карте и слухам, здесь опасно. Вдалеке, с другой стороны холма, поднимается тонкая струйка дыма.</text><img name="article-img0">/online/player/mitril/images/ef8402dc-02b2-11f1-b78c-002590e2f74e91ae199e4a4fda2cc003fc30c07fe536.jpg</img><action class="btnBlue" goto="9f3c9b0d-02b3-11f1-b78c-002590e2f74e">Обойти курган широкой дугой, чтобы избежать встречи. Перейдите к 27.</action><action class="btnBlue" goto="9f3d005b-02b3-11f1-b78c-002590e2f74e">Попытаться пробраться прямо, стараясь быть тихим и незаметным. Перейдите к 28.</action><script type="local1001_859815636"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"df46fe9a-da7f-443b-89ba-e9b7758a740c","amnt":null}], true);]]></script><action class="btnBlue" if="local1001_859815636" goto="9f2e2437-02b3-11f1-b78c-002590e2f74e">Если у вас есть информация от хозяина, вы вспоминаете про "синие огни". Можно попробовать подойти к кургану с восточной стороны, в стороне от дыма. Перейдите к 29.</action></article></book>

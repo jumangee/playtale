@@ -1,0 +1,1555 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<book guid="a86a2525-330c-11ec-9c87-002590e2f74e">
+  <article id="mitril">
+    <script type="onload"><![CDATA[var mitrilSetup = (function(rawSetup) {
+	function parseMixBoolean(value) {
+		if (value === 'true') return true;
+		if (value === 'false') return false;
+		return parseInt(value);
+	}
+	var setup = {
+		groups: {},
+		items: {},
+		functions: {},
+		checkpoints: [],
+		len: 67 ,
+		ends: 5 ,
+		prod: 1 ,
+		index: 'skeptiki1',
+		game_id: 10628
+	};
+	var groups = rawSetup['keywords'];
+	if (groups) {
+		for (var g = 0; g < groups.length; g++) {
+			var group = groups[g];
+			group.type = 'k';
+			group.visible = parseMixBoolean(group.visible);
+			group.limit = parseMixBoolean(group.limit);
+			setup.groups[group.uid] = group;
+			var items = group['items'];
+			var list = [];
+			if (items) {
+				for (var i = 0; i < items.length; i++) {
+					var item = items[i];
+					item.group = group.uid;
+					item.start = parseMixBoolean(item.start);
+					item.limit = (item.limit && item.limit > 0) ? parseInt(item.limit) : 0;
+					setup.items[item.uid] = item;
+					list.push(item.uid);
+				}
+			}
+			group.items = list;
+		}
+	}
+	groups = rawSetup['resources'];
+	if (groups) {
+		for (var g = 0; g < groups.length; g++) {
+			var group = groups[g];
+			group.type = 'r';
+			group.visible = parseMixBoolean(group.visible);
+			group.limit = parseMixBoolean(group.limit);
+			setup.groups[group.uid] = group;
+			var items = group['items'];
+			var list = [];
+			if (items) {
+				for (var i = 0; i < items.length; i++) {
+					var item = items[i];
+					item.group = group.uid;
+					item.start = parseMixBoolean(item.start);
+					setup.items[item.uid] = item;
+					list.push(item.uid);
+				}
+			}
+			group.items = list;
+		}
+	}
+
+	if (rawSetup['functions']) {
+		for (var f = 0; f < rawSetup['functions'].length; f++) {
+			var func = rawSetup['functions'][f];
+			setup.functions[func['func_uid']] = JSON.parse(func['func_script']);
+		}
+	}
+
+	if (rawSetup['soundtrack']) {
+		setup.soundtrack = {
+			type: rawSetup['soundtrack']['type'],
+			owner: rawSetup['soundtrack']['owner'],
+			list: rawSetup['soundtrack']['list'],
+			key: rawSetup['soundtrack']['key']
+		};
+	}
+	if (rawSetup['checkpoints']) {
+		setup.checkpoints = rawSetup['checkpoints'].slice();
+	}
+
+	rawSetup = undefined;
+	return setup;
+})({"keywords":[{"name":"\u0412\u044b\u0431\u043e\u0440 \u041f\u0430\u0448\u0438 - 1","uid":"4de6542c-b31f-4050-aef9-4c2e98bca9fb","visible":"false","limit":"false","items":[{"name":"\u0413\u0438\u0442\u0430\u0440\u0430","uid":"53e89b55-275d-4e79-a71c-d356088095e2","start":"false"},{"name":"\u0417\u0432\u043e\u043d\u043e\u043a","uid":"99f8c5e6-c571-4b99-b74a-9b89903ad94f","start":"false"},{"name":"\u0423\u0440\u043e\u043a","uid":"7fd930f7-714c-4429-9ca7-788920dcd458","start":"false"},{"name":"\u0421\u043f\u043e\u0440 \u0432 \u0441\u0435\u0442\u0438","uid":"c48e44a1-6225-4b98-b130-de7d4e25562b","start":"false"}]},{"name":"\u0412\u044b\u0431\u043e\u0440 \u041f\u0430\u0448\u0438-2","uid":"50f881d0-5f76-42e6-b63f-7b6fdc3e8f7f","visible":"false","limit":"false","items":[{"name":"\u0421\u043f\u0440\u043e\u0441\u0438\u043b \u043f\u0440\u043e \u0440\u0430\u0431\u043e\u0442\u0443","uid":"382f282f-1627-46b7-8732-6551bd0e7ba0","start":"false"},{"name":"\u0421\u043f\u0440\u043e\u0441\u0438\u043b \u043f\u0440\u043e \u043b\u0438\u0447\u043d\u0443\u044e \u0436\u0438\u0437\u043d\u044c","uid":"0c6fa003-bab4-4cd0-9b2c-dccd2842485b","start":"false"},{"name":"\u0421\u043f\u0440\u043e\u0441\u0438\u043b \u043f\u0440\u043e \u043e\u0442\u043f\u0443\u0441\u043a","uid":"db6ff7a6-7780-4fa9-844b-990b16a5abad","start":"false"}]},{"name":"\u0421\u044e\u0436\u0435\u0442\u043d\u044b\u0435 \u0441\u043e\u0431\u044b\u0442\u0438\u044f","uid":"db63f94d-10fa-4c73-8c72-239c4adf6d78","visible":"false","limit":"false","items":[{"name":"\u0414\u0443\u0440\u0430\u0446\u043a\u0430\u044f \u0448\u0443\u0442\u043a\u0430","uid":"25a4cbe7-7e35-4f15-8da5-a62f1609272a","start":"false"},{"name":"\u0410\u043d\u0435\u043a\u0434\u043e\u0442","uid":"ca0799eb-0360-4a4b-9a76-acd18d95438a","start":"false"}]},{"name":"\u0423\u043b\u0438\u043a\u0438-1","uid":"832c2579-dfb1-4232-acf2-128904757a9b","visible":"false","limit":"false","items":[{"name":"\u0410\u043d\u043e\u043c\u0430\u043b\u0438\u044f","uid":"03f6dff6-2225-4504-ae47-ad73c8e5f6a3","start":"false"},{"name":"\u041c\u0430\u0433\u0430\u0437\u0438\u043d","uid":"ef50f8cc-b491-4dad-9295-c1ecb8742bf8","start":"false"},{"name":"\u0421\u0432\u0435\u0442","uid":"65e9c917-c034-4675-9d31-b2c8bd4d03ef","start":"false"},{"name":"\u0422\u043e\u0440\u0433\u043e\u0432\u043b\u044f","uid":"55cb1e01-8a89-41ee-82ad-2093f6e31406","start":"false"},{"name":"\u0427\u0435\u0441\u043d\u043e\u043a","uid":"8e5a1a6c-d369-4b0a-9ac0-9f32c9c3e1a9","start":"false"},{"name":"\u0412\u0430\u043a\u0446\u0438\u043d\u0430","uid":"c3373abd-4aac-4e7d-8958-f554b1e6c169","start":"false"},{"name":"\u0414\u0440\u0443\u0436\u0431\u0430","uid":"ac7ac6eb-40b2-4f16-a1bb-8b44fee9eecc","start":"false"},{"name":"\u0421\u043e\u0432\u0435\u0442 \u043d\u0435\u0437\u043d\u0430\u043a\u043e\u043c\u0446\u0430","uid":"a77a960f-a72e-4a80-9b71-af7c2cc80d93","start":"false"}]},{"name":"50 \u043d\u0430 50","uid":"00e5f402-465e-4c33-ae60-9f8007c4b77a","visible":"false","limit":"false","items":[{"name":"50 \u043d\u0430 50 - 1","uid":"9b4d7d17-2d31-41cf-b433-148426cea53f","start":"false"},{"name":"50 \u043d\u0430 50 - 2","uid":"340f06c4-02ee-439d-b1ab-f9b0000d48b4","start":"false"}]},{"name":"1 \u0438\u0437 5","uid":"93b9a1cd-da8b-4b26-ba7f-0b2f32042136","visible":"false","limit":"false","items":[{"name":"1","uid":"e74b3816-16d7-4419-8bca-ddc31280c870","start":"false"},{"name":"2","uid":"27a21406-aac0-423e-917d-c803f4289c5a","start":"false"},{"name":"3","uid":"00451090-ab48-4ed8-b1e7-2f2a3454a120","start":"false"},{"name":"4","uid":"f2649bd1-69ba-4b1b-b164-9ccf22a46545","start":"false"},{"name":"5","uid":"37ec0b55-e445-424b-a1f6-41a6c0961de0","start":"false"}]},{"name":"\u041a\u043d\u0438\u0433\u0438","uid":"417b04a0-8f0b-4ed4-adda-3d98216458e8","visible":"false","limit":"false","items":[{"name":"\u041d\u0435 \u043d\u0430\u0434\u043e \u043d\u0430\u043c \u043c\u0430\u043a\u0443\u043b\u0430\u0442\u0443\u0440\u044b","uid":"66a38054-c779-418f-a574-020de2a207c5","start":"false"},{"name":"\u041c\u043e\u0434\u043d\u043e\u0435 \u0444\u043e\u0442\u043e \u0432 \u043a\u043b\u0438\u043a","uid":"54e0ff32-4632-44ca-b144-c7c4832ad4d5","start":"false"},{"name":"\u041c\u0438\u0441\u0442\u0438\u0447\u0435\u0441\u043a\u0438\u0435 \u043f\u0440\u0430\u043a\u0442\u0438\u043a\u0438 \u041f\u043e\u0432\u043e\u043b\u0436\u044c\u044f","uid":"3ab832c5-6691-4485-92f1-2ce3577dbc69","start":"false"},{"name":"\u041c\u0435\u0442\u043e\u0434\u044b \u0430\u0441\u0442\u0440\u0430\u043b\u044c\u043d\u043e\u0433\u043e \u0437\u043e\u043d\u0434\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u044f","uid":"74608eb7-bb64-4284-96dc-b56f6f30e193","start":"false"},{"name":"\u0421\u0431\u043e\u0440\u043d\u0438\u043a \u0430\u043d\u0435\u043a\u0434\u043e\u0442\u043e\u0432","uid":"654b2db1-4b8f-45a9-b9ae-2f1ed1bfb0c3","start":"false"},{"name":"\u0410\u043a\u043a\u043e\u0440\u0434\u044b \u043f\u043e\u043f\u0443\u043b\u044f\u0440\u043d\u044b\u0445 \u043f\u0435\u0441\u0435\u043d","uid":"e2b039cf-2371-470d-9386-602d22e25a44","start":"false"},{"name":"\u041f\u0443\u0442\u0435\u0432\u043e\u0434\u0438\u0442\u0435\u043b\u044c \u043f\u043e \u0440\u043e\u0434\u043d\u043e\u043c\u0443 \u043a\u0440\u0430\u044e","uid":"5f0c7a11-ba16-4a44-bd69-3b093c0d4f15","start":"false"},{"name":"\u0421\u0430\u0434 \u0438 \u043e\u0433\u043e\u0440\u043e\u0434","uid":"a1314075-4c92-4b2c-804c-69e51d96c7cf","start":"false"},{"name":"\u041a\u0430\u0440\u0442\u043e\u0447\u043d\u044b\u0435 \u0444\u043e\u043a\u0443\u0441\u044b","uid":"f62dab5e-4559-435e-ac49-c83c75a95822","start":"false"},{"name":"\u0421\u0431\u043e\u0440\u043d\u0438\u043a \u0442\u044e\u0440\u0435\u043c\u043d\u043e\u0439 \u043b\u0438\u0440\u0438\u043a\u0438","uid":"46ab38f3-3b55-4c56-ad08-a46a350d1cfe","start":"false"},{"name":"\u0416\u0435\u043d\u0441\u043a\u0438\u0439 \u0434\u0435\u0442\u0435\u043a\u0442\u0438\u0432","uid":"252a4dd1-8198-46a8-94f9-d79021dfd15e","start":"false"}]},{"name":"1 \u0438\u0437 10","uid":"fb82a661-0bc1-4f55-8021-dde143fe5db4","visible":"false","limit":"false","items":[{"name":"1 \u0438\u0437 10-1","uid":"9b78fca2-77f5-4d77-86eb-e3fd71e487b4","start":"false"},{"name":"1 \u0438\u0437 10-2","uid":"ffa5f45b-534b-4c3e-849f-86048286f44a","start":"false"},{"name":"1 \u0438\u0437 10-3","uid":"682443e4-60df-42f0-9d00-d409c9fd9532","start":"false"},{"name":"1 \u0438\u0437 10-4","uid":"19c99a22-c821-4d8f-b7b9-cd7da7169d84","start":"false"},{"name":"1 \u0438\u0437 10-5","uid":"8538421c-ab27-4489-8c02-de8cbce48131","start":"false"},{"name":"1 \u0438\u0437 10-6","uid":"74d7bc04-ad80-4f8a-a41e-2113c14702a0","start":"false"},{"name":"1 \u0438\u0437 10-7","uid":"eae459d6-5c7b-4b16-9196-3c77be78ca5b","start":"false"},{"name":"1 \u0438\u0437 10-8","uid":"b2ae445a-d6f1-4090-b6bd-f5064600b3ef","start":"false"},{"name":"1 \u0438\u0437 10-9","uid":"263d54b1-54fa-47ae-957e-7df0f26024d5","start":"false"},{"name":"1 \u0438\u0437 10-10","uid":"af4d9946-3f4a-4a7f-94ed-ccd37dfca1a0","start":"false"}]},{"name":"\u0420\u0435\u0430\u043a\u0446\u0438\u044f \u041f\u0430\u0448\u0438","uid":"a7fb2a8b-06c6-403b-a136-d7ccda3a4a09","visible":"false","limit":"false","items":[{"name":"\u041c\u0430\u0440\u0430\u0437\u043c","uid":"a53262f4-39ad-4ee5-bfdb-57c4f013e4dc","start":"false"},{"name":"\u0411\u0430\u0439\u043a\u0430 \u043e \u043a\u0440\u043e\u043a\u043e\u0434\u0438\u043b\u0430\u0445","uid":"38b083ed-bd77-4db2-9e3a-8c9ce613f518","start":"false"},{"name":"\u0421\u043e\u043c\u043d\u0438\u0442\u0435\u043b\u044c\u043d\u044b\u0439 \u043f\u043b\u0430\u043d","uid":"2c9aa6c5-24f3-46fc-8521-e99446518802","start":"false"}]},{"name":"\u0423\u043b\u0438\u043a\u0438 \u0432 \u0440\u0430\u0437\u0433\u043e\u0432\u043e\u0440\u0435","uid":"08732914-26ea-4f8b-89cb-9c134bb0b001","visible":"false","limit":"false","items":[{"name":"\u041e\u0433\u043e\u0440\u043e\u0434","uid":"52573dcf-67d1-4c52-a33a-db88b0afc706","start":"false"},{"name":"\u041f\u0440\u0438\u043c\u0438\u0440\u0435\u043d\u0438\u0435","uid":"99be239b-bd1b-42d6-8a73-ad7257abf2fa","start":"false"},{"name":"\u0420\u044b\u043d\u043e\u043a","uid":"4a367176-f181-4148-832a-bfb3be40c68c","start":"false"}]}],"resources":[{"name":"\u0422\u0440\u0438 \u043f\u043e\u043f\u044b\u0442\u043a\u0438","uid":"dc171b4d-ea14-4e4a-993b-0a06785612d1","visible":"false","limit":"false","items":[{"name":"\u041f\u043e\u043f\u044b\u0442\u043a\u0430","uid":"ae049776-4176-4a2b-bac2-f729f8dcc529","start":"0","limit":"0"}]},{"name":"\u041e\u0442\u043d\u043e\u0448\u0435\u043d\u0438\u0435 \u0410\u043b\u0438\u0441\u044b","uid":"48ecbc93-9fee-45cf-9c73-93db7515134c","visible":"false","limit":"false","items":[{"name":"\u041e\u0442\u043d\u043e\u0448\u0435\u043d\u0438\u0435","uid":"d1324bc6-7b25-4187-a0d1-12bfa2232a4f","start":"10","limit":"0"}]}],"functions":[],"achis":[{"achi_id":"1","achi_title":"\u0414\u0435\u043b\u043e \u0440\u0430\u0441\u043a\u0440\u044b\u0442\u043e","achi_artefact":"","achi_ico":"ach_3256d387ac2df2789ca634f150d7c328.png"},{"achi_id":"2","achi_title":"\u041f\u043e\u043f\u044b\u0442\u043a\u0430 \u043d\u0435 \u043f\u044b\u0442\u043a\u0430","achi_artefact":"","achi_ico":"ach_7695802a6dd421badd714308139121d6.png"},{"achi_id":"3","achi_title":"\u0422\u043e\u043f\u0447\u0438\u043a","achi_artefact":"","achi_ico":"ach_7cd3ce72a7fe53ea5ee352788e514fe8.png"}],"settings":[{"type":"export","name":"pdf","value":"false"},{"type":"defaults","name":"action-style","value":"1"},{"type":"game","name":"scores","value":""}],"tags":["22"]});
+
+function mitrilController() {
+
+	var tpls = {};
+	var saveGameTimer;
+	var lastSaveData;
+	var self = this;
+
+	if (!mitrilSetup.prod) {
+		$('.end-go-edit').attr('href', '/online/edit/' + mitrilSetup.game_id + '/').fadeIn();
+	}
+	$('.btn-error-report').show();
+	$('.ticket-is_prod').val(mitrilSetup.prod);
+
+	$('.display-properties').slideDown();
+
+	if (mitrilSetup.soundtrack) {
+		var snd = mitrilSetup.soundtrack;
+		$.ajax({
+			url: '/online/mitril/soundtrack/',
+			data: snd,
+			dataType: 'json',
+			method: 'GET',
+			success: function(response) {
+				var ost = $('.soundtrack');
+				if (response.result == 'ok') {
+					$('iframe', ost).attr('src', response.data.message);
+					ost.fadeIn();
+				} else {
+					ost.remove();
+				}
+			}
+		});
+	}
+
+	this.ver = 1.4;
+
+	this.getGameID = function() {
+		return mitrilSetup.game_id;
+	}
+
+	this.isProd = function() {
+		return mitrilSetup.prod == 1;
+	}
+
+	///
+
+	function checkExpression(items, expr) {
+		var value = items[expr.val];
+
+		if (expr.type === 'k' && value) {
+			return true;
+		}
+
+		if (expr.type === 'r') {
+			if (!value) value = 0;
+			var count;
+			if (isNaN(expr.amnt)) {
+				var v = items[expr.amnt];
+				count = v !== undefined ? v : 0;
+			} else {
+				count = expr.amnt;
+			}
+			if (expr.eq) {
+				return value == count && count > 0;
+			}
+			return value >= count;
+		}
+
+		return false;
+	}
+
+	this.checkCondition = function(items, cond, crit) {
+		var modeAND = true;
+		if (cond && cond.or) { //&& cond.c instanceof Array
+			if (cond.or) {
+				modeAND = false;
+			}
+			cond = cond.c;
+		}
+
+		if (!modeAND) {
+			// OR
+			for (var c = 0; c < cond.length; c++) {
+				var expr = cond[c];
+				if (checkExpression(items, expr) === crit) {
+					return true;
+				}
+			}
+			return false;
+		}
+		for (var c = 0; c < cond.length; c++) {
+			var expr = cond[c];
+			if (checkExpression(items, expr) !== crit) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	this.getGroupResourceCount = function(items, uid) {
+		var result = 0;
+		var group = mitrilSetup.groups[uid];
+		if (!group) {
+			return 0;
+		}
+
+		for (var i = 0; i < group.items.length; i++) {
+			var uid = group.items[i];
+			var value = items[uid];
+			if (value) {
+				if (group.type == 'k') {
+					result++;
+				} else {
+					result += Math.abs(value);
+				}
+			}
+		}
+
+		return result;
+	}
+
+	function executeIncTask(items, task) {
+		var uid = task.val;
+		var libItem = mitrilSetup.items[uid];
+		if (!libItem) return false;
+
+		var group = mitrilSetup.groups[libItem.group];
+		if (!group) return false;
+
+		var count = parseInt(task.amnt);
+		if (!count || isNaN(count)) count = 1;
+
+		if (group.limit !== false) {
+			var stored = mitril.getGroupResourceCount(items, group.uid);
+			if (stored + count > group.limit) {
+				if (task.type == 'k') {
+					return true;
+				}
+				count = Math.max(group.limit - stored, 0);
+			}
+		}
+
+		if (task.type == 'k') {
+			items[uid] = true;
+			return true;
+		}
+
+		if (task.type == 'r') {
+			if (!items[uid]) {
+				items[uid] = 0;
+			}
+
+			var curVal = items[uid];
+			if (libItem.limit > 0 && (curVal + count > libItem.limit)) {
+				count = Math.max(libItem.limit - curVal, 0);
+			}
+
+			items[uid] += count;
+			return true;
+		}
+
+		return false;
+	}
+
+	function checkGroupSpaceTask(items, task) {
+		var uid = task.val;
+		var libItem = mitrilSetup.items[uid];
+		if (!libItem) return false;
+
+		var group = mitrilSetup.groups[libItem.group];
+		if (!group) return false;
+
+		if (group.limit !== false) {
+			var stored = mitril.getGroupResourceCount(items, group.uid);
+			if (stored < group.limit) {
+				return true;
+			}
+		}
+
+		return true;
+	}
+
+	function executeSetTask(items, task) {
+		var uid = task.val;
+		var libItem = mitrilSetup.items[uid];
+		if (!libItem) return false;
+
+		var group = mitrilSetup.groups[libItem.group];
+		if (!group) return false;
+
+		var count = parseInt(task.amnt);
+		if (isNaN(count)) count = 0;
+
+		if (task.type == 'k') {
+			return false;
+		}
+
+		if (group.limit !== false) {
+			var oldValue = items[uid];
+			items[uid] = count;
+			var stored = mitril.getGroupResourceCount(items, group.uid);
+			if (stored > group.limit) {
+				items[uid] -= (stored - group.limit);
+			}
+		} else {
+			items[uid] = count;
+		}
+
+		return true;
+	}
+
+	function executeDecTask(items, task) {
+		var uid = task.val;
+		var libItem = mitrilSetup.items[uid];
+		if (!libItem) return false;
+
+		if (task.type == 'k') {
+			items[uid] = false;
+			return true;
+		}
+
+		if (task.type == 'r') {
+			var count = parseInt(task.amnt);
+			if (!count || isNaN(count)) count = 1;
+
+			if (!items[uid]) {
+				items[uid] = 0;
+			}
+
+			items[uid] -= count;
+			if (items[uid] < 0) { // MIN!!!
+				items[uid] = 0;
+			}
+			return true;
+		}
+
+		return false;
+	}
+
+	// remove all keys of group
+	function executeDelTask(items, task) {
+		var uid = task.val;
+		var libGroup = mitrilSetup.groups[uid];
+		if (!libGroup) return false;
+
+		if (task.type == 'r') {
+			return false;
+		}
+
+		var groupItems = libGroup.items;
+		for (var i = 0; i < groupItems.length; i++) {
+			delete items[groupItems[i]];
+		}
+
+		return true;
+	}
+	
+	// set 0 all res of group
+	function executeNlgTask(items, task) {
+		var libGroup = mitrilSetup.groups[task.val];
+		if (!libGroup) return false;
+
+		if (task.type == 'k') {
+			return false;
+		}
+
+		var groupItems = libGroup.items;
+		for (var i = 0; i < groupItems.length; i++) {
+			delete items[groupItems[i]];
+		}
+
+		return true;
+	}
+
+	function rnd(min, max) {
+		return Math.min(max, Math.min(max, Math.floor(Math.random() * (max - min + 1)) + min));
+	}
+
+	function getRandom(min, max) {
+		var results = [];
+		var throws = rnd(5, 10);
+		for (var i = 0; i < throws; i++) {
+			results.push(rnd(min, max));
+		}
+		return results[rnd(0, throws - 1)];
+	}
+
+	// checkpoint
+	function executeSaveTask(items, task) {
+		var checkpoint = task.val;
+		var self = this;
+		if (checkpoint && lastSaveData) {
+			$.ajax({
+				url: '/online/mitril/savegame/',
+				data: {
+					game_id: mitrilSetup.game_id,
+					prod: mitrilSetup.prod,
+					checkpoint: checkpoint,
+					savedata: lastSaveData,
+					testuid: window.playerInfo ? window.playerInfo.testuid : undefined
+				},
+				method: 'POST',
+				dataType: 'json',
+				success: function(response) {
+					if (response.result == 'ok') {
+						items[checkpoint] = true;
+						jsIQ.triggerEvent('update_charsheet', {
+							update: true
+						});
+					}
+				}
+			});
+			return true;
+		}
+
+		return false;
+	}
+
+	// add one random key of group
+	function executeRndTask(items, task) {
+		var uid = task.val;
+		var libGroup = mitrilSetup.groups[uid];
+		if (!libGroup) return false;
+
+		if (task.type == 'r') {
+			return false;
+		}
+
+		var groupItems = libGroup.items;
+		var pos = getRandom(0, groupItems.length - 1);
+		items[groupItems[pos]] = true;
+
+		return true;
+	}
+
+	function executeGotoTask(items, task) {
+		var uid = task.val;
+		jsIQ.showArticle(uid);
+		return true;
+	}
+
+	function executeBackTask(items, task) {
+		if (vars.lastarticle) {
+			jsIQ.showArticle(vars.lastarticle);
+			vars.lastarticle = null;
+			return true;
+		}
+		return false;
+	}
+
+	function executeAchiTask(items, task) {
+		var achi = task.val;
+		if (achi > 0 && achi < 5) {
+			$.ajax({
+				url: '/online/mitril/achi/add/',
+				method: 'POST',
+				dataType: 'json',
+				data: {
+					game_id: mitrilSetup.game_id,
+					prod: mitrilSetup.prod,
+					achi_id: achi,
+					testuid: window.playerInfo ? window.playerInfo.testuid : undefined
+				},
+				success: function(response) {
+					if (response.result != 'error') {
+						// announce
+						var achi = response.data;
+						var msg = '<div style="overflow: hidden; margin-top: 0.5em"><img src="/online/player/mitril/images/' + achi.achi_ico + '" style="float:left; margin-right: 1em; height: 50px;"><h5>' + achi.achi_title + '</h5></div>';
+						if (window.showNotification) {
+							showNotification('<div class="alert alert-success text-dark" role="alert"><h4 class="alert-heading m-0">Получено достижение!</h4><p style="font-size:95%">'+ msg + (response.result == 'fake' ? '\n<i>Внимание! Достижения анонимных пользователей не сохраняются</i>' : '')+'</p></div>');
+						} /*else {
+							$.growl({
+								title: "Получено достижение!",
+								message: ,
+								duration: 10000,
+								size: 'large',
+								style: 'warning'
+							});
+						}*/
+					}
+				}
+			});
+		}
+
+		return true;
+	}
+
+	function executeAddResTask(items, task) {
+		if (task.type == 'k') {
+			return false;
+		}
+
+		var uid = task.val;
+		var libItem = mitrilSetup.items[uid];
+		if (!libItem) return false;
+
+		var group = mitrilSetup.groups[libItem.group];
+		if (!group) return false;
+
+		var count = items[task.param];
+		if (!count) {
+			return true;
+		}
+
+		if (group.limit !== false) {
+			var stored = mitril.getGroupResourceCount(items, group.uid);
+			if (stored + count > group.limit) {
+				if (task.type == 'k') {
+					return true;
+				}
+				count = Math.max(group.limit - stored, 0);
+			}
+		}
+
+		if (!items[uid]) {
+			items[uid] = 0;
+		}
+
+		var curVal = items[uid];
+		if (libItem.limit > 0 && (curVal + count > libItem.limit)) {
+			count = Math.max(libItem.limit - curVal, 0);
+		}
+
+		items[uid] += count;
+		return true;
+	}
+
+	function executeSubResTask(items, task) {
+		if (task.type == 'k') {
+			return false;
+		}
+
+		var uid = task.val;
+		var libItem = mitrilSetup.items[uid];
+		if (!libItem) return false;
+
+		var count = items[task.param];
+		if (!count) {
+			return true;
+		}
+
+		if (!items[uid]) {
+			items[uid] = 0;
+		}
+
+		items[uid] -= count;
+		if (items[uid] < 0) { // MIN!!!
+			items[uid] = 0;
+		}
+		return true;
+	}
+
+	function executeMlpResTask(items, task) {
+		if (task.type == 'k') {
+			return false;
+		}
+
+		var uid = task.val;
+		var libItem = mitrilSetup.items[uid];
+		if (!libItem) return false;
+
+		var group = mitrilSetup.groups[libItem.group];
+		if (!group) return false;
+
+		var count = items[task.param];
+		if (!count) {
+			items[uid] = 0;
+			return true;
+		}
+
+		var result = items[uid] ? (items[uid] * count) : 0;
+		items[uid] = result;
+
+		if (group.limit !== false) {
+			var stored = mitril.getGroupResourceCount(items, group.uid);
+			if (stored > group.limit) {
+				result -= group.limit - stored;
+			}
+		}
+
+		if (libItem.limit > 0 && (result > libItem.limit)) {
+			result -= libItem.limit - result;
+		}
+
+		items[uid] = result;
+		return true;
+	}
+
+	function executeDivResTask(items, task) {
+		if (task.type == 'k') {
+			return false;
+		}
+
+		var uid = task.val;
+		var libItem = mitrilSetup.items[uid];
+		if (!libItem) return false;
+
+		var group = mitrilSetup.groups[libItem.group];
+		if (!group) return false;
+
+		var count = items[task.param];
+		if (!count) {
+			items[uid] = 0;
+			return true;
+		}
+
+		var result = items[uid] ? (Math.round(items[uid] / count)) : 0;
+
+		items[uid] = result;
+		return true;
+	}
+
+	function executeEqlResTask(items, task) {
+		if (task.type == 'k') {
+			return false;
+		}
+
+		var uid = task.val;
+		var libItem = mitrilSetup.items[uid];
+		if (!libItem) return false;
+
+		var group = mitrilSetup.groups[libItem.group];
+		if (!group) return false;
+
+		var count = items[task.param];
+		if (!count) {
+			items[uid] = 0;
+			return true;
+		}
+
+		items[uid] = count;
+
+		if (group.limit !== false) {
+			var stored = mitril.getGroupResourceCount(items, group.uid);
+			if (stored > group.limit) {
+				count -= group.limit - stored;
+			}
+		}
+
+		if (libItem.limit > 0 && (count > libItem.limit)) {
+			count -= libItem.limit - count;
+		}
+
+		items[uid] = count;
+		return true;
+	}
+
+	function executeRndResTask(items, task) {
+		if (task.type == 'k') {
+			return false;
+		}
+
+		var uid = task.val;
+		var libItem = mitrilSetup.items[uid];
+		if (!libItem) return false;
+
+		var group = mitrilSetup.groups[libItem.group];
+		if (!group) return false;
+
+		var count = getRandom(1, items[task.param]);
+
+		if (group.limit !== false) {
+			var stored = mitril.getGroupResourceCount(items, group.uid);
+			if (stored + count > group.limit) {
+				if (task.type == 'k') {
+					return true;
+				}
+				count = Math.max(group.limit - stored, 0);
+			}
+		}
+
+		if (!items[uid]) {
+			items[uid] = 0;
+		}
+
+		var curVal = items[uid];
+		if (libItem.limit > 0 && (curVal + count > libItem.limit)) {
+			count = Math.max(libItem.limit - curVal, 0);
+		}
+
+		items[uid] += count;
+		return true;
+	}
+
+	function executeRndRemResTask(items, task) {
+		if (task.type == 'k') {
+			return false;
+		}
+
+		var uid = task.val;
+		var libItem = mitrilSetup.items[uid];
+		if (!libItem) return false;
+
+		var group = mitrilSetup.groups[libItem.group];
+		if (!group) return false;
+
+		var count = getRandom(1, items[task.param]);
+
+		if (!items[uid]) {
+			items[uid] = 0;
+		}
+
+		items[uid] = Math.max(items[uid] - count, 0);
+		return true;
+	}
+
+	function executeRndGResTask(items, task) {
+		if (task.type == 'k') {
+			return false;
+		}
+
+		var uid = task.val;
+		var group = mitrilSetup.groups[uid];
+		if (!group) return false;
+		var groupItems = group.items;
+		var pos = getRandom(0, groupItems.length - 1);
+
+		var count = getRandom(1, items[task.param]);
+		var uid = groupItems[pos];
+		var libItem = mitrilSetup.items[uid];
+
+		if (group.limit !== false) {
+			var stored = mitril.getGroupResourceCount(items, group.uid);
+			if (stored + count > group.limit) {
+				count = Math.max(group.limit - stored, 0);
+			}
+		}
+
+		if (!items[uid]) {
+			items[uid] = 0;
+		}
+
+		var curVal = items[uid];
+		if (libItem.limit > 0 && (curVal + count > libItem.limit)) {
+			count = Math.max(libItem.limit - curVal, 0);
+		}
+
+		items[uid] += count;
+		return true;
+	}
+
+	function executeRndRemGResTask(items, task) {
+		if (task.type == 'k') {
+			return false;
+		}
+
+		var uid = task.val;
+		var group = mitrilSetup.groups[uid];
+		if (!group) return false;
+		var groupItems = group.items;
+		var pos = getRandom(0, groupItems.length - 1);
+		var count = getRandom(1, items[task.param]);
+		var uid = groupItems[pos];
+		var libItem = mitrilSetup.items[uid];
+
+		if (!items[uid]) {
+			items[uid] = 0;
+		}
+
+		items[uid] = Math.max(items[uid] - count, 0);
+		return true;
+	}
+
+	function executeIfTask(items, task) {
+		var ifOpnd = $.parseJSON(task.type === '64' ? Base64.decode(task.val) : task.val);
+
+		if (!ifOpnd) return false;
+
+		var cond = ifOpnd['action_if'];
+		if (cond && cond.length > 2) {
+			var r = mitril.checkCondition(items, JSON.parse(cond), true);
+			if (!r) {
+				return true;
+			}
+		}
+
+		cond = ifOpnd['action_ifnot'];
+		if (cond && cond.length > 2) {
+			var r = mitril.checkCondition(items, JSON.parse(cond), false);
+			if (!r) {
+				return true;
+			}
+		}
+
+		mitril.script(items, JSON.parse(ifOpnd['action_script']));
+
+		return true;
+	}
+
+	function executeFunTask(items, task) {
+		var script = mitrilSetup.functions[task.val];
+		if (!script) return false;
+
+		mitril.script(items, script);
+
+		return true;
+	}
+	
+	this.executeCleanTask = function(items, task) {
+		for (var uid in items) {
+			if (mitrilSetup.hasOwnProperty(uid)) continue;
+			delete items[uid];
+		}
+		for (var uid in mitrilSetup.items) {
+			if (mitrilSetup.hasOwnProperty(uid)) continue;
+			var item = mitrilSetup.items[uid];
+			if (item.start) {
+				items[item.uid] = item.start;
+			}
+		}
+
+		return true;
+	}
+
+	function executeTask(items, task) {
+		switch (task.class) {
+			case 'inc': {
+				return executeIncTask(items, task);
+			}
+			case 'dec': {
+				return executeDecTask(items, task);
+			}
+			case 'goto': {
+				return executeGotoTask(items, task);
+			}
+			case 'set': {
+				return executeSetTask(items, task);
+			}
+			case 'del': {
+				return executeDelTask(items, task);
+			}
+			case 'rnd': {
+				return executeRndTask(items, task);
+			}
+			case 'back': {
+				return executeBackTask(items, task);
+			}
+			case 'achi': {
+				return executeAchiTask(items, task);
+			}
+			case 'save': {
+				setTimeout(function() {
+					executeSaveTask(items, task);
+				}, 500);
+				return true;
+			}
+			case 'add': {
+				return executeAddResTask(items, task);
+			}
+			case 'sub': {
+				return executeSubResTask(items, task);
+			}
+			case 'mlp': {
+				return executeMlpResTask(items, task);
+			}
+			case 'div': {
+				return executeDivResTask(items, task);
+			}
+			case 'eql': {
+				return executeEqlResTask(items, task);
+			}
+			case 'rnr': {
+				return executeRndResTask(items, task);
+			}
+			case 'rng': {
+				return executeRndGResTask(items, task);
+			}
+			case 'rrr': {
+				return executeRndRemResTask(items, task);
+			}
+			case 'rrg': {
+				return executeRndRemGResTask(items, task);
+			}
+			case 'if': {
+				return executeIfTask(items, task);
+			}
+			case 'fun': {
+				return executeFunTask(items, task);
+			}
+			case 'nul': {
+				return self.executeCleanTask(items, task);
+			}
+			case 'nlg': {
+				return executeNlgTask(items, task);
+			}
+		}
+		return true;
+	}
+
+	function getItemChangesList(olditems, newitems) {
+		var result = [];
+
+		$.each(mitrilSetup.items, function(uid) {
+			var oldval = olditems[uid];
+			var newval = newitems[uid];
+			if (oldval !== newval) {
+				var itemInfo = mitrilSetup.items[uid];
+				var itemGroup = mitrilSetup.groups[itemInfo.group];
+				if (!itemGroup.visible) {
+					return;
+				}
+				var title = itemGroup.name + '/' + itemInfo.name;
+				var diff;
+				if (itemGroup.type === 'k') {
+					diff = (!newval) ? ('<strike>' + title + '</strike>') : ('<b>' + title + '</b>');
+				} else {
+					if (!oldval) oldval = 0;
+					if (!newval) {
+						diff = '<strike>' + title + '</strike>';
+					} else {
+						diff = newval > oldval ? '+' : '';
+						diff = '' + title + ': <b>' + (diff + (newval - oldval)) + '</b> (' + newval + ')';
+					}
+				}
+				result.push(diff);
+			}
+		});
+		return result;
+	}
+
+	this.scriptWrap = function(varslink, script) {
+		var oldItems = $.extend({}, varslink.items);
+		var history = $('#charsheet-change-history');
+		this.script(varslink.items, script);
+		var changes = getItemChangesList(oldItems, varslink.items);
+		if (changes.length) {
+			$.each(changes, function() {
+				history.append('<div class="charsheet-changed-item"><i class="fad fa-edit"></i> ' + this + '</div>');
+			});
+			history.stop().animate({
+				scrollTop: history.prop('scrollHeight')
+			}, 500);
+		}
+		jsIQ.triggerEvent('update_charsheet', {
+			update: true
+		}); /* real update charsheet! */
+		this.saveGame(jsIQ.current_article.title, varslink);
+		return true;
+	}
+
+	this.script = function(items, script) {
+		if (!script || !(script instanceof Array)) return false;
+		for (var s = 0; s < script.length; s++) {
+			var task = script[s];
+			if (!executeTask(items, task)) {
+				return false;
+			}
+		}
+		//jsIQ.triggerEvent('update_charsheet', {update: true});                  /* real update charsheet! */
+		return true;
+	}
+
+	this.getCharsheetData = function(items) {
+		var result = [];
+		var groups = mitrilSetup.groups;
+		for (var g in groups) {
+			if (!groups.hasOwnProperty(g)) continue;
+			var group = groups[g];
+			if (!group.visible || !group.items || !group.items.length) continue;
+			var list = [];
+			var stored = 0;
+			for (var i = 0; i < group.items.length; i++) {
+				var uid = group.items[i];
+				var value = vars.items[uid];
+				if (value) {
+					var item = mitrilSetup.items[uid];
+					list.push({
+						name: item.name,
+						uid: uid,
+						value: value
+					});
+					stored += value;
+				}
+			}
+			if (list.length > 0) {
+				result.push({
+					name: group.name,
+					uid: group.uid,
+					type: group.type,
+					visible: group.visible,
+					limit: group.limit,
+					stored: stored,
+					items: list
+				});
+			}
+		}
+
+		var checkpoints = mitrilSetup.checkpoints;
+		if (checkpoints) {
+			var cpArr = [];
+			for (var c = 0; c < checkpoints.length; c++) {
+				var checkpoint = checkpoints[c];
+				var visited = null;
+				for (var v = 0; v < checkpoint.vars.length; v++) {
+					var variant = checkpoint.vars[v];
+					if (vars.items[checkpoint.uid + '--' + variant.uid] == true) {
+						visited = variant;
+						break;
+					}
+				}
+				if (visited) {
+					for (var d = 0; d < c; d++) {
+						if (cpArr[d].available === 'preview') {
+							// skipped
+							cpArr[d].available = 'skipped';
+						}
+					}
+				}
+				cpArr.push({
+					name: checkpoint.name + (visited ? (': ' + visited.name) : ''),
+					uid: (visited ? (checkpoint.uid + '--' + visited.uid) : undefined),
+					type: 'checkpoint',
+					available: visited ? 'available' : 'preview'
+				});
+			}
+			result = result.concat(cpArr);
+		}
+		return result;
+	}
+
+	this.getTpl = function(id) {
+		if (tpls[id]) {
+			return tpls[id].clone();
+		}
+		tpls[id] = $('.mitril-tpl > .' + id).clone();
+		return tpls[id].clone();
+	}
+
+	this.restartGame = function(callback) {
+		if (confirm('Начать игру с начала?')) {
+			$.ajax({
+				url: '/online/mitril/restart/',
+				data: {
+					game_id: mitrilSetup.game_id,
+					prod: mitrilSetup.prod,
+					testuid: window.playerInfo ? window.playerInfo.testuid : undefined
+				},
+				method: 'POST',
+				success: function() {
+					if (callback) {
+						callback();
+					}
+				}
+			});
+		}
+	}
+
+	this.getSavegame = function(callback) {
+		$.ajax({
+			url: '/online/mitril/loadgame/',
+			data: {
+				game_id: mitrilSetup.game_id,
+				prod: mitrilSetup.prod,
+				testuid: window.playerInfo ? window.playerInfo.testuid : undefined
+			},
+			dataType: 'json',
+			method: 'POST',
+			success: function(response) {
+				if (response.result == 'ok' && response.data) {
+					callback(response.data);
+					return;
+				}
+				callback(false);
+			}
+		});
+	}
+
+	this.loadCheckpoint = function(checkpoint_uid) {
+		$.ajax({
+			url: '/online/mitril/loadgame/',
+			data: {
+				game_id: mitrilSetup.game_id,
+				checkpoint: checkpoint_uid,
+				prod: mitrilSetup.prod
+			},
+			dataType: 'json',
+			method: 'POST',
+			success: function(response) {
+				if (response.result == 'ok' && response.data) {
+					result = response.data;
+					vars.items = result.savedata;
+					vars.steps = parseInt(result.steps);
+					if (!vars.steps || isNaN(vars.steps)) vars.steps = 0;
+					if (result.lastarticle) vars.lastarticle = result.lastarticle;
+					jsIQ.showArticle(result.article);
+					jsIQ.triggerEvent('update_charsheet', {
+						update: true
+					});
+				}
+			}
+		});
+	}
+
+	this.saveGame = function(article, vars) {
+		var save = {
+			article: article,
+			savedata: vars.items ? $.extend({}, vars.items) : undefined,
+			steps: vars.steps
+		};
+		if (vars.lastarticle) {
+			save.lastarticle = vars.lastarticle;
+		}
+
+		lastSaveData = JSON.stringify(save);
+		mitrilJs.prepareTicketData(save);
+
+		clearTimeout(saveGameTimer);
+		saveGameTimer = setTimeout(function() {
+			mitrilJs.uploadSavegame(mitrilSetup.game_id, mitrilSetup.prod, lastSaveData);
+		}, 250);
+	}
+
+	this.checkGameEnd = function(vars) {
+		var self = this;
+		$('.mitril-game-end').hide();
+		setTimeout(function() {
+			if (jsIQ.current_article && jsIQ.current_article.title != 'mitril' &&
+				$('.actionContainer.Visible', jsIQ.containers.actions).length === 0
+			) {
+				mitrilJs.gameEnd(mitrilSetup, {
+					steps: vars.steps
+				});
+			}
+		}, 500);
+	}
+
+	$('.end-go-restart').unbind().attr('href', '#').click(function() {
+		window.mitril.restartGame(function() {
+			window.location.reload();
+		});
+		return false;
+	});
+
+	var triggers = jsIQ.getArticle('_mitril_triggers');
+	if (triggers.length === 1 && $('action', triggers).length) {
+		jsIQ.addEventHandler('before_render_article', function(params, vars, process) {
+			jsIQ.current_article.appendArticle(triggers);
+			process.next();
+		});
+	}
+
+	var colors = ['white', 'silver', 'gray', 'black', 'red', 'maroon', 'yellow', 'olive', 'lime', 'green', 'aqua', 'teal', 'blue', 'navy', 'fuchsia', 'purple'];
+
+	var bbcode = [];
+
+	bbcode['^(===) (.+) (===)\\n'] = '<h4><b>$2</b></h4>';
+	bbcode['^(==) (.+) (==)\\n'] = '<h4>$2</h4>';
+
+	bbcode['\\n'] = '<br/>';
+	bbcode['\\[b\\]'] = '<b>';
+	bbcode['\\[/b\\]'] = '</b>';
+	bbcode['\\[u\\]'] = '<u>';
+	bbcode['\\[/u\\]'] = '</u>';
+	bbcode['\\[i\\]'] = '<i>';
+	bbcode['\\[/i\\]'] = '</i>';
+	bbcode['\\[list\\]'] = '<ul>';
+	bbcode['\\[/list\\]'] = '</ul>';
+	bbcode['\\[\\*\\]'] = '<li>';
+	bbcode['\\[/\\*\\]'] = '</li>';
+	bbcode['\\[color=([A-Z,a-z,0-9,\\$,\\#]+)\\](.+?)\\[/color\\]'] = function() {
+		var c = arguments[1];
+		if (colors.indexOf(c) > -1) {
+			return '<span style="color:' + c + '">' + arguments[2] + '</span>';
+		}
+		return arguments[2];
+	};
+	bbcode['\\[sup\\](.+?)\\[/sup\\]'] = '<sup>$1</sup>';
+	bbcode['\\[player\\]'] = playerInfo.name;
+	bbcode['\\[url=((?:(?:https?:\\/\\/)?(?:[\\da-z\\.-]+)\\.(?:[a-z\\.]{2,6})(?:[\\/\\w\\.-]*)*\\/?))\\](.+?)\\[/url\\]'] = '<a href="$1" target="_blank">$2</a>';
+
+	this.getBBCode = function() {
+		return bbcode;
+	}
+
+	this.prepareText = function(text) {
+		for (var i in bbcode)
+			text = text.replace(new RegExp(i, 'gm'), bbcode[i]);
+		return text;
+	}
+
+	return this;
+}
+
+window.mitril = new mitrilController();
+
+window.mitril.getSavegame(function(result) {
+	if (!result) {
+		vars.items = {};
+		window.mitril.executeCleanTask(vars.items);
+		vars.steps = 0;
+		jsIQ.showArticle("1f0a24bf-e257-11eb-9c87-002590e2f74e");
+		jsIQ.triggerEvent('update_charsheet', {
+			update: true
+		});
+	} else {
+		vars.items = result.savedata;
+		vars.steps = parseInt(result.steps);
+		if (!vars.steps || isNaN(vars.steps)) vars.steps = 0;
+		if (result.lastarticle) vars.lastarticle = result.lastarticle;
+		if (result.article) {
+			jsIQ.showArticle(result.article, {
+				noPreLoadScript: true
+			});
+		} else {
+			jsIQ.showArticle("1f0a24bf-e257-11eb-9c87-002590e2f74e");
+		}
+		jsIQ.triggerEvent('update_charsheet', {
+			update: true
+		});
+	}
+});]]></script>
+  </article>
+  <handlers>
+    <handler name="update_charsheet"><![CDATA[var params = env.params;
+if (params && params.update) {
+    var charsheet = mitril.getCharsheetData(vars.items);
+    var ctx = mitril.getTpl('charsheet');
+    var checkpoints = [];
+    for (var g = 0; g < charsheet.length; g++) {
+        var group = charsheet[g];
+        if (group.type == 'checkpoint') {
+            checkpoints.push(group);
+            continue;
+        }
+        if (!group.visible) continue;
+
+        var html = mitril.getTpl('charsheet-group');
+
+        $('.g-name', html).html( group.name );
+        if (group.limit !== false) {
+            $('.g-limit', html).html( group.limit );
+            $('.g-stored', html).html( group.stored );  /* mitril.getGroupResourceCount(vars.items, group.uid) */
+        } else {
+            $('.g-size', html).remove();
+        }
+        var itemsHtml = $('.g-items', html);
+        var items = group.items;
+        for (var i = 0; i < items.length; i++) {
+            var item = items[i];
+            var itemHtml = mitril.getTpl('charsheet-item-' + group.type);
+            $('.i-name', itemHtml).html( item.name );
+            $('.i-uid', itemHtml).html( item.uid );
+            $('.i-value', itemHtml).html( item.value );
+            itemsHtml.append(itemHtml);
+        }
+        ctx.append( html );
+    }
+    $('#charsheet-data').html('').append( ctx );
+
+    if (checkpoints.length > 0) {
+        var ctx = mitril.getTpl('charsheet-checkpoints');
+        var html = $('.cp-list', ctx);
+        var visited = 0;
+        for (var c = 0; c < checkpoints.length; c++) {
+            var checkpoint = checkpoints[c];
+            var item = mitril.getTpl('charsheet-checkpoint');
+            $('.cp-icon', item).not('.'+checkpoint.available).hide();
+            if (checkpoint.available !== 'preview') {
+                visited++;
+            }
+            var link = $('.cp-label', item).html(checkpoint.name);
+            (function (a, uid) {
+                a.click(function() {
+                    if (uid) {
+                        mitril.loadCheckpoint(uid);
+                    }
+                    return false;
+                });
+            })(link, checkpoint.available === 'available' ? checkpoint.uid : false);
+
+            html.append( item );
+        }
+        var progress = Math.round( ( visited / ( checkpoints.length + 0.3) ) * 100 );
+        $('.progress-value', ctx).html();
+        $('.progress-bar', ctx).width(progress + '%');
+        $('#charsheet-data').append( ctx );
+    }
+}
+
+process.next();]]></handler>
+    <handler name="on_render_images"><![CDATA[$('.mitril-image', jsIQ.containers.text).remove();
+
+var images = env.params.images;
+if (images && images.length > 0) {
+    var image = images[0];
+    image = $('<div class="mitril-image '+image.name+'"><img src="'+image.src+'" style="width: 100%"/></div');
+    jsIQ.containers.text.prepend( image );
+}
+
+process.next();]]></handler>
+    <handler name="on_article_preload"><![CDATA[if (env.params && window.mitril) {
+    if ( env.params.article && env.params.article.title != 'mitril' ) {
+        /*var save = {
+            article: env.params.article.title,
+            savedata: vars.items ? $.extend({}, vars.items) : undefined,
+            steps: vars.steps
+        };
+        if (vars.lastarticle) {
+            save.lastarticle = vars.lastarticle;
+        }
+
+        window.mitril.saveGame(save);*/
+
+        window.mitril.saveGame(env.params.article.title, vars);
+
+        vars.steps++;
+    }
+}
+process.next();]]></handler>
+    <handler name="on_text_render"><![CDATA[/*
+PARSE TEXT, SYNCED!
+*/
+
+var ctx = env.params.container;
+if (ctx) {
+    /*$.each(getTextNodes(env.params.text.link), function() {
+      //var oldText = env.params.text.text;
+      //var text = window.mitril.prepareText(env.params.text.text);
+      //if (text !== oldText) {
+        //$(this).parent().html( window.mitril.prepareText( env.params.text.text ) );
+      //}
+    });*/
+    env.params.text.link.html( window.mitril.prepareText( env.params.text.text ) );
+}
+
+process.next();]]></handler>
+    <handler name="before_article_unload"><![CDATA[
+	mitrilJs.articleFadeAnimStart();
+
+	if (env.params.current) {
+		vars.lastarticle = env.params.current;
+	} else {
+		vars.lastarticle = null;
+	}
+
+process.next();]]></handler>
+    <handler name="on_render_article"><![CDATA[if (window.mitril) {
+		mitril.checkGameEnd(vars);
+	}
+	process.next();
+	]]></handler>
+    <handler name="after_article_loaded"><![CDATA[mitrilJs.articleFadeAnimEnd(null, null, process);]]></handler>
+    <handler name="jsiq_init_done"><![CDATA[jsIQ.addEventHandler('on_action_render', function(params, vars, process)	{
+    if (params.container && params.container.is('.Visible')) {
+        params.container.prepend('<small><i class="a-hover far fa-check-circle mr-2"></i><i class="a-unhover far fa-circle mr-2"></i></small>');
+    }
+
+    process.next();
+});
+
+process.next();]]></handler>
+  </handlers>
+<article id="1f0a24bf-e257-11eb-9c87-002590e2f74e"><text>Обычно день начинается с кофе, но сегодня Паша начал его со странных вопросов самому себе, типа "Алисе интересно хоть что-то, кроме аниме, разных паранормальных загадок и дайвинга?"
+Странным в таких вопросах является сам факт их существования, ведь он знает Алису с детства.
+Теперь он взрослый, состоявшийся фотограф, который даже живёт отдельно от родителей, снимая на свои деньги квартиру. Однако по-прежнему, как школьник, робеет в присутствии Алисы, хотя и встречается с ней постоянно по рабочим вопросам.
+У бойкой Алисы множество самых разных знакомых, которым нужен фотограф, поэтому проблем с заказами у Паши нет. Сейчас утро, а рабочие дела появятся ближе к вечеру, можно расслабиться. Как ему убить время?</text><img name="article-img1">/online/player/mitril/images/1f0a24bf-e257-11eb-9c87-002590e2f74eb331668cd3a2fd1468b3b867afc29cc2.jpg</img><script type="local1001_640255118"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"99f8c5e6-c571-4b99-b74a-9b89903ad94f","amnt":null}]);]]></script><action class="btnBlue" do="local1001_640255118" goto="d4d0c160-e257-11eb-9c87-002590e2f74e">Позвонить Алисе</action><script type="local1002_245456227"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"53e89b55-275d-4e79-a71c-d356088095e2","amnt":null}]);]]></script><action class="btnBlue" do="local1002_245456227" goto="d4d0c160-e257-11eb-9c87-002590e2f74e">Отвлечься, сыграв что-то на гитаре</action><script type="local1003_811734744"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"7fd930f7-714c-4429-9ca7-788920dcd458","amnt":null}]);]]></script><action class="btnBlue" do="local1003_811734744" goto="d4d0c160-e257-11eb-9c87-002590e2f74e">Потратить время с пользой, посмотрев уроки по фотографии</action><script type="local1004_354877474"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"c48e44a1-6225-4b98-b130-de7d4e25562b","amnt":null},{"class":"dec","type":"r","val":"d1324bc6-7b25-4187-a0d1-12bfa2232a4f","amnt":1}]);]]></script><action class="btnBlue" do="local1004_354877474" goto="d4d0c160-e257-11eb-9c87-002590e2f74e">Излить негативное настроение в соц-сетях</action></article><article id="01206c81-f36f-11eb-9c87-002590e2f74e"><text>Это конец первой истории. Друзья раскрыли первое дело, но впереди у них ещё много других загадочных случаев.
+== Эпизод 2 ==
+[url=https://quest-book.ru/online/skeptiki2/]Атака клонов[/url]</text><img name="article-img1">/online/player/mitril/images/01206c81-f36f-11eb-9c87-002590e2f74ed815d19c7a6f1aba230664e086f617bc.gif</img></article><article id="02a0f478-eb96-11eb-9c87-002590e2f74e"><text/><img name="article-img1">/online/player/mitril/images/02a0f478-eb96-11eb-9c87-002590e2f74e63c386b7945ebf1ca8b7f6967919828c.jpg</img><text>Поезд прибыл в пункт назначения. Пассажиры  быстро расходятся с вокзала, а герои решили потратить несколько минут, чтобы осмотреться. Времени у них много и торопиться некуда.
+Место вокруг вполне обычное и даже, можно сказать, приветливое. Это Павлу кажется подозрительным. Он  настроен на скептический лад. Почему везде так чисто? Почему люди улыбаются? Почему деревья и кусты аккуратно пострижены?</text><script type="local1001_600562912"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"7fd930f7-714c-4429-9ca7-788920dcd458","amnt":null}], true);]]></script><text if="local1001_600562912">Пейзаж сильно напоминает картинки из урока по фотографии, который Паша изучал перед тем, как к нему пришла Алиса.</text><script type="local1002_366860770"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"c48e44a1-6225-4b98-b130-de7d4e25562b","amnt":null}], true);]]></script><text if="local1002_366860770">Пейзаж сильно напоминает те картинки, которые использовал оппонент Паши в том сетевом споре, который прервала Алиса.
+Тут всё так благостно, как в колхозе с советского агитационного плаката.</text><text>Алиса, в отличие от Паши, весьма довольна. Даже история в электричке не смогла выбить её из равновесия. Она всегда любила тихие провинциальные городки. Атмосфера здесь кажется ей умиротворяющей и даже романтичной.      
+Теперь надо навестить бабулю. Она живёт неподалёку от вокзала.</text><action class="btnBlue" goto="5f268385-eb96-11eb-9c87-002590e2f74e">Далее</action></article><article id="083a9be5-e62a-11eb-9c87-002590e2f74e"><text>От торговли на рынке прибыли много не получишь. Так что, пенсионерки больше для развлечение этим занимаются. Но какое развлечение, если просто молча сидеть весь день за прилавком?  
+А с чесноком, как и с прочей зеленью, странная штука – она на рынке примерно у всех одинаковая. Это если, конечно, не китайская. Но там, как известно, пестициды. Если что-то  натуральное и полезное, то оно не может быть большим и блестящим, а по словам бабули, у её подруги   как раз всё такое.</text><img name="article-img1">/online/player/mitril/images/083a9be5-e62a-11eb-9c87-002590e2f74e0e1b1e35740c83ba268403d91e341c95.jpg</img><action class="btnBlue" goto="234ce390-e62a-11eb-9c87-002590e2f74e">Далее</action></article><article id="0d71245f-e62a-11eb-9c87-002590e2f74e"><text>Вакцина? Да как у всех. Пошла в местную поликлинику, да и сделала.
+Половина посёлка так поступила. Другая лечится от коронавируса хреном, баней и банками. 
+Есть ещё заговоры,  амулеты и молитвы, но в них мало кто верит, потому что эти методы пока не доказали  в глазах местных свою эффективность.</text><img name="article-img1">/online/player/mitril/images/0d71245f-e62a-11eb-9c87-002590e2f74eb5c3402d04f6ea9213f0e5ff27611e34.jpg</img><action class="btnBlue" goto="234ce390-e62a-11eb-9c87-002590e2f74e">Далее</action></article><article id="11952a6a-e62a-11eb-9c87-002590e2f74e"><text>Бабушки дружат давно. Раньше, как говорится - не разлей вода были. В молодости вместе ходили в походы и влюблялись в одних и тех же парней, была даже пара каких-то любовных драм.
+Обе вышли замуж, но у бабушки Алисы муж умер, а подруга давно развелась. Теперь они просто две одинокие пожилые женщины.</text><action class="btnBlue" goto="234ce390-e62a-11eb-9c87-002590e2f74e">Далее</action></article><article id="1a9e5a68-e3dc-11eb-9c87-002590e2f74e"><text>Это, конечно, ерунда, но бабушка очень беспокоится за подругу. Они вместе с самого детства и даже живут рядом. Много лет всё шло своим чередом – они ходили в гости друг к другу, вместе торговали чесноком и носками на рынке. 
+Но теперь, вдруг, всё резко изменилось: подруга сделала прививку от коронавируса и совсем забросила огород. Он зарос сорняками и крапивой.  Однако подруга продолжает торговать, а  чеснок у неё не переводится и даже стал больше обычного – мясистый и блестящий. Верный признак что, что-то не так!   
+В гости к соседке она не заходит, но подолгу бесцельно ходит вокруг вышки сотовой связи и  часто сидит в сарае. Оттуда она облучает бывшую подругу лучами, что заметно по помехам в телевизоре. Бабушка Алисы испугалась и  больше к соседке на участок ни ногой!
+Вот у Алисы и возник план, что надо просто зайти в гости к подозрительной старушке, пообщаться, сделать фотографии  огорода  и тем самым доказать, что  всё осталось, как прежде.
+Трудно передать как сильно смущает Пашу этот план. Да, с одной стороны: Алиса и её бабушка, которую сам Паша прекрасно знает. Обижать не хочется обеих. С другой стороны, какая-то непонятная старушка, к которой надо напрашиваться в гости.  Неужели у Алисы нет никаких более интересных дел?</text><img name="article-img1">/online/player/mitril/images/1a9e5a68-e3dc-11eb-9c87-002590e2f74ec04e4588c9229011535a1761eb1d18ee.jpg</img><script type="local1001_318972394"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"a53262f4-39ad-4ee5-bfdb-57c4f013e4dc","amnt":null},{"class":"dec","type":"r","val":"d1324bc6-7b25-4187-a0d1-12bfa2232a4f","amnt":2}]);]]></script><action class="btnBlue" do="local1001_318972394" goto="39dd2b6d-e3dc-11eb-9c87-002590e2f74e">Бабушка просто в маразме!</action><script type="local1002_535424215"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"38b083ed-bd77-4db2-9e3a-8c9ce613f518","amnt":null},{"class":"dec","type":"r","val":"d1324bc6-7b25-4187-a0d1-12bfa2232a4f","amnt":1}]);]]></script><action class="btnBlue" do="local1002_535424215" goto="39dd2b6d-e3dc-11eb-9c87-002590e2f74e">Давай лучше проверим байку о крокодилах в нашем пруду!</action><script type="local1003_920943332"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"2c9aa6c5-24f3-46fc-8521-e99446518802","amnt":null}]);]]></script><action class="btnBlue" do="local1003_920943332" goto="39dd2b6d-e3dc-11eb-9c87-002590e2f74e">Какой-то сомнительный план</action></article><article id="234ce390-e62a-11eb-9c87-002590e2f74e"><text>Да, всё это выглядит странно. Паша пытается как-то переварить информацию, но ему всё время мешают. 
+Во-первых, Алиса опять отвлеклась от темы и начала обсуждать каких-то общих знакомых. Правда, она часто путает какие из них на самом деле общие, а каких знает только она. Очень уж  широкий у неё круг общения, в отличие от Паши.   
+Во-вторых, рядом с ними сидит пара с ребёнком, который громко комментирует всё, что видит за окном. В пересказе всё это выглядит довольно мрачно: 
+- Мама! Заброшенный дом! А вот ещё развалины! Смотрите, там был пожар! 
+Родители пытаются ему тактично намекнуть, что из окна поезда всё выглядит хуже, чем есть на самом деле. Однако, получается у них плохо и ребёнок всё ни унимается.</text><img name="article-img1">/online/player/mitril/images/234ce390-e62a-11eb-9c87-002590e2f74eb27cffa90d05dc95d11afff9dc3a019a.jpg</img><action class="btnBlue" goto="be98bcbe-e6df-11eb-9c87-002590e2f74e">Далее</action></article><article id="286b447a-f36a-11eb-9c87-002590e2f74e"><text>Паша никогда в жизни так не бегал - страх за Алису дал ему сил. Она не отвечает на телефон. Такое вообще когда-то случалось? Здесь явно творится какая-то дичь.   
+Вот перед Пашей вышка сотовой связи, а на тропинке к ней - Алиса - неторопливо, но очень целеустремлённо  идёт к вышке.
+Паша бросается к девушке, но она не узнаёт приятеля. Её глаза смотрят только в сторону вышки. Несмотря на отчаянные призывы Паши, она не останавливается. Паша пытается как-то растормошить девушку, чтобы она очнулась от наваждения. Всё тщетно! Ещё пара шагов и девушка дойдёт до вышки. 
+Надо срочно что-то придумать!</text><img name="article-img1">/online/player/mitril/images/286b447a-f36a-11eb-9c87-002590e2f74e1e6171d53a29c852018dd78519792cb6.jpg</img><action class="btnBlue" goto="355c3287-f36b-11eb-9c87-002590e2f74e">Алиса! Миелофон у меня!</action><action class="btnBlue" goto="55e24450-f36b-11eb-9c87-002590e2f74e">Аниме - это просто халтурные мультики!</action><action class="btnBlue" goto="355c3287-f36b-11eb-9c87-002590e2f74e">Я люблю тебя!</action></article><article id="2922871c-e31c-11eb-9c87-002590e2f74e"><text>Алиса, срезая углы,  ведёт  Пашу коротким путём на станцию, где им надо сесть на электричку. 
+Самое время спросить о цели похода. Сложность в том, что Алиса сама не замолкает ни на минуту.  Она рассказывает о своих черепашках, которые сбежали из аквариума, потом следует история про акваланг и мороженое. Когда Паша всё-таки наводит девушку на нужную ему тему, она очень удивляется, "Разве ты не в курсе, раз согласился?". Ха! Попробуй тут отказать!
+Алиса пожимает плечами - мол, странный ты, всё-таки Паша. 
+В общем,  дело в том, что у Алисы есть бабушка. А у этой бабушки подруга детства. И вот эту самую подругу "чипировали" во время вакцинации.</text><img name="article-img1">/online/player/mitril/images/2922871c-e31c-11eb-9c87-002590e2f74e1d03f0a78a31f781a3b70f174ced0887.jpg</img><script type="local1001_258619521"><![CDATA[mitril.scriptWrap(vars, [{"class":"dec","type":"r","val":"d1324bc6-7b25-4187-a0d1-12bfa2232a4f","amnt":1}]);]]></script><action class="btnBlue" do="local1001_258619521" goto="1a9e5a68-e3dc-11eb-9c87-002590e2f74e">Чипировали, значит так надо. Мы тут  причём?</action><script type="local1002_458259677"><![CDATA[mitril.scriptWrap(vars, [{"class":"dec","type":"r","val":"d1324bc6-7b25-4187-a0d1-12bfa2232a4f","amnt":1}]);]]></script><action class="btnBlue" do="local1002_458259677" goto="1a9e5a68-e3dc-11eb-9c87-002590e2f74e">Ерунда какая!</action><action class="btnBlue" goto="1a9e5a68-e3dc-11eb-9c87-002590e2f74e">И  что?</action></article><article id="31a83947-efc4-11eb-9c87-002590e2f74e"><text>Алиса картинно закатывает глаза и подносит ладонь к лицу, изображая фейспалм, после чего презрительно фыркает и начинает говорить с Пашей, как с маленьким ребёнком.
+- Паша, мы с тобой друзья с детства, очень хорошие друзья. Я тебя очень ценю, давай не портить всё, тем более в такой момент. 
+И что теперь делать? Обижаться? Выяснять отношения или сделать вид, что ничего не произошло? Пока герой решает эту непростую задачку, бабуля вернулась с гостинцами и момент был упущен.</text><action class="btnBlue" goto="83b8c70a-edf2-11eb-9c87-002590e2f74e">Далее</action></article><article id="_mitril_triggers"><text/></article><article id="3233935f-e629-11eb-9c87-002590e2f74e"><text>Ну, старушка в молодости была  радиоинженером. 
+И, пользуясь своими навыками, она    обнаружила некую электромагнитную аномалию на соседнем участке и составила её карту.  Она напоминает восьмёрку, в центре кругов которой дом и сарай.</text><action class="btnBlue" goto="5ac19cea-e629-11eb-9c87-002590e2f74e">Далее</action></article><article id="355c3287-f36b-11eb-9c87-002590e2f74e"><text>Алиса не обращает внимания на Павла и идёт дальше. 
+Он пробует схватить её, но Алиса с неожиданной силой отталкивает его в сторону. 
+У самой вышки девушка вдруг останавливается. Лицо просветляется и она с улыбкой оборачивается к другу.
+- Ты чего орёшь? Что случилось?   
+Паша задаёт ей кучу вопросов, он сбит с толку и растерян, но Алиса спокойна и рассудительна. Она объясняет, что ей нужно было проверить теорию о вредном влиянии вышек на здоровье. 
+Вот, теперь они оба стоят прямо рядом с объектом и ничего страшного не случилось. Можно возвращаться назад.</text><action class="btnBlue" goto="b02a5d39-f44b-11eb-9c87-002590e2f74e">Далее</action></article><article id="37a2c797-e629-11eb-9c87-002590e2f74e"><text>Согласно  наблюдениям бабули, подруга перестала ходить в магазин, в поликлинику или просто в парк.  
+Вместо этого она без видимой цели бродит по улицам, а иногда подолгу  сидит  в лесу рядом с вышкой сотовой связи.</text><action class="btnBlue" goto="5ac19cea-e629-11eb-9c87-002590e2f74e">Далее</action></article><article id="39dd2b6d-e3dc-11eb-9c87-002590e2f74e"><text/><img name="article-img1">/online/player/mitril/images/39dd2b6d-e3dc-11eb-9c87-002590e2f74e351fba9408b767d341e32cb6885af182.jpg</img><script type="local1001_477404133"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"a53262f4-39ad-4ee5-bfdb-57c4f013e4dc","amnt":null}], true);]]></script><text if="local1001_477404133">Алиса морщится. Она любит свою бабушку.</text><script type="local1002_604214767"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"38b083ed-bd77-4db2-9e3a-8c9ce613f518","amnt":null}], true);]]></script><text if="local1002_604214767">Алиса разочарованно фыркает! Она не любит, когда её планы высмеивают или подвергают сомнениям, а шутку про крокодилов в пруду она не оценила. 
+Зря! Паша её долго придумывал.</text><script type="local1003_347469643"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"2c9aa6c5-24f3-46fc-8521-e99446518802","amnt":null}], true);]]></script><text if="local1003_347469643">Алиса разочарованно фыркает! Она не любит, когда её планы высмеивают или подвергают сомнениям.</text><text>- Пенсионерам надо помогать, даже если они ведут себя странно! Доживёшь до её лет и ещё не то будешь рассказывать. Может, ей внимания просто не хватает? В любом случае, можно  попытаться помирить старых друзей. Что в этом плохого? Бабу Галю я тоже хорошо знаю - она чудить любит. Я, когда маленькая была, то она в меня конфетами кидалась с яблони. Игру, понимаешь ли, она такую придумала. Типа, просто в прятки с ребёнком  скучно играть. Наверняка и сейчас что-то подобное выдумала.</text><script type="local1004_721970205"><![CDATA[mitril.scriptWrap(vars, [{"class":"dec","type":"r","val":"d1324bc6-7b25-4187-a0d1-12bfa2232a4f","amnt":1}]);]]></script><action class="btnBlue" do="local1004_721970205" goto="b1b8088f-e3dd-11eb-9c87-002590e2f74e">Лезть в эти разборки - плохая идея</action><action class="btnBlue" goto="9a78cd02-e3df-11eb-9c87-002590e2f74e">Ладно, давай всё проверим</action></article><article id="3c466eae-e629-11eb-9c87-002590e2f74e"><text>По словам пенсионерки,  соседка ночью практически не пользуется светом.  Лампа включается только на кухне, а в остальных комнатах всегда темно.</text><action class="btnBlue" goto="5ac19cea-e629-11eb-9c87-002590e2f74e">Далее</action></article><article id="3e8fb4fb-e3df-11eb-9c87-002590e2f74e"><text>Героям не удалось раскрыть тайну. Ну, ничего! В следующий раз повезёт - на свете ещё много тайн и загадок.</text><img name="article-img1">/online/player/mitril/images/3e8fb4fb-e3df-11eb-9c87-002590e2f74edcce535bb1991f7a55736b2fafbb7c72.gif</img><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"achi","val":2}]);]]></script></article><article id="41b4a8ba-f393-11eb-9c87-002590e2f74e"><text>Паша сам не заметил, как оказался на соседнем участке. 
+Он был так погружён в себя и свои ощущения, что не сразу понял - перед ним кто-то стоит. 
+Сначала он услышал невнятное многоголосое бормотание. Потом почувствовал резкий чесночный запах и лишь затем увидел, что вровень с бурьяном стоят старушки. 
+Их было много и они были повсюду. Странно, но теперь Паша их не боялся. Он, даже обрадовался, словно после долгого пути по пустыне  он наконец-то вышел к жилью. 
+Его рот расплылся в бессмысленной улыбке. Он подошёл поближе к ближайшей старушке.       
+Она протягивает ему чеснок. Наконец-то еда!</text><action class="btnBlue" goto="66c0e6f5-f369-11eb-9c87-002590e2f74e">Далее</action></article><article id="42150543-efc4-11eb-9c87-002590e2f74e"><text>Алиса смотрит на Пашу с недоумением. С каких это пор он заделался любителем природы? Она прекрасно помнит, что как ещё в школе они ходили с классом в поход. Там Паша натёр себе ногу ещё в автобусе, а ночью не мог спать в палатке,  потому что ему мешал дятел. 
+В итоге, днём, когда все жгли костёр и купались в реке, он собрал все спальные мешки в кучу и спал на них, как принцесса на горошине.
+  
+Паша пытается ещё что-то рассказать о своей любви к красотам средней полосы России, но Алиса уже потеряла  интерес – у неё слишком много дел в городе для такой ерунды.</text><action class="btnBlue" goto="83b8c70a-edf2-11eb-9c87-002590e2f74e">Далее</action></article><article id="46932717-e491-11eb-9c87-002590e2f74e"><text>Алиса как-то с недоумением  посмотрела на Пашу, а потом загадочно замолкает. Это на неё непохоже, то ли Паша допустил бестактность, то ли задел за живое. 
+Её реакция так поражает Пашу, что он тоже молчит до самой электрички.</text><action class="btnBlue" goto="d93fa5e0-e491-11eb-9c87-002590e2f74e">Далее</action></article><article id="497b26d1-f3a4-11eb-9c87-002590e2f74e"><text>После того, как Паша отсидел за нападение 30 суток в местном обезьяннике, он вернулся домой, где встретил Алису. 
+Она сильно изменилась - стала больше похожа на свою бабушку. Она не хочет обсуждать произошедшее и как-то отдалилась от Павла. Больше они не общаются.
+Это конец истории.</text><img name="article-img1">/online/player/mitril/images/497b26d1-f3a4-11eb-9c87-002590e2f74e4ff766b1a81b8d88463bef412f084a47.gif</img><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"achi","val":2}]);]]></script></article><article id="49ac8037-e629-11eb-9c87-002590e2f74e"><text>Несмотря на прочие странности, подруга бабушки продолжает торговать на рынке зеленью с собственного огорода. 
+Весь день она сидит молча, ни с кем не общается, а на вопросы отвечает односложно, хотя и вежливо.</text><action class="btnBlue" goto="5ac19cea-e629-11eb-9c87-002590e2f74e">Далее</action></article><article id="4ca6843f-e491-11eb-9c87-002590e2f74e"><text>Как и предполагал Пашу, Алису прорвало словно дамбу половодьем. У Алисы всегда тысяча и одно дело. 
+Только официальных мест работ у неё аж целых три!
+Пока они шли к электричке, Паша узнал чрезвычайно много новой информации. Она включала в себя изменения в новой системе пропусков в издательстве,  проблемы со статьёй про хобби мэра, а также местную сенсацию, которая касалась новой сотрудницы, что оказалась  вовсе даже и не новой, а хорошо забытой старой.
+Вряд ли что-то из этих данных пригодится Паше, но сам факт подобного разговора вселял в него оптимизм насчёт развития их с Алисой отношений. 
+Нет лучше способа их наладить, чем дать человеку выговориться на интересную ему тему.</text><action class="btnBlue" goto="d93fa5e0-e491-11eb-9c87-002590e2f74e">Далее</action></article><article id="500530cd-efc4-11eb-9c87-002590e2f74e"><text>Алиса очень хочет вернуться домой пораньше – у неё, как всегда, полно дел.
+Во-первых, ей надо проверить дела в домашнем террариуме. Его обитатели  не особо привередливы – еды и воды у них достаточно, но мало ли что! Вдруг они кого-то не того съели?
+Во-вторых, а что если в квартире трубу прорвало? Вряд ли, но вдруг?
+В-третьих, ей надо взять интервью у одного депутата. По сути, это самое важное дело и его надо бы поставить на первое место. Но Алисе совсем  неохота общаться  с этим скользким дядечкой. Собственно, именно поэтому она ищет любой способ, чтобы отложить такое неприятное дело. 
+Подозрения Паши ей кажутся нелепыми, но, с другой стороны – дело есть дело! Она может ещё немного пообщаться со старушкой, отвлечь её и выиграть время. 
+Что в это время Паша хочет осмотреть?</text><action class="btnBlue" goto="9ad9c664-f061-11eb-9c87-002590e2f74e">Дом снаружи</action><action class="btnBlue" goto="9f0079c2-f061-11eb-9c87-002590e2f74e">Аномалию у сарая</action><script type="local1001_633336965"><![CDATA[return mitril.checkCondition(vars.items, {"or":1,"c":[{"type":"k","val":"8e5a1a6c-d369-4b0a-9ac0-9f32c9c3e1a9","amnt":null},{"type":"k","val":"a1314075-4c92-4b2c-804c-69e51d96c7cf","amnt":null}]}, true);]]></script><action class="btnBlue" if="local1001_633336965" goto="a332bcd2-f061-11eb-9c87-002590e2f74e">Огород</action><script type="local1002_403555936"><![CDATA[return !mitril.checkCondition(vars.items, [{"type":"k","val":"8e5a1a6c-d369-4b0a-9ac0-9f32c9c3e1a9","amnt":null},{"type":"k","val":"a1314075-4c92-4b2c-804c-69e51d96c7cf","amnt":null}], false);]]></script><action class="btnBlue" ifnot="local1002_403555936" goto="e5a8a861-f062-11eb-9c87-002590e2f74e">Огород</action></article><article id="52b632e1-f36d-11eb-9c87-002590e2f74e"><text>Вернувшись в дом бабушки, друзья застают старушку в добром здравии. Она немного растеряна и как будто забыла детали последних дней.  Например, она не может вспомнить, откуда у неё на грядках взялся подозрительный чеснок. 
+Вооружившись лопатой и рабочими перчатками, друзья бегут его уничтожать, но находят только гнилые остатки. 
+Кажется всё окончилось.</text><action class="btnBlue" goto="e1c243f7-f36d-11eb-9c87-002590e2f74e">Далее</action></article><article id="52f4ae16-e491-11eb-9c87-002590e2f74e"><text>У обычных людей разговор об отпуске - это повод помечтать.  
+Однако Алиса всегда делает тысячу дел одновременно. Она даже официально подрабатывает в трёх фирмах - для одной пишет статьи, для другой рисует иллюстрации, а в третьей она организует мероприятия.  
+Поэтому отпуск у неё всегда  непредсказуемый и весьма хаотичный. Например, сегодня она помогает организовывать свадьбу, а завтра уже сплавляется по реке на байдарке и одновременно пишет статью о космосе.
+Так что, её мечты об отпуске это всегда какой-то новый "проект". 
+После перечисления всех дел, что запланировала себе Алиса, Паша на мгновение даже пожалел, что завёл это разговор.  
+Хорошо, что они дошли до электрички и Алиса отвлеклась от своего "бизнеса".</text><action class="btnBlue" goto="d93fa5e0-e491-11eb-9c87-002590e2f74e">Далее</action></article><article id="55e24450-f36b-11eb-9c87-002590e2f74e"><text>Алиса останавливается, словно получив пощёчину и медленно поворачивается в сторону Паши.
+- Что ты сказал!? - её голос дрожит от возмущения. Она так злится, что даже не замечает где находится.
+- Алиска! Я пошутил! Очнись! - от волнения Паша даже теряет контроль над собой, хлюпает носом и с трудом сдерживает слёзы, а затем обнимает девушку, но та не сразу понимает всю абсурдность сцены.
+        
+Вскоре Паша успокаивается, а Алиса полностью приходит в себя, теперь она снова готова к бою и её просто распирает от возмущения из-за такого коварного обмана.</text><img name="article-img1">/online/player/mitril/images/55e24450-f36b-11eb-9c87-002590e2f74e05e0c61fbb25c21185a4d40dfe4d0781.jpg</img><action class="btnBlue" goto="c4a4d289-f36c-11eb-9c87-002590e2f74e">Алиса, что делать?</action><action class="btnBlue" goto="c4a4d289-f36c-11eb-9c87-002590e2f74e">Пойдём домой</action><action class="btnBlue" goto="c4a4d289-f36c-11eb-9c87-002590e2f74e">Надо позвать на помощь</action></article><article id="5ac19cea-e629-11eb-9c87-002590e2f74e"><text>Других подробностей, к сожалению, Алиса не знает. Она не придаёт им значения, потому что не верит в чипирование. У неё куча других версий насчёт бабушки среди которых можно выделить: 
+Версия первая: бабуле скучно и она хочет видеть внучку.
+Версия вторая - ей не хватает внимания. 
+Третья - она поссорилась из-за чего-то с соседкой, но ей стыдно признаться о причине. Наверняка это что-то очень глупое.    
+Версия четвёртая: возможно, что соседка заболела, сидит в карантине и не хочет видеть подругу, чтобы не заразить. 
+Ну и банально нельзя отметать вариант, что может быть, старушка просто так шутит?
+Алиса бы ещё версий напридумывала, но Паша всерьёз решил разобраться в проблеме. Надо изучить ситуацию со всех сторон.</text><script type="local1001_698990360"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"8e5a1a6c-d369-4b0a-9ac0-9f32c9c3e1a9","amnt":null}]);]]></script><action class="btnBlue" do="local1001_698990360" goto="083a9be5-e62a-11eb-9c87-002590e2f74e">Спросить про чеснок</action><script type="local1002_813910303"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"c3373abd-4aac-4e7d-8958-f554b1e6c169","amnt":null}]);]]></script><action class="btnBlue" do="local1002_813910303" goto="0d71245f-e62a-11eb-9c87-002590e2f74e">Спросить про вакцину</action><script type="local1003_144167822"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"ac7ac6eb-40b2-4f16-a1bb-8b44fee9eecc","amnt":null}]);]]></script><action class="btnBlue" do="local1003_144167822" goto="11952a6a-e62a-11eb-9c87-002590e2f74e">Спросить про историю дружбы</action></article><article id="5dec51fd-eb95-11eb-9c87-002590e2f74e"><text>Поезд движется дальше. Алиса с задумчивым выражением лица смотрит в окно, а Паша оглядывается вокруг, его одолевают разные мысли. 
+ 
+Скоро конец пути и людей в вагоне становится меньше, возможно это -  последний шанс спокойно  поговорить с Алисой о чём-то личном. Например, стоило бы уточнить в каком качестве он едет в эту поездку. Неужели он нужен Алисе только как фотограф и друг детства? Может, тут есть что-то большее? Надо бы осторожно прощупать почву.
+Паша хорошо знает Алису - она уже предельно сосредоточена на задаче и готова ринуться в бой, а когда она в таком настроении, её лучше не отвлекать. С другой стороны, дальше будет совсем не до посторонних разговоров.</text><img name="article-img1">/online/player/mitril/images/5dec51fd-eb95-11eb-9c87-002590e2f74e750d2831568c61f5784e20d23aeb9cfa.jpg</img><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"del","type":"k","val":"00e5f402-465e-4c33-ae60-9f8007c4b77a"},{"class":"rnd","type":"k","val":"00e5f402-465e-4c33-ae60-9f8007c4b77a"}]);]]></script><action class="btnBlue" goto="9bbbcf0e-eb95-11eb-9c87-002590e2f74e">Подождать подходящего момента</action><script type="local1001_566526982"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"9b4d7d17-2d31-41cf-b433-148426cea53f","amnt":null}], true);]]></script><script type="local1002_242903385"><![CDATA[mitril.scriptWrap(vars, [{"class":"dec","type":"r","val":"d1324bc6-7b25-4187-a0d1-12bfa2232a4f","amnt":1},{"class":"inc","type":"k","val":"ca0799eb-0360-4a4b-9a76-acd18d95438a","amnt":null}]);]]></script><action class="btnBlue" if="local1001_566526982" do="local1002_242903385" goto="9bbbcf0e-eb95-11eb-9c87-002590e2f74e">Рассказать анекдот</action><script type="local1003_275506499"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"r","val":"d1324bc6-7b25-4187-a0d1-12bfa2232a4f","amnt":1}]);]]></script><action class="btnBlue" do="local1003_275506499" goto="9bbbcf0e-eb95-11eb-9c87-002590e2f74e">Начать разговор о деле и перевести тему</action><script type="local1004_942753869"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"340f06c4-02ee-439d-b1ab-f9b0000d48b4","amnt":null}], true);]]></script><script type="local1005_585474838"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"r","val":"d1324bc6-7b25-4187-a0d1-12bfa2232a4f","amnt":1},{"class":"inc","type":"k","val":"ca0799eb-0360-4a4b-9a76-acd18d95438a","amnt":null}]);]]></script><action class="btnBlue" if="local1004_942753869" do="local1005_585474838" goto="9bbbcf0e-eb95-11eb-9c87-002590e2f74e">Рассказать анекдот</action></article><article id="5f268385-eb96-11eb-9c87-002590e2f74e"><text>Бабушка Алисы живёт в одноэтажном частном доме, который стоит в одном ряду с такими же. Они похожи друг на друга как две капли воды, правда, как показалось Паше, остальные дома новее, что ли. 
+Старушка встречала их у калитки с таким видом, словно стояла тут уже с утра, как солдат на посту. 
+Следуя древнему ритуалу, Алиса с Пашей были тотчас приглашены внутрь и накормлены до бесчувствия. 
+Бабушка в очень хорошем настроении, она рада видеть внучку, а, кроме, того, она уже помирилась со своей соседкой и все недоразумения были забыты.
+Алиса торжествующе смотрит на Пашу - мол, я же говорила!</text><img name="article-img1">/online/player/mitril/images/5f268385-eb96-11eb-9c87-002590e2f74eaccdf185fb1e52e66b4611f7150b5801.jpg</img><action class="btnBlue" goto="83b8c70a-edf2-11eb-9c87-002590e2f74e">Отлично! Миссия выполнена!</action><action class="btnBlue" goto="a08d2d65-edf2-11eb-9c87-002590e2f74e">Есть ещё пара вопросов</action></article><article id="66c0e6f5-f369-11eb-9c87-002590e2f74e"><text>ОНОТОЛЕ СЛЕДИТ РИАЛЬНЕ!!111111 ЖАЖА!!!!11111!!1 ЪЖЧЛО1!!адин111 ЪЖСЛОЕ111!! УНЫЛЕ ДОЛЛАРЕ ИНФЛЯЦЕЕ - ПЕПЯКЕ РОСТЕ!!!!111 11 111 ЧАКЕ БДИТ, УГ НЕ ПРОЙДЕТ111 ВОЕНЕ УПЧК СТРАШНЕ ОТАКЕ ДДоСЕ! 11РАСРАС ФИФТЕЦЕНДЕ СИРАНЕ УГ ПОПЯЧТСА!!111, %USERNAME%?! 111 СКОЛОПЕНДРЕ БОДРЕ МОГУЧЕ ЖЫВТОНЕ НАСЕКОМЕ!!!!!!
+Что это код или поток бреда? Герой не знает, да и не может знать.  Там, где он  был раньше, теперь появилось иное существо, которому нет дела до  глупых вопросов, которые задавал себе Паша. 
+Для Паши это конец истории.</text><img name="article-img1">/online/player/mitril/images/66c0e6f5-f369-11eb-9c87-002590e2f74edaf16a8bf872fd170c6cb03fafe0acbe.gif</img><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"achi","val":2}]);]]></script></article><article id="6b49ca64-f369-11eb-9c87-002590e2f74e"><text>Свет и тень причудливо играют в догонялки среди густых зарослей у забора. 
+Там что-то мелькнуло или это воображение, пришпоренное страхом? Несмотря на тревогу, Пашу влечёт всё дальше в сторону участка соседки.  
+Он раздвигает ветки сирени и настойчиво продирается вперёд. Инстинкт самосохранения не советует ему продолжать, но с каждым шагом его голос всё тише.</text><img name="article-img1">/online/player/mitril/images/6b49ca64-f369-11eb-9c87-002590e2f74e52212320ff52cd188ff13cc1af88126f.jpg</img><action class="btnBlue" goto="70782d17-f369-11eb-9c87-002590e2f74e">Вернуться в дом</action><action class="btnBlue" goto="41b4a8ba-f393-11eb-9c87-002590e2f74e">Идти дальше</action></article><article id="70782d17-f369-11eb-9c87-002590e2f74e"><text>Сердце героя бешено колотится, колени подкашиваются, а голова идёт кругом. В такие моменты всегда особенно обидно, что трудно определить причину такого состояния – ничего же особенного не происходит!
+Солнышко светит, трава зеленеет, вокруг умиротворяющий провинциальный пейзаж, а всё тело вдруг охватывает липкий и противный страх.  
+Хорошо ещё, что Алиса этого безобразия не видит. Уж она-то точно бросилась бы к забору или бесстрашно вырвала этот подозрительный чеснок.  
+Хм… Кстати, а где она? 
+На кухне сидит только улыбчивая бабушка, которая смотрит на Пашу жутким взглядом: ему кажется, что она не моргает. Она что, реально не моргает? Не может такого быть! Наверное, она моргнула тогда же, когда моргнул и Паша.
+Но где Алиса? Старушка вежливо сообщает, что Алиса уехала домой. Явное враньё! Алиса не может уехать без Паши!
+Теперь страх героя постепенно вытесняется гневом. Надо направить эмоции в нужную сторону.</text><action class="btnBlue" goto="c027d7ae-f369-11eb-9c87-002590e2f74e">Накинуться на старушку с кулаками</action><action class="btnBlue" goto="c4b527d4-f369-11eb-9c87-002590e2f74e">Броситься искать Алису</action><script type="local1001_691106174"><![CDATA[mitril.scriptWrap(vars, [{"class":"nlg","type":"r","val":"dc171b4d-ea14-4e4a-993b-0a06785612d1","amnt":0}]);]]></script><action class="btnBlue" do="local1001_691106174" goto="c9a84178-f369-11eb-9c87-002590e2f74e">Успокоиться и осмотреться кругом</action></article><article id="787d4cf7-f438-11eb-9c87-002590e2f74e"><text>Осмотр улик не дал результата. Наверное, Паша ошибся с самого начала или был невнимателен в своём расследовании.
+Ну, что же, по крайней мере - основную задачу они с Алисой выполнили - старушки-то помирились!</text><action class="btnBlue" goto="83b8c70a-edf2-11eb-9c87-002590e2f74e">Далее</action></article><article id="83b8c70a-edf2-11eb-9c87-002590e2f74e"><text>Паша и Алиса едут домой. Всё хорошо, что хорошо кончается. 
+Если бы все проблемы решались так легко, то жизнь стала бы значительно проще.</text><action class="btnBlue" goto="3e8fb4fb-e3df-11eb-9c87-002590e2f74e">Далее</action></article><article id="849f727f-f524-11eb-9c87-002590e2f74e"><text>Паша не замечает ничего особенного. 
+Время уходит. Надо торопиться.</text><script type="local1001_655409629"><![CDATA[return !mitril.checkCondition(vars.items, [{"type":"r","val":"ae049776-4176-4a2b-bac2-f729f8dcc529","amnt":3}], false);]]></script><action class="btnBlue" ifnot="local1001_655409629" goto="c9a84178-f369-11eb-9c87-002590e2f74e">Попробовать ещё раз</action><script type="local1002_591106619"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"r","val":"ae049776-4176-4a2b-bac2-f729f8dcc529","amnt":3}], true);]]></script><action class="btnBlue" if="local1002_591106619" goto="c4b527d4-f369-11eb-9c87-002590e2f74e">Искать Алису</action></article><article id="88c92d25-f3a5-11eb-9c87-002590e2f74e"><text>С тех пор Алиса сильно изменилась - стала больше похожа на свою бабушку. Она не хочет  больше обсуждать произошедшее и как-то отдалилась от Павла.  Больше они не общаются.
+Это конец истории.</text><img name="article-img1">/online/player/mitril/images/88c92d25-f3a5-11eb-9c87-002590e2f74e65253b38b0b4adb043faa979dcf3bcdb.gif</img><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"achi","val":2}]);]]></script></article><article id="88d12c8d-edf3-11eb-9c87-002590e2f74e"><text/><text>Старушка отделывается вежливыми, но общими словами. Не хочет ничего говорить по существу или ей просто нечего сказать?</text><script type="local1001_851819528"><![CDATA[return !mitril.checkCondition(vars.items, [{"type":"k","val":"74608eb7-bb64-4284-96dc-b56f6f30e193","amnt":null}], false);]]></script><text ifnot="local1001_851819528">Эх, надо было всё-таки купить книгу про астральное зондирование. Как ещё из бабули информацию вытянуть?!</text><script type="local1002_154864596"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"74608eb7-bb64-4284-96dc-b56f6f30e193","amnt":null}], true);]]></script><text if="local1002_154864596">В книге про астральное зондирование есть целый раздел по работе с такими несговорчивыми клиентами.
+К сожалению для этого нужны  подручные средства - душ Шарко, осциллограф и парк крупных картофелин.</text><script type="local1003_877429121"><![CDATA[return !mitril.checkCondition(vars.items, [{"type":"r","val":"ae049776-4176-4a2b-bac2-f729f8dcc529","amnt":4}], false);]]></script><text ifnot="local1003_877429121">Пока друзья ещё сидят за столом, можно попробовать ещё раз.</text><script type="local1004_858572924"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"r","val":"ae049776-4176-4a2b-bac2-f729f8dcc529","amnt":4}], true);]]></script><text if="local1004_858572924">К сожалению, времени больше нет. Алиса, довольная тем, что проблема разрешилась, давно уже подаёт Паше знаки о том, что пора возвращаться домой.</text><script type="local1005_242747430"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"r","val":"ae049776-4176-4a2b-bac2-f729f8dcc529","amnt":4}], true);]]></script><action class="btnBlue" if="local1005_242747430" goto="83b8c70a-edf2-11eb-9c87-002590e2f74e">Далее</action><script type="local1006_642689183"><![CDATA[return !mitril.checkCondition(vars.items, [{"type":"r","val":"ae049776-4176-4a2b-bac2-f729f8dcc529","amnt":4}], false);]]></script><action class="btnBlue" ifnot="local1006_642689183" goto="a08d2d65-edf2-11eb-9c87-002590e2f74e">Далее</action></article><article id="8e924405-e3de-11eb-9c87-002590e2f74e"><text>Алиса резко останавливается на месте:
+- Ты это серьёзно сейчас сказал?</text><action class="btnBlue" goto="c75bccad-e3de-11eb-9c87-002590e2f74e">Конечно!</action><script type="local1001_511274557"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"25a4cbe7-7e35-4f15-8da5-a62f1609272a","amnt":null}]);]]></script><action class="btnBlue" do="local1001_511274557" goto="9a78cd02-e3df-11eb-9c87-002590e2f74e">Я пошутил.  Раскроем дело!</action></article><article id="9a78cd02-e3df-11eb-9c87-002590e2f74e"><text>Паша понимает, что хватит ему пока разговоров про странных старушек и решает сменить тему. С Алисой это просто - надо задать ей любой вопрос, а дальше всё произойдёт само собой.</text><img name="article-img1">/online/player/mitril/images/9a78cd02-e3df-11eb-9c87-002590e2f74e971604f712392f7f8e65874b0707d50d.jpg</img><script type="local1001_348865563"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"0c6fa003-bab4-4cd0-9b2c-dccd2842485b","amnt":null},{"class":"dec","type":"r","val":"d1324bc6-7b25-4187-a0d1-12bfa2232a4f","amnt":1}]);]]></script><action class="btnBlue" do="local1001_348865563" goto="46932717-e491-11eb-9c87-002590e2f74e">Как дела на личном фронте?</action><script type="local1002_423520873"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"382f282f-1627-46b7-8732-6551bd0e7ba0","amnt":null},{"class":"inc","type":"r","val":"d1324bc6-7b25-4187-a0d1-12bfa2232a4f","amnt":1}]);]]></script><action class="btnBlue" do="local1002_423520873" goto="4ca6843f-e491-11eb-9c87-002590e2f74e">Что нового на работе?</action><script type="local1003_952110879"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"db6ff7a6-7780-4fa9-844b-990b16a5abad","amnt":null}]);]]></script><action class="btnBlue" do="local1003_952110879" goto="52f4ae16-e491-11eb-9c87-002590e2f74e">Куда поедешь в отпуск?</action></article><article id="9ad9c664-f061-11eb-9c87-002590e2f74e"><text>Дом как дом. Таких по всей стране уйма. 
+Если смотреть издалека, то его не отличишь от соседнего. 
+Видны  следы косметического ремонта, который затеяли совсем недавно и ещё не успели закончить. 
+Не очень понятна его логика. Например, вроде забор недавно красили, а теперь опять перекрашивают. 
+Лампы меняют  на такие же дурацкие, как у соседей. 
+Зачем? Они явно хуже, чем старые. 
+Типовая пластиковая мебель тоже не добавляет красоты и индивидуальности. 
+Такое впечатление, что  цель ремонта - сделать внешний вид дома ещё более стандартным.</text><action class="btnBlue" goto="787d4cf7-f438-11eb-9c87-002590e2f74e">Далее</action></article><article id="9bbbcf0e-eb95-11eb-9c87-002590e2f74e"><text/><img name="article-img1">/online/player/mitril/images/9bbbcf0e-eb95-11eb-9c87-002590e2f74ebceceda88507eccf80568d03d3c2cf63.jpg</img><script type="local1001_570862698"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"9b4d7d17-2d31-41cf-b433-148426cea53f","amnt":null},{"type":"k","val":"ca0799eb-0360-4a4b-9a76-acd18d95438a","amnt":null}], true);]]></script><text if="local1001_570862698">Алисе анекдот не понравился. 
+Странно, ведь раньше Паша успешно её смешил.
+Наверное, просто не повезло.</text><script type="local1002_999917562"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"340f06c4-02ee-439d-b1ab-f9b0000d48b4","amnt":null},{"type":"k","val":"ca0799eb-0360-4a4b-9a76-acd18d95438a","amnt":null}], true);]]></script><text if="local1002_999917562">Главное в отношениях с девушкой - уметь её рассмешить. 
+В этот раз Паше повезло. 
+Ему всегда нравилось, как Алиса улыбается.  В такие моменты у неё появляются маленькие, но солнечные морщинки, а глаза блестят, словно капельки росы в лучах этого солнца.</text><text>Неожиданно к героям подсаживается странный мужик,.
+Он помят и небрит, но на бомжа не очень похож. Также он не тянет на работягу – тощий, нервный и бледный. Какой-то недавно уволенный клерк или офисный планктон в запое? Не ясно. 
+Может, пьяный или укуренный? Вроде, ничем таким от него не пахнет, но он возбуждён и его слегка пошатывает из стороны в сторону. 
+  
+Он долго смотрит на Алису, но та не обращает на него никого внимания - так умеют игнорировать нескромные взгляды все симпатичные девушки.
+ 
+Тогда незнакомец переводит взгляд на Пашу и  внезапно радуется, словно он встретил старого знакомого.  
+Паша в таких случаях всегда теряется и его охватило неприятное предчувствие. Вскоре случается самое страшное, что может произойти в  поездке – разговор с неадекватным попутчиком.
+- Ты уже обо всём догадался, да, брат? – радостно спрашивает он Пашу, хлопая его по колену.
+Паша же мучительно обдумывает свою стратегию поведения.
+Что лучше использовать?</text><script type="local1003_594793891"><![CDATA[mitril.scriptWrap(vars, [{"class":"dec","type":"r","val":"d1324bc6-7b25-4187-a0d1-12bfa2232a4f","amnt":1}]);]]></script><action class="btnBlue" do="local1003_594793891" goto="cba5f616-eb95-11eb-9c87-002590e2f74e">Пассивную агрессию</action><action class="btnBlue" goto="dffc18db-eb95-11eb-9c87-002590e2f74e">Депрессивную дипломатию</action><script type="local1004_615650463"><![CDATA[mitril.scriptWrap(vars, [{"class":"dec","type":"r","val":"d1324bc6-7b25-4187-a0d1-12bfa2232a4f","amnt":2}]);]]></script><action class="btnBlue" do="local1004_615650463" goto="f173030a-eb95-11eb-9c87-002590e2f74e">Дворовый этикет</action></article><article id="9f0079c2-f061-11eb-9c87-002590e2f74e"><text>Без приборов Паша не видит ничего особенного. Сарай, поленница у забора, какая-то куча мусора и бурьян. Герой обходил территорию по кругу, тыкает крапиву палкой, но не находит ничего подозрительного.</text><action class="btnBlue" goto="787d4cf7-f438-11eb-9c87-002590e2f74e">Далее</action></article><article id="a08d2d65-edf2-11eb-9c87-002590e2f74e"><text>Хотя Алиса считает миссию выполненной, Паша решает кое-что уточнить. В ходе непринуждённой светской беседы, он ненавязчиво касается интересующей его темы.</text><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"r","val":"ae049776-4176-4a2b-bac2-f729f8dcc529","amnt":1},{"class":"del","type":"k","val":"fb82a661-0bc1-4f55-8021-dde143fe5db4"},{"class":"rnd","type":"k","val":"fb82a661-0bc1-4f55-8021-dde143fe5db4"},{"class":"rnd","type":"k","val":"fb82a661-0bc1-4f55-8021-dde143fe5db4"},{"class":"rnd","type":"k","val":"fb82a661-0bc1-4f55-8021-dde143fe5db4"}]);]]></script><script type="local1001_539793209"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"9b78fca2-77f5-4d77-86eb-e3fd71e487b4","amnt":null}], true);]]></script><action class="btnBlue" if="local1001_539793209" goto="88d12c8d-edf3-11eb-9c87-002590e2f74e">Спросить про погоду</action><script type="local1002_869435799"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"ffa5f45b-534b-4c3e-849f-86048286f44a","amnt":null}], true);]]></script><action class="btnBlue" if="local1002_869435799" goto="88d12c8d-edf3-11eb-9c87-002590e2f74e">Спросить про ремонт дома</action><script type="local1003_952846973"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"682443e4-60df-42f0-9d00-d409c9fd9532","amnt":null},{"type":"k","val":"a1314075-4c92-4b2c-804c-69e51d96c7cf","amnt":null}], true);]]></script><script type="local1004_508193838"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"52573dcf-67d1-4c52-a33a-db88b0afc706","amnt":null}]);]]></script><action class="btnBlue" if="local1003_952846973" do="local1004_508193838" goto="aaf0f3e4-edf4-11eb-9c87-002590e2f74e">Спросить про огород</action><script type="local1005_972516357"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"19c99a22-c821-4d8f-b7b9-cd7da7169d84","amnt":null}], true);]]></script><action class="btnBlue" if="local1005_972516357" goto="88d12c8d-edf3-11eb-9c87-002590e2f74e">Спросить про аномалию</action><script type="local1006_845468367"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"8538421c-ab27-4489-8c02-de8cbce48131","amnt":null}], true);]]></script><script type="local1007_723938229"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"99be239b-bd1b-42d6-8a73-ad7257abf2fa","amnt":null}]);]]></script><action class="btnBlue" if="local1006_845468367" do="local1007_723938229" goto="aaf0f3e4-edf4-11eb-9c87-002590e2f74e">Спросить про примирение</action><script type="local1008_421936145"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"74d7bc04-ad80-4f8a-a41e-2113c14702a0","amnt":null},{"type":"k","val":"a77a960f-a72e-4a80-9b71-af7c2cc80d93","amnt":null}], true);]]></script><script type="local1009_883529839"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"4a367176-f181-4148-832a-bfb3be40c68c","amnt":null}]);]]></script><action class="btnBlue" if="local1008_421936145" do="local1009_883529839" goto="aaf0f3e4-edf4-11eb-9c87-002590e2f74e">Спросить про рынок</action><script type="local1010_774144489"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"eae459d6-5c7b-4b16-9196-3c77be78ca5b","amnt":null}], true);]]></script><action class="btnBlue" if="local1010_774144489" goto="88d12c8d-edf3-11eb-9c87-002590e2f74e">Спросить про угощение</action><script type="local1011_236583281"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"b2ae445a-d6f1-4090-b6bd-f5064600b3ef","amnt":null}], true);]]></script><action class="btnBlue" if="local1011_236583281" goto="88d12c8d-edf3-11eb-9c87-002590e2f74e">Спросить про здоровье</action><script type="local1012_346452616"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"263d54b1-54fa-47ae-957e-7df0f26024d5","amnt":null}], true);]]></script><action class="btnBlue" if="local1012_346452616" goto="88d12c8d-edf3-11eb-9c87-002590e2f74e">Спросить про политику</action><script type="local1013_144404461"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"af4d9946-3f4a-4a7f-94ed-ccd37dfca1a0","amnt":null}], true);]]></script><action class="btnBlue" if="local1013_144404461" goto="88d12c8d-edf3-11eb-9c87-002590e2f74e">Спросить про пенсию</action></article><article id="a332bcd2-f061-11eb-9c87-002590e2f74e"><text>Несмотря на бурьян у забора, этот огород явно  используется – много разных грядок, скошенная трава и протоптанные дорожки.      Однако за растениями не ухаживали несколько дней.  
+Погода стоит сухая, а на земле нет никаких следов полива. Кое-какие растения уже засохли.
+Паша внимательно осматривает все грядки и, наконец, видит чеснок.  Странно, что он растёт в двух местах, но в одном он маленький и чахлый, а в другом  - большой и  сочный. 
+Кроме этого, у героя складывается впечатление, что хороший чеснок растёт даже не на грядке, а просто в траве.</text><action class="btnBlue" goto="a836b22c-f061-11eb-9c87-002590e2f74e">Далее</action></article><article id="a836b22c-f061-11eb-9c87-002590e2f74e"><text>Паше становится не по себе. Ему кажется, что за ним кто-то следит из кустов у забора. Слегка закружилась голова, во рту  пересохло и очень  захотелось чего-то острого. Скорее всего, у него случился  тепловой удар. А если нет?</text><img name="article-img1">/online/player/mitril/images/a836b22c-f061-11eb-9c87-002590e2f74ec16b085ab8a0ebdc53d094dc4e879afc.jpg</img><action class="btnBlue" goto="66c0e6f5-f369-11eb-9c87-002590e2f74e">Сорвать и съесть лист чеснока</action><action class="btnBlue" goto="70782d17-f369-11eb-9c87-002590e2f74e">Скорее вернуться в дом</action><action class="btnBlue" goto="6b49ca64-f369-11eb-9c87-002590e2f74e">Подойти к забору</action></article><article id="aaf0f3e4-edf4-11eb-9c87-002590e2f74e"><text/><script type="local1001_117813555"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"52573dcf-67d1-4c52-a33a-db88b0afc706","amnt":null}], true);]]></script><text if="local1001_117813555">- Огород? А что огород... Я старая уже для земледелия. 
+Сорняки от морковки не отличу, - отвечает бабуля. 
+Паша уверен, что старушка, мягко говоря, лукавит. То она ссорится с подругой из-за чеснока, то он  её вообще не интересует. Пенсионерка явно  путается в показаниях.</text><script type="local1002_855785972"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"99be239b-bd1b-42d6-8a73-ad7257abf2fa","amnt":null}], true);]]></script><text if="local1002_855785972">- Да пустяки! В нашем возрасте всякое бывает. Слово за слово - вот и ссора. Как говорят французы - любая дама может сделать из ничего шляпку, салат и скандал, - шутит старушка. 
+Паша вежливо смеётся, но не верит ей. Бабуля не одну  неделю рассказывала Алисе самые фантастические подробности о ссоре, а теперь они вдруг стали неважны? 
+Так не бывает. Ведь Алиса с Пашей специально для этого сюда приехали, а потерпевшая теперь и говорить о проблеме не желает!</text><script type="local1003_211629439"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"4a367176-f181-4148-832a-bfb3be40c68c","amnt":null}], true);]]></script><text if="local1003_211629439">- Да я на рынок только за молоком и хожу. Остальное лучше в магазине покупать. Там дешевле и ближе, - бабуля отмахивается от вопроса, как матёрый политик на пресс-конференции.
+Однако по рассказам Алисы  Паша помнит, что старушки ходили на рынок не как покупатели, а как продавцы.   
+Пенсионерка явно путается в показаниях!</text><text>Да, как и предполагал герой, тут всё не так просто. Однако Алиса, кажется, не видит тут ничего подозрительного и уже собирается прощаться с бабушкой. 
+Пока старушка в соседней комнате собирает угощение в дорогу, у Паши есть пара минут, чтобы поговорить с Алисой наедине. Он делает страшные глаза и издаёт таинственные звуки, чтобы подать знак напарнице, но та не обращает на него никакого внимания, заинтересовавшись старым календарём на стене: там какие-то барышни  обнимаются с пылесосами. У этих  рекламных девушек такой счастливый и безмятежный вид, словно они открыли  у пылесоса какие-то дополнительные волшебные функции. 
+  
+Наконец Паше не выдерживает  и просто пинает Алису ногой. 
+- Что тебе? – недовольно спрашивает  она.
+- Нельзя сейчас уезжать, - шепчет ей Павел.
+- Почему?</text><script type="local1004_479352377"><![CDATA[mitril.scriptWrap(vars, [{"class":"dec","type":"r","val":"d1324bc6-7b25-4187-a0d1-12bfa2232a4f","amnt":1}]);]]></script><action class="btnBlue" do="local1004_479352377" goto="31a83947-efc4-11eb-9c87-002590e2f74e">У нас появился шанс провести время вдвоём</action><action class="btnBlue" goto="42150543-efc4-11eb-9c87-002590e2f74e">Тут хорошо. Давай отдохнём на природе</action><action class="btnBlue" goto="500530cd-efc4-11eb-9c87-002590e2f74e">Нужно время, чтобы проверить улики</action></article><article id="b02a5d39-f44b-11eb-9c87-002590e2f74e"><text>Пока друзья возвращаются домой, большая часть пути проходит в тишине. Алиса смотрит в окно и улыбается своим мыслям, а мысли Павла не столь оптимистичны. Он чувствует, что где-то допустил ошибку и произошло нечто нехорошее.</text><action class="btnBlue" goto="88c92d25-f3a5-11eb-9c87-002590e2f74e">Далее</action></article><article id="b1b8088f-e3dd-11eb-9c87-002590e2f74e"><text>Иногда Паша нравится дразнить Алису, ведь тогда она смешно дёргает плечами и закатывает глаза, а тон при этом  становится такой драматический. Так разговаривает одна известная актриса, которая у Паши в компе на заставке рабочего стола изображена. 
+Алиса же, кажется, начинает всерьёз злиться:
+- То есть, ты предлагаешь  просто оставить всё как есть? Ты понимаешь, что у моей бабушки нет других подруг?</text><script type="local1001_609673313"><![CDATA[mitril.scriptWrap(vars, [{"class":"dec","type":"r","val":"d1324bc6-7b25-4187-a0d1-12bfa2232a4f","amnt":1}]);]]></script><action class="btnBlue" do="local1001_609673313" goto="8e924405-e3de-11eb-9c87-002590e2f74e">Пусть найдёт себе нормальную подругу</action><action class="btnBlue" goto="9a78cd02-e3df-11eb-9c87-002590e2f74e">Хорошо. Приступим.</action></article><article id="be98bcbe-e6df-11eb-9c87-002590e2f74e"><text>Паша обдумывает самые разные версии, хотя фактов пока не хватает.  С одной стороны – история глупая, но с другой, ссора – это факт. Люди, которые так долго дружат, не перестают общаться по пустякам. Возможно, что дело, как  дипломатично говорят медики, в возрастных изменениях?  
+Бабушку Алисы Паша видел совсем недавно – очень бойкая старушка с острым и ясным умом. Не похоже, что она в маразме. Вряд ли также, что она не заметила бы его у подруги, но почему она прицепилась к этой чуши про чипирование? Она же с высшим образованием!  Нет, тут явно что-то не так.</text><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"rnd","type":"k","val":"93b9a1cd-da8b-4b26-ba7f-0b2f32042136"},{"class":"rnd","type":"k","val":"93b9a1cd-da8b-4b26-ba7f-0b2f32042136"}]);]]></script><action class="btnBlue" goto="dbe30f78-e6df-11eb-9c87-002590e2f74e">Далее</action></article><article id="c027d7ae-f369-11eb-9c87-002590e2f74e"><text>Паша хоть и тощий, но ярость на старую каргу придала ему сил. Одним мощным ударом он сшибает её с табуретки на пол. Паша наотмашь хлещет старуху по щекам, но она только улыбается, как в рекламе сметаны. 
+Что-то заставляет героя обернуться. Он в ужасе видит, как в дом входит целая толпа таких же улыбающихся старушек.
+У некоторых в руках коты и они шипят на Павла.
+Паша пытается убежать, но пенсионерки хватают его за руки и за ноги. Он впадает в ступор от нереальности всего происходящего.</text><action class="btnBlue" goto="497b26d1-f3a4-11eb-9c87-002590e2f74e">Далее</action></article><article id="c1006f39-f524-11eb-9c87-002590e2f74e"><text>Возможно, что вся планета на пороге какой-то великой катастрофы, поэтому друзья решают заняться изучением таких паранормальных случаев и раскрыть их всему миру. С этой идеей они создали свой собственный блог в сети под названием "Скептики", а первой записью в нём стала история "Чип оптимизма".
+Но об одной тайне Паша никогда в нём не расскажет. 
+Кто он для Алисы? Только ли друг и коллега?</text><script type="local1001_654556743"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"r","val":"d1324bc6-7b25-4187-a0d1-12bfa2232a4f","amnt":9}], true);]]></script><text if="local1001_654556743">Сегодняшнее приключение даёт ему повод для оптимизма.
+Алиса стала смотреть на Пашу как-то иначе и даже пару раз как-то по особенному коснулась его. Или это ему просто кажется? Ну что же - время покажет.</text><script type="local1002_493329788"><![CDATA[return !mitril.checkCondition(vars.items, [{"type":"r","val":"d1324bc6-7b25-4187-a0d1-12bfa2232a4f","amnt":9}], false);]]></script><text ifnot="local1002_493329788">К сожалению, сегодняшнее приключение не даёт ему повода для оптимизма. Несмотря на то, что Паша  спас девушку, Алиса держит дистанцию и общается так, будто этого не было. Очевидно, что сильно самолюбивой Алисе не понравилась традиционная романтическая роль "дама в беде".</text><script type="local1003_882466371"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"r","val":"d1324bc6-7b25-4187-a0d1-12bfa2232a4f","amnt":9}], true);]]></script><script type="local1004_163712723"><![CDATA[mitril.scriptWrap(vars, [{"class":"achi","type":"","val":3,"amnt":null}]);]]></script><action class="btnBlue" if="local1003_882466371" do="local1004_163712723" goto="01206c81-f36f-11eb-9c87-002590e2f74e">Далее</action><script type="local1005_679757127"><![CDATA[return !mitril.checkCondition(vars.items, [{"type":"r","val":"d1324bc6-7b25-4187-a0d1-12bfa2232a4f","amnt":9}], false);]]></script><script type="local1006_140775840"><![CDATA[mitril.scriptWrap(vars, [{"class":"achi","type":"","val":1,"amnt":null}]);]]></script><action class="btnBlue" ifnot="local1005_679757127" do="local1006_140775840" goto="01206c81-f36f-11eb-9c87-002590e2f74e">Далее</action></article><article id="c4a4d289-f36c-11eb-9c87-002590e2f74e"><text>Как всегда, если уж Алиса решила действовать, то ей не нужны никакие советы. 
+Она смотрит на вышку сотовой связи, а потом на линию электропередач, которая тянется через лес и решение созревает за несколько секунд.
+ 
+Друзья толкают большое сухое дерево и оно падает  на провода, обрывая их. Целый посёлок остаётся без света, но и без сигналов, идущих с вышки.</text><action class="btnBlue" goto="52b632e1-f36d-11eb-9c87-002590e2f74e">Далее</action></article><article id="c4b527d4-f369-11eb-9c87-002590e2f74e"><text>Паша осматривает всё вокруг, но найти Алису так и не удаётся. Затем он ищет на огороде, ходит на рынок и даже в полицию.
+Спустя некоторое время Алиса сама нашла Пашу. По её словам она просто поговорила с обоими старушками и выяснила, что их ссора произошла из-за недоразумения, которое давно уладилось.  
+Друзья едут домой.</text><action class="btnBlue" goto="88c92d25-f3a5-11eb-9c87-002590e2f74e">Далее</action></article><article id="c75bccad-e3de-11eb-9c87-002590e2f74e"><text>Девушка поворачивается к Паше спиной и уходит:
+- Я не думала, что ты такой чёрствый.</text><img name="article-img1">/online/player/mitril/images/c75bccad-e3de-11eb-9c87-002590e2f74e1015fb0601c165dc18b2276f9394bfc3.jpg</img><script type="local1001_596629624"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"53e89b55-275d-4e79-a71c-d356088095e2","amnt":null}], true);]]></script><text if="local1001_596629624">Ну и сиди себе дома - бренчи на гитаре!</text><script type="local1002_567741252"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"7fd930f7-714c-4429-9ca7-788920dcd458","amnt":null}], true);]]></script><text if="local1002_567741252">Ну и сиди себе дома -  фотографируй сам себя!</text><script type="local1003_907220504"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"c48e44a1-6225-4b98-b130-de7d4e25562b","amnt":null}], true);]]></script><text if="local1003_907220504">Конечно, лучше в сети с незнакомцами ругаться!</text><script type="local1004_284729177"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"99f8c5e6-c571-4b99-b74a-9b89903ad94f","amnt":null}], true);]]></script><text if="local1004_284729177">Не звони мне больше!</text><action class="btnBlue" goto="3e8fb4fb-e3df-11eb-9c87-002590e2f74e">Далее</action></article><article id="c9a84178-f369-11eb-9c87-002590e2f74e"><text>На первый взгляд, в комнате ничего не изменилось. Никаких следов борьбы или тайных знаков.
+ 
+На стене шкафчики с посудой. Кухонная плита. Раковина.  Стол.  Окошко с весёленькими занавесками. 
+Старушка собралась что-то готовить и на столе разложены разные продукты.</text><script type="preload"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"r","val":"ae049776-4176-4a2b-bac2-f729f8dcc529","amnt":1}]);]]></script><action class="btnBlue" goto="849f727f-f524-11eb-9c87-002590e2f74e">Осмотреть мусорное ведро</action><action class="btnBlue" goto="f7490eb1-f369-11eb-9c87-002590e2f74e">Осмотреть продукты на столе</action><action class="btnBlue" goto="849f727f-f524-11eb-9c87-002590e2f74e">Осмотреть плиту</action><action class="btnBlue" goto="849f727f-f524-11eb-9c87-002590e2f74e">Осмотреть окно</action><action class="btnBlue" goto="849f727f-f524-11eb-9c87-002590e2f74e">Осмотреть бабулю</action><action class="btnBlue" goto="849f727f-f524-11eb-9c87-002590e2f74e">Осмотреть раковину</action><action class="btnBlue" goto="849f727f-f524-11eb-9c87-002590e2f74e">Осмотреть пол</action><action class="btnBlue" goto="849f727f-f524-11eb-9c87-002590e2f74e">Осмотреть картины</action></article><article id="cba5f616-eb95-11eb-9c87-002590e2f74e"><text>Паша злобно бурчит нечто нечленораздельное - лишь бы незнакомец отстал, но тот подсаживается поближе и теперь дышит собеседнику прямо в лицо.  
+- Друг, я же по-хорошему хочу предупредить. Что ты быкуешь? Я вижу кто ты. Впервые у нас, да? Тут чужих не любят. Будь осторожен.
+Паша делает зверское лицо и принимает угрожающую позу. Попутчик пытается обнять его за плечи, но Паша сразу жёстко пресекает подобные действия. Странный мужик выдавливает из себя ещё несколько каких-то туманных угроз и уходит.
+Что это было вообще? Алиса продолжает делать вид, что ничего не замечает.</text><action class="btnBlue" goto="02a0f478-eb96-11eb-9c87-002590e2f74e">Далее</action></article><article id="d4d0c160-e257-11eb-9c87-002590e2f74e"><text/><img name="article-img1">/online/player/mitril/images/d4d0c160-e257-11eb-9c87-002590e2f74e46911609e8269d812999237dcabfe688.jpg</img><script type="local1001_498383633"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"53e89b55-275d-4e79-a71c-d356088095e2","amnt":null}], true);]]></script><text if="local1001_498383633">[i]Ничего на свете лучше нету
+Чем бродить друзьям по белу свету...[/i]
+...поэтому импровизированном концерту сегодня состояться не судьба.</text><script type="local1002_240776863"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"99f8c5e6-c571-4b99-b74a-9b89903ad94f","amnt":null}], true);]]></script><text if="local1002_240776863">Ожидая, пока сотовый наберёт номер подруги, Паша перебирал варианты того, чем Алиса может сейчас заниматься, поэтому услышав мелодию звонка чужого телефона у себя за спиной даже вздрогнул от неожиданности.</text><script type="local1003_928657328"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"7fd930f7-714c-4429-9ca7-788920dcd458","amnt":null}], true);]]></script><text if="local1003_928657328">Лучшее обучение - это практика. Паша тренируется на фото Алисы, помещая её то в средневековую атмосферу, то на другую планету.  Жаль, что фоток маловато, ведь она не любит фотографироваться.</text><script type="local1004_298720941"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"c48e44a1-6225-4b98-b130-de7d4e25562b","amnt":null}], true);]]></script><text if="local1004_298720941">Это было непросто, но Паша убедил незнакомца, встреченного в комментариях к какой-то фотографии, что  удои в советском колхозе были ниже, чем на аргентинской ферме.
+Впрочем, насладиться своим триумфом не получится.</text><text>Появление Алисы – всегда  неожиданный сюрприз, даже если о нём знаешь заранее. Трудно сказать, как она это делает, но всегда складывается такое впечатление, что она возникает с какими-то спецэффектами – громкой музыкой, вспышками или просто падает на тебя с потолка.
+Вот и сейчас она словно по волшебству  материализовалась у Пашки прямо в прихожей. 
+Конечно, вполне возможно, что она сначала позвонила в дверь или даже заранее договорилась по телефону о встрече, но при виде Алисы у любого эти детали вылетают из головы – так стремительно и мощно она вовлекает всех в свои авантюры:
+- Ты готов? Пошли!... Что значит куда?! Паша, мы же уже сто раз обговорили… Ну, может, не тебе говорила, какая разница!? У тебе же есть фотоаппарат? Значит, всё верно! Идём!
+И вот уже Паша идёт куда-то с Алисой, как  верный оруженосец со своим рыцарем.</text><action class="btnBlue" goto="2922871c-e31c-11eb-9c87-002590e2f74e">И что теперь?</action></article><article id="d93fa5e0-e491-11eb-9c87-002590e2f74e"><text>В электричке Пашин энтузиазм к расследованию падает ещё больше. Ну, честное слово, неужели всё эту чушь по поводу чипирования разгребать? Не совсем ясно, какой есть план у Алисы. Может, она особый подход к пенсионеркам придумает, но ему что там делать? 
+Похоже, что Алисе стало скучно и она стала рассказывать про свою бабушку. Так как Паша всё время пялился на Алису, то помимо своей воли, он  всё это слушал, хотя и вполуха. Внезапно он, к своему удивлению,  заинтересовался историей. 
+По словам Алисы выходило, что её бабушка сама провела какое-то предварительное расследование. Так что там Алиса говорила про…</text><img name="article-img1">/online/player/mitril/images/d93fa5e0-e491-11eb-9c87-002590e2f74ef0525337f0e90a0a34b3dba994f1bd3e.jpg</img><script type="local1001_922399698"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"03f6dff6-2225-4504-ae47-ad73c8e5f6a3","amnt":null}]);]]></script><action class="btnBlue" do="local1001_922399698" goto="3233935f-e629-11eb-9c87-002590e2f74e">Аномалию на участке</action><script type="local1002_949440472"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"ef50f8cc-b491-4dad-9295-c1ecb8742bf8","amnt":null}]);]]></script><action class="btnBlue" do="local1002_949440472" goto="37a2c797-e629-11eb-9c87-002590e2f74e">Магазин</action><script type="local1003_788936101"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"65e9c917-c034-4675-9d31-b2c8bd4d03ef","amnt":null}]);]]></script><action class="btnBlue" do="local1003_788936101" goto="3c466eae-e629-11eb-9c87-002590e2f74e">Свет в доме</action><script type="local1004_412503742"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"55cb1e01-8a89-41ee-82ad-2093f6e31406","amnt":null}]);]]></script><action class="btnBlue" do="local1004_412503742" goto="49ac8037-e629-11eb-9c87-002590e2f74e">Торговлю</action></article><article id="dbe30f78-e6df-11eb-9c87-002590e2f74e"><text>Пашины размышления прерывает продавец книг и журналов. Его очень трудно игнорировать из-за  заунывного, но громкого голоса - так обычно во всяких фильмах разговаривают  одержимые дьяволом проповедники.  
+Алиса морщится и отворачивается к окну, но  Паша краем глаза быстро  оглядывает ассортимент. Может, купить что-то? Всё стоит буквально копейки.</text><img name="article-img1">/online/player/mitril/images/dbe30f78-e6df-11eb-9c87-002590e2f74e32a1e4441b4c7ea66fa181f687cd9013.jpg</img><script type="local1001_564410863"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"66a38054-c779-418f-a574-020de2a207c5","amnt":null}]);]]></script><action class="btnBlue" do="local1001_564410863" goto="f6dbd0d5-e6df-11eb-9c87-002590e2f74e">Не надо нам макулатуры!</action><script type="local1002_969594591"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"e74b3816-16d7-4419-8bca-ddc31280c870","amnt":null}], true);]]></script><script type="local1003_146992874"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"3ab832c5-6691-4485-92f1-2ce3577dbc69","amnt":null}]);]]></script><action class="btnBlue" if="local1002_969594591" do="local1003_146992874" goto="f6dbd0d5-e6df-11eb-9c87-002590e2f74e">Мистические практики Поволжья</action><script type="local1004_680232650"><![CDATA[return !mitril.checkCondition(vars.items, [{"type":"k","val":"7fd930f7-714c-4429-9ca7-788920dcd458","amnt":null}], false);]]></script><script type="local1005_542160307"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"54e0ff32-4632-44ca-b144-c7c4832ad4d5","amnt":null}]);]]></script><action class="btnBlue" ifnot="local1004_680232650" do="local1005_542160307" goto="f6dbd0d5-e6df-11eb-9c87-002590e2f74e">Модное фото в клик</action><script type="local1006_771358927"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"27a21406-aac0-423e-917d-c803f4289c5a","amnt":null}], true);]]></script><script type="local1007_712279326"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"74608eb7-bb64-4284-96dc-b56f6f30e193","amnt":null}]);]]></script><action class="btnBlue" if="local1006_771358927" do="local1007_712279326" goto="f6dbd0d5-e6df-11eb-9c87-002590e2f74e">Методы астрального зондирования</action><script type="local1008_409228666"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"00451090-ab48-4ed8-b1e7-2f2a3454a120","amnt":null}], true);]]></script><script type="local1009_781917602"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"654b2db1-4b8f-45a9-b9ae-2f1ed1bfb0c3","amnt":null}]);]]></script><action class="btnBlue" if="local1008_409228666" do="local1009_781917602" goto="f6dbd0d5-e6df-11eb-9c87-002590e2f74e">Сборник анекдотов</action><script type="local1010_783328104"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"53e89b55-275d-4e79-a71c-d356088095e2","amnt":null}], true);]]></script><script type="local1011_525793415"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"e2b039cf-2371-470d-9386-602d22e25a44","amnt":null}]);]]></script><action class="btnBlue" if="local1010_783328104" do="local1011_525793415" goto="f6dbd0d5-e6df-11eb-9c87-002590e2f74e">Аккорды популярных песен</action><script type="local1012_387762910"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"37ec0b55-e445-424b-a1f6-41a6c0961de0","amnt":null}], true);]]></script><script type="local1013_879808902"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"5f0c7a11-ba16-4a44-bd69-3b093c0d4f15","amnt":null}]);]]></script><action class="btnBlue" if="local1012_387762910" do="local1013_879808902" goto="f6dbd0d5-e6df-11eb-9c87-002590e2f74e">Путеводитель по родному краю</action><script type="local1014_753487133"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"8e5a1a6c-d369-4b0a-9ac0-9f32c9c3e1a9","amnt":null}], true);]]></script><script type="local1015_402930193"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"a1314075-4c92-4b2c-804c-69e51d96c7cf","amnt":null}]);]]></script><action class="btnBlue" if="local1014_753487133" do="local1015_402930193" goto="f6dbd0d5-e6df-11eb-9c87-002590e2f74e">Сад и огород</action><script type="local1016_609700452"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"f2649bd1-69ba-4b1b-b164-9ccf22a46545","amnt":null}], true);]]></script><script type="local1017_536411632"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"f62dab5e-4559-435e-ac49-c83c75a95822","amnt":null}]);]]></script><action class="btnBlue" if="local1016_609700452" do="local1017_536411632" goto="f6dbd0d5-e6df-11eb-9c87-002590e2f74e">Карточные фокусы</action><script type="local1018_762721760"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"27a21406-aac0-423e-917d-c803f4289c5a","amnt":null}], true);]]></script><script type="local1019_428502676"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"46ab38f3-3b55-4c56-ad08-a46a350d1cfe","amnt":null},{"class":"dec","type":"r","val":"d1324bc6-7b25-4187-a0d1-12bfa2232a4f","amnt":1}]);]]></script><action class="btnBlue" if="local1018_762721760" do="local1019_428502676" goto="f6dbd0d5-e6df-11eb-9c87-002590e2f74e">Сборник тюремной лирики</action><script type="local1020_931284905"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"00451090-ab48-4ed8-b1e7-2f2a3454a120","amnt":null}], true);]]></script><script type="local1021_935710697"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"252a4dd1-8198-46a8-94f9-d79021dfd15e","amnt":null}]);]]></script><action class="btnBlue" if="local1020_931284905" do="local1021_935710697" goto="f6dbd0d5-e6df-11eb-9c87-002590e2f74e">Женский детектив</action></article><article id="dffc18db-eb95-11eb-9c87-002590e2f74e"><text>Выйти из зоны комфорта, на самом деле, очень просто. Труднее в неё вернуться.
+- Позвольте, что вы хотите сказать? – мямлит Паша, надеясь, что ситуации разрешится как-то сама собой.
+Пока этот метод не работает и   попутчик  собирается с мыслями.
+- Я это… Ты не понял? А я вот понял, что ты неспроста тут. Сразу видно – чужой.
+- Да, мы не местные, но разве это проблема? – продолжает тянуть время Паша.
+- Проблема. Раз я сразу понял, что ты чужой – они тоже поймут. Береги себя и барышню свою. Красивая…. Если ещё и умная, то дело труба. Тут таких не любят. 
+На этих словах Алиса оживляется:
+- Кто это не любит? Вы? А что я вам плохого сделала?
+Незнакомец ухмыляется:
+- Я люблю. Но вот видите, что со мной сделали? - он горестно указывает  на себя руками. 
+- Кто сделал? Я не понимаю, - Паша судорожно пытается сообразить, как направить разговор в конструктивное русло.
+- Да всё вы понимаете. Тут одна остановка осталась – конечная, значит, вам сюда. А вас уже ждут, будьте осторожней.
+Поезд уже подъезжает к станции и мужчина нервничает. Он бросает за окно пугливые взгляды и порывается уйти:
+- Смысла объяснять нет – бесполезно. Вы сами должны увидеть. Но хотя бы не ешьте ничего с рынка.    
+Он стремительно срывается с места и  убегает ещё до того, как друзья смогли сформулировать ещё какой-нибудь вопрос.</text><script type="local1001_350997458"><![CDATA[mitril.scriptWrap(vars, [{"class":"inc","type":"k","val":"a77a960f-a72e-4a80-9b71-af7c2cc80d93","amnt":null}]);]]></script><action class="btnBlue" do="local1001_350997458" goto="02a0f478-eb96-11eb-9c87-002590e2f74e">Далее</action></article><article id="e1c243f7-f36d-11eb-9c87-002590e2f74e"><text>Проведя дополнительное расследование, Алиса и Паша выяснили, что странный чеснок пропал у всех в посёлке. Люди снова стали вести себя как ни в чём не бывало, а пенсионерки помирились.
+Что это было? Нашествие инопланетян? Таинственная мутация или заговор? Откуда взялся зомбирующий чеснок и причём тут сотовая связь? 
+Эта история стала настоящим потрясением для скептически настроенной Алисы. Больше всего её поразило, что подобное  произошло прямо у неё под носом, в то время, как она занималась какой-то ерундой!</text><action class="btnBlue" goto="c1006f39-f524-11eb-9c87-002590e2f74e">Далее</action></article><article id="e5a8a861-f062-11eb-9c87-002590e2f74e"><text>Ну, ничего особенного. 
+Огород, как огород.  
+Полно каких-то  растений разной степени полезности. 
+Что это мята или крапива? 
+Кажется, крапива жжётся. 
+А говорят, у этих селян ещё какой-то борщевик есть. Это вообще жесть, судя по роликам с Youtube.</text><action class="btnBlue" goto="787d4cf7-f438-11eb-9c87-002590e2f74e">Далее</action></article><article id="f173030a-eb95-11eb-9c87-002590e2f74e"><text>Паша никогда не был силён в подобных разговорах, но собрал в кулак всю свою волю и фантазию. Он встал с кресла и навис над собеседником:  
+-Э, мужик, ты ничего не попутал, часом? Ты  что такой дерзкий в таком месте и в такое время? 
+Попутчик смутился. Кажется, он не ожидал подобного развития событий:
+-Да ты не кипятись, друг. Я, кажется, обознался.      
+Мужик быстро уходит, а Алиса удивлённо смотрит на Павла. Он пытается обратить всё в шутку:
+-Не зря же я в школьном театральном кружке оттрубил от звонка до звонка.
+Кажется, Алиса не оценила актёрский талант Паши. 
+Вот, сейчас обидно было. Ведь, Паша импровизировал  - в таком образе он играл впервые.</text><action class="btnBlue" goto="02a0f478-eb96-11eb-9c87-002590e2f74e">Далее</action></article><article id="f6dbd0d5-e6df-11eb-9c87-002590e2f74e"><text/><script type="local1001_259875266"><![CDATA[return mitril.checkCondition(vars.items, {"or":1,"c":[{"type":"k","val":"f62dab5e-4559-435e-ac49-c83c75a95822","amnt":null},{"type":"k","val":"654b2db1-4b8f-45a9-b9ae-2f1ed1bfb0c3","amnt":null}]}, true);]]></script><text if="local1001_259875266">Сойдёт, чтобы убить время, но ничего полезного. 
+Хотя, как знать -  может, пригодится позднее.</text><script type="local1002_160628653"><![CDATA[return mitril.checkCondition(vars.items, {"or":1,"c":[{"type":"k","val":"252a4dd1-8198-46a8-94f9-d79021dfd15e","amnt":null}]}, true);]]></script><text if="local1002_160628653">Зачем Паша это купил? Непонятно... Значит, будет подарок бабушке.
+Тут два в одном - лёгкое чтение и растопка для печки.</text><script type="local1003_194930582"><![CDATA[return mitril.checkCondition(vars.items, {"or":1,"c":[{"type":"k","val":"54e0ff32-4632-44ca-b144-c7c4832ad4d5","amnt":null}]}, true);]]></script><text if="local1003_194930582">Эта книга больше подойдёт для тех, кто постит свои фотки в сети. Но, пара приёмов может пригодиться.</text><script type="local1004_287538282"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"3ab832c5-6691-4485-92f1-2ce3577dbc69","amnt":null}], true);]]></script><text if="local1004_287538282">Интересная, но судя по всему, бесполезная книга. Она похожа на сборник сказок. Причём, складывается  впечатления, что большую их часть составитель придумал сам.   
+Интересно, много ли людей  покупают подобные книги? 
+Тут свалено всё в кучу – старые городские легенды, суеверия, мифы из сериалов и фильмов, а также обычные телевизионные байки.   
+Паша, которой увлекается историей и славянским фольклором, сильно разочарован такой  халтурой. Даже в иной компьютерной игре больше достоверной информации, чем в таком «научном труде».  
+Однако, кое-что полезное он всё же узнал. Как он понял,  в данной местности особенно распространены истории о кикиморе. Чаще всего, она предстаёт в образе злобной старушки, которая всячески мешают людям жить, если они потревожат или разрушат её обычное место обитания – глухой лесной закоулок. 
+В некоторых рассказах, она обладает способностью принимать чужой облик и захватывать чужое жилище,  выгоняя или порабощая прежнего хозяина.        
+Надо проверить, связано ли как-то это с их делом? 
+Алисе, Паша, решил пока ничего не говорить – засмеёт.</text><script type="local1005_639975594"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"74608eb7-bb64-4284-96dc-b56f6f30e193","amnt":null}], true);]]></script><text if="local1005_639975594">Весьма странная книга. В предисловии указано, что она предназначена для «людей, применяющих экстрасенсорные практики». Однако, содержимое больше похоже на современную версию «Молота ведьм», где в роли ведьм - инопланетяне.
+Особенно заинтересовал Пашу раздел, описывающий способы соблазнения землян инопланетянами. В книге «Молот ведьм» тоже было нечто похожее, но без таких развратных картинок – Паша даже покраснел  и постарался, чтобы Алиса ничего не заметила - к счастью она отвлеклась на телефон. 
+С практической точки зрения книга вряд ли принесёт пользу. Их случай не похож на всё, что там описывается.</text><script type="local1006_270737314"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"5f0c7a11-ba16-4a44-bd69-3b093c0d4f15","amnt":null}], true);]]></script><text if="local1006_270737314">Это всё было бы весьма полезно, будь Паша туристом или хотя бы рыбаком.</text><script type="local1007_931164716"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"46ab38f3-3b55-4c56-ad08-a46a350d1cfe","amnt":null}], true);]]></script><text if="local1007_931164716">Зачем Паша купил книгу, на обложке которой решётка и тюремные татуировки?
+Как только он открыл первую страницу, он тут же пожалел о покупке. 
+Хуже всего, что Алиса заметила как саму книгу, так и смущение Паши.
+Хотя девушка  и не подала виду, но герою  всё же кажется, что она как-то разочаровано вздохнула.</text><script type="local1008_607996901"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"e2b039cf-2371-470d-9386-602d22e25a44","amnt":null}], true);]]></script><text if="local1008_607996901">Довольно банальная брошюра. Какой-то подбор песен для сельской пьянки. 
+Не то, чтобы Паша был против хорошей попойки... 
+Просто все эти песни он уже знает.</text><script type="local1009_511931610"><![CDATA[return mitril.checkCondition(vars.items, [{"type":"k","val":"a1314075-4c92-4b2c-804c-69e51d96c7cf","amnt":null}], true);]]></script><text if="local1009_511931610">Сначала Паша сам не понял, зачем ему книга для пенсионеров, дачников или фермеров.
+0днако он стал смутно припоминать, что у бабушки есть огород и с ним связана какая-то часть таинственной истории.
+Может, что-то пригодится. 
+В любом случае, пока есть время, можно эту книжку полистать.</text><text/><action class="btnBlue" goto="5dec51fd-eb95-11eb-9c87-002590e2f74e">Далее</action></article><article id="f7490eb1-f369-11eb-9c87-002590e2f74e"><text>Среди зелени ярко выделяется сочный чеснок. Такое впечатление, что его кто-то недавно попробовал: часть зубчиков отсутствует, а в мусорном ведре шелуха. Перед тем, как Павел вышел, старуха пошла за гостинцами в дорогу.
+Неужели она уговорила Алису попробовать эту едкую зелёную гадость? Что-то явно не так с этим овощем! Он странно действует на людей. 
+Надо срочно найти Алису! Куда она могла пойти?</text><action class="btnBlue" goto="c4b527d4-f369-11eb-9c87-002590e2f74e">В полицию</action><action class="btnBlue" goto="c4b527d4-f369-11eb-9c87-002590e2f74e">На рынок</action><action class="btnBlue" goto="286b447a-f36a-11eb-9c87-002590e2f74e">К вышке сотовой связи</action></article></book>

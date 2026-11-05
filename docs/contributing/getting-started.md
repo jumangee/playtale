@@ -1,6 +1,6 @@
 # Getting Started
 
-This guide helps you build and run CrossPoint locally.
+This guide helps you build and run PlayTale (КвестБук Читалка) locally.
 
 ## Prerequisites
 
@@ -43,8 +43,8 @@ The reported major version must be 21 or newer.
 ## Clone and initialize
 
 ```sh
-git clone --recursive https://github.com/crosspoint-reader/crosspoint-reader
-cd crosspoint-reader
+git clone --recursive https://github.com/jumangee/playtale
+cd playtale
 ```
 
 If you already cloned without submodules:
@@ -114,7 +114,7 @@ use the [normal build command](#build).
 pio run --target upload
 ```
 
-## First checks before opening a PR
+## Checks before committing
 
 ```sh
 ./bin/clang-format-fix
@@ -128,5 +128,4 @@ Development builds apply the Git version only to sources that use
 ## What to read next
 
 - [Architecture Overview](./architecture.md)
-- [Development Workflow](./development-workflow.md)
 - [Testing and Debugging](./testing-debugging.md)

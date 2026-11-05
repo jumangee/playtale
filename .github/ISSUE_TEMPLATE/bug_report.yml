@@ -12,9 +12,8 @@ body:
     id: device
     attributes:
       label: Device
-      description: Which device does this happen on? Pick "Other" for boards CrossPoint does not release firmware for — those are maintained in their own port repositories.
+      description: Which device does this happen on? Pick "Other" for boards this fork does not release firmware for.
       options:
-        - Xteink X3
         - Xteink X4
         - Xteink X4 Classic
         - Xteink X4 Pro

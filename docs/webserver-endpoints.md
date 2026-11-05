@@ -1,7 +1,7 @@
 # Webserver Endpoints
 
 This document describes the HTTP, WebSocket, WebDAV, and discovery endpoints
-available while CrossPoint Reader is in File Transfer or Calibre Wireless mode.
+available while КвестБук Читалка (PlayTale) is in File Transfer or Calibre Wireless mode.
 
 - HTTP server: port 80
 - WebSocket upload server: port 81
@@ -56,7 +56,7 @@ Response:
 | Field | Type | Description |
 |-------|------|-------------|
 | `version` | string | Firmware version |
-| `firmwareFamily` | string | Stable compatibility family; stock CrossPoint uses `crosspoint` |
+| `firmwareFamily` | string | Stable compatibility family; PlayTale still uses `crosspoint` (not renamed yet) |
 | `pluginApi` | number | Numeric plugin API level used for catalog compatibility |
 | `pluginCapabilities` | string | Comma-separated firmware capabilities used for catalog compatibility |
 | `ip` | string | Device IP address |
@@ -65,7 +65,7 @@ Response:
 | `freeHeap` | number | Free heap in bytes |
 | `uptime` | number | Seconds since boot |
 | `deviceId` | string | With `?plugin=<name>`: 64 hex chars, stable per device and plugin (SHA-256 of an on-device NVS secret and the name); omitted if NVS is unavailable |
-| `device` | string | `"X3"` or `"X4"` hardware detection |
+| `device` | string | Board name. On the C3 profile (`FREEINK_DEVICE_X4`/`FREEINK_DEVICE_X3`) it is `"X3"` or `"X4"` from runtime hardware detection; on other profiles it is `BoardConfig::ACTIVE.name`. See `src/network/CrossPointWebServer.cpp`. |
 
 ## File Management
 
@@ -547,7 +547,11 @@ The final field is the WebSocket upload port.
 
 ### Access Point Mode (AP)
 
-- Device creates an open hotspot named `CrossPoint-Reader`.
+- Device creates an open hotspot named `CrossPoint-Reader` (the Wi-Fi name
+  visible on phones; it is not renamed yet).
+- In Join Network mode the reader also announces itself to the router with a
+  `CrossPoint-Reader-<MAC>` hostname, so the router's client list may show that
+  name.
 - The device shows a Wi-Fi QR code and URL QR code.
 - The fallback IP is typically `192.168.4.1`.
 - `/api/status` returns `"mode": "AP"` and `"rssi": 0`.

@@ -1,2 +1,30 @@
+# Store text files as LF in the repository and in the working tree.
+# Without this, an editor that defaults to CRLF turns the whole tree into a
+# spurious diff on Windows. Binary types are matched before the catch-all so
+# git never rewrites their bytes.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.bmp binary
+*.ico binary
+*.ttf binary
+*.otf binary
+*.ttc binary
+*.epub binary
+*.xz binary
+*.zip binary
+*.bin binary
+
+# These five files are checked in with CRLF bytes; -text pins them so git
+# neither normalizes nor rewrites them.
+lib/EpdFont/builtinFonts/source/NotoSans/OFL.txt -text
+lib/EpdFont/builtinFonts/source/NotoSansHebrew/OFL.txt -text
+lib/EpdFont/builtinFonts/source/NotoSerif/OFL.txt -text
+lib/EpdFont/builtinFonts/source/Ubuntu/UFL.txt -text
+test/hyphenation_eval/resources/swedish_hyphenation_tests.txt -text
+
 # Preserve the original whitespace in copied license texts.
 licenses/*.txt -whitespace

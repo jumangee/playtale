@@ -1,4 +1,4 @@
-# CrossPoint Reader agent instructions
+# PlayTale agent instructions
 
 The root `AGENTS.md` is the always-loaded policy and router. Detailed repository facts live in `rules/`; reusable procedures and review axes live in `skills/`.
 
@@ -11,11 +11,11 @@ Read-only inquiries and reviewers do not run implementation handoff.
 
 `CLAUDE.md` links to the root guide. Each skill lives in a directory containing
 `SKILL.md`, with a matching frontmatter `name`. Descriptions identify when an
-agent should load a skill; contributors can also name it explicitly. Skills
+agent should load a skill; the human owner can also name it explicitly. Skills
 provide decision procedures and self-review checklists; those checklists also
 serve as review rubrics. Keep them short, anchor them on durable API/type/file
 names, and avoid line-number references that drift. Edit the skill at its new
-home rather than restoring `.skills/` or duplicating the root policy.
+home rather than duplicating the root policy.
 
 ## Rules
 
@@ -25,7 +25,7 @@ home rather than restoring `.skills/` or duplicating the root policy.
 - `coding-standards.md`: C/C++ conventions and platform pitfalls
 - `ui-activities.md`: orientation, input, UI, activities, tasks, and fonts
 - `testing-debugging.md`: build, formatting, CI, serial, crash, and verification procedures
-- `git-workflow.md`: repository context, branches, commits, and publication controls
+- `git-workflow.md`: repository context, fork maintenance, branches, commits, and publication controls
 - `generated-files-cache.md`: generated sources, i18n, local artifacts, and cache formats
 
 ## Mandatory firmware review
@@ -40,3 +40,10 @@ home rather than restoring `.skills/` or duplicating the root policy.
 The [handoff skill](skills/firmware-handoff/SKILL.md) owns the workflow and
 completion criteria. Each reviewer task carries the inspection-only scope;
 the main agent owns test execution, builds, and diagnostic code.
+
+## Documentation scope
+
+Agent rules and technical references are English. `README.md`, `USER_GUIDE.md`,
+and new user-facing feature documents are Russian, per the naming and language
+rules in the root guide. `ROADMAP.md` is the only document that describes planned
+work; the rest record current behavior.

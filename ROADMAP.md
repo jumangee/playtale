@@ -1,98 +1,140 @@
-# CrossPoint Reader Roadmap
+# PlayTale Roadmap
 
-This roadmap describes how CrossPoint is moving through the tighter scope defined in [SCOPE.md](SCOPE.md). It is
-intentionally phased: Phase 0 closed out the commitments already in flight before locking down to the stricter
-"fill gaps the stock firmware leaves" delineator.
+This roadmap describes how PlayTale is moving toward the scope defined in [SCOPE.md](SCOPE.md). Phases
+are sequential: a phase starts only when the prior one is wrapped or explicitly carried over.
 
-Phases are sequential. We do not start the next phase until the prior one is wrapped or explicitly carried over.
+**Everything below a "planned" marker is a plan, not shipped behavior.** Current behavior is described
+in `README.md`, `USER_GUIDE.md`, and `docs/`; nothing here should be read as already implemented.
 
 Status: ✅ done · 🚧 in progress · ❌ shelved
 
 ---
 
-## ✅ Phase 0 - Close Out Legacy Scope Items
+## ✅ Phase 0 — Rebrand and project baseline
 
-**Goal:** Land the work that was already in motion under the prior, broader scope so contributors are not left
-hanging, and so we enter the stricter phases with a clean slate.
+**Goal:** Make the fork self-describing, so later feature work is not built on upstream assumptions.
 
-* ✅ **RTL support PRs.** The in-flight right-to-left work was reviewed, iterated, and merged.
-* ✅ **Dictionary PR.** The offline dictionary lookup work was reviewed and merged.
-* ✅ **Bookmarks** feature. First-class navigation markers in EPUBs.
-* ✅ **Transparent sleep screens.**
+* ✅ **Naming rules.** Product, technical, developer, and website names are fixed in
+  [AGENTS.md](AGENTS.md#naming-and-branding).
+* ✅ **Documentation reset.** Upstream community and process documents were removed (governance,
+  contributor credits, competitor comparison, the Xteink unbricking guide, the upstream PR/issue
+  templates and funding link, and the release workflows that published into the upstream project).
+* ✅ **Scope rewritten** around one online source and two content kinds.
+* ✅ **Version restarted** at `0.1.0` for PlayTale.
+* ✅ **Line-ending normalization** so fork diffs stay readable and upstream merges stay cheap.
 
-Phase 0 is closed. The tighter scope in [SCOPE.md](SCOPE.md) is now fully enforced. "But it was on the old roadmap"
-is not a valid argument for accepting a PR.
-
----
-
-## 🚧 Phase 1 - Consolidation, Footprint, and Multi-Device Support
-
-**Goal:** Reduce memory and flash usage, clean up the codebase, and land the SDK / HAL generalization work so
-CrossPoint runs cleanly on ESP32-based e-reader hardware beyond Xteink (X3 / X4), including ESP32-S3 class devices.
-
-**Focus areas:**
-
-* DRAM and heap fragmentation reduction across the reader core.
-* Flash footprint reduction (dead code, redundant strings, oversized tables).
-* Refactors that tighten the HAL / SDK boundary.
-* ✅ Pluggable per-device SDK layers (display, input, storage, battery) and per-device build configuration without
-  forking the reader core. CrossPoint now builds for and runs on multiple device targets beyond the
-  Xteink X3 / X4, including ESP32-S3 class hardware (X4 Pro, PaperMono, Seeed Sticky).
-* Adding support for a new device is done in the [FreeInk SDK](https://freeink.org) first (display, input,
-  storage, battery drivers), followed by a commit to this repo adding board support (build environment and
-  device configuration).
-* E-ink driver refinement (ghosting, partial update behavior).
-
-**Closed during this phase:** new themes built into firmware, new external network connectors (sync engines, cloud
-storage, remote file access).
+Phase 0 is closed.
 
 ---
 
-## Phase 2 - Languages, Fonts, and Themes
+## 🚧 Phase 1 — КвестБук section: browse and download
 
-**Goal:** With the codebase smaller and portable, make reading great in every language: multi-language support,
-better font support with custom fonts, UI translations, and themes loaded from the SD card instead of consuming
-flash.
+**Goal:** Let a reader find and download storygames from КвестБук without a computer.
 
-**Focus areas:**
+**Planned work:**
 
-* Multi-language reading support (underserved languages, complex script support where realistic on ESP32 hardware).
-  Substantial progress has already landed: RTL reading (Arabic, Hebrew) and CJK via SD card fonts.
-* ✅ Better font support and custom fonts. **Landed early.** SD card fonts with a downloader and font manager,
-  script grouping, and CJK support are shipped (see [docs/sd-card-fonts.md](docs/sd-card-fonts.md)).
-* ✅ UI languages and localization. **Landed early.** The UI ships with 30+ translations, including RTL languages,
-  and continues to receive improvements.
-* Moving themes off-firmware to SD-loaded assets (see SCOPE.md Section 6).
-* **SD-loaded plugins.** Extend the device from the SD card without growing the firmware: plugin packages that add
-  integrations and connectors, running through the web server and a whitelisted job queue instead of compiled-in
-  code. This is how new "talk to a server" functionality gets added without paying the flash and RAM cost in the
-  core firmware, keeping the connector freeze in SCOPE.md intact.
-* **Moving hyphenation files off-firmware.** Hyphenation rules vary per language and the files are large (German
-  alone is ~200KB). Today these eat flash budget that should be available for the reader core. The plan is to build
-  a downloader analogous to the existing font downloader and store the hyphenation files on SD, loading on
-  demand. This unlocks better hyphenation for long-word languages (German, Finnish, Norwegian, etc.) without paying
-  the flash cost up front.
+* A **КвестБук** entry in the device UI as the reader's route to quest-book.ru.
+* Browsing the КвестБук catalogue and downloading a storygame to the SD card.
+* A storygame file format placed under the library root, so downloaded games appear in the existing
+  library and file browser.
 
-This phase depends on Phase 1 cleanup landing first; otherwise we generalize a moving target.
+**What already exists and should be reused rather than rebuilt:**
+
+* The SD-card plugin system already provides declarative catalogues with server-side list paging,
+  item details, and multi-file bundle download (`docs/sd-plugins.md`). A catalogue-driven first version
+  can be shipped **without new firmware code**.
+* `CatalogActivity` (`src/activities/CatalogActivity.h`) already owns the shared catalogue flow: Wi-Fi
+  check, search keyboard, loading, download with progress and cancel, and error screens.
+* The home screen's library slot already swaps between Plugins and OPDS
+  (`src/activities/home/HomeActivity.h`).
+
+**Open question:** whether Phase 1 ships as a plugin catalogue or as a built-in section. The decision
+depends on whether КвестБук accounts are needed during browsing, which pulls Phase 3 forward.
+
+---
+
+## Phase 2 — Storygame runtime
+
+**Goal:** Play a downloaded storygame on the device.
+
+**Planned work:**
+
+* Parse the storygame's XML: the game modules, the transition map, and the game parameters.
+* Execute the storygame's rules and drive the plot from the reader's choices.
+* Persist progress and game parameters, so a game resumes where it stopped.
+* Register the storygame format with the library so games and books appear together.
+
+**What already exists and should be reused rather than rebuilt:**
+
+* **XML: expat 2.7.3 is already vendored and used** by the EPUB parsers
+  (`lib/expat/`, `lib/XmlParserUtils/XmlParserUtils.h`). No new XML dependency is needed; what is
+  needed is a parser for the storygame schema on top of it.
+* **Chapter/page layout and text rendering** are shared with the EPUB reader.
+
+**Open decision — the scripting engine.** Nothing suitable is vendored today; a JS interpreter would be
+a new dependency. This is the phase's critical path:
+
+* The engine must fit the ESP32-C3 baseline (roughly 380 KB usable RAM, no PSRAM). On S3 boards PSRAM
+  is available, but C3 support is required.
+* Candidates (for example mJS, Elk, Espruino) must be evaluated for RAM, flash, and worst-case
+  execution before one is chosen.
+* **No engine is selected yet.** This document records the constraint, not a choice.
+
+**Planned prerequisite:** moving built-in hyphenation data to the SD card, to free the flash budget the
+runtime will need (German hyphenation alone is about 200 KB).
+
+---
+
+## Phase 3 — КвестБук account and game experience
+
+**Goal:** Track the reader's progress and experience in a КвестБук account.
+
+**Planned work:**
+
+* Sign in with a КвестБук account.
+* Report game experience and progress to КвестБук.
+* Replace the CrossPoint Sync account settings with КвестБук account settings.
+
+**What this replaces.** The firmware currently ships a CrossPoint Sync / KOReader progress-sync path,
+including a default server at `sync.crosspointreader.com` and its settings. That path remains in the
+code and is documented as current behavior until this phase lands.
+
+**Planned prerequisite:** a КвестБук API. Nothing in this repository can define it.
+
+---
+
+## Related planned work
+
+These are not phases of their own, but they are needed and unowned:
+
+* **OTA update channel.** The firmware's update check currently points at the upstream project's GitHub
+  releases. Removing the upstream release workflows left it without a source of PlayTale builds. A
+  replacement channel is required.
+* **Plugin Hub and font download sources.** Two features fetch from upstream-hosted services
+  (`pluginhub.crosspointreader.com` and the upstream fonts repository). Both need a PlayTale source or
+  removal.
+* **Identifier migration.** `/.crosspoint/` and the `CROSSPOINT-BOARD-V1:` image tag are still the
+  upstream names. Renaming them is planned, but there is **no cache migration path** and the image tag
+  is validated during OTA and SD-card updates, so any rename must handle both deliberately. See the
+  code-identifier table in [AGENTS.md](AGENTS.md#naming-and-branding).
 
 ---
 
 ## Out of Roadmap
 
-The following are explicitly *not* on the roadmap. They may live in other CrossPoint forks; they will not be picked
-up here:
+Explicitly *not* planned. See [SCOPE.md](SCOPE.md) for the rationale.
 
-* Interactive apps (games, calculators, notepads).
+* General-purpose interactive apps (notepads, calculators, unrelated games).
 * Writing / authoring tools.
 * Active connectivity features (RSS, news, browsers).
 * PDF rendering as a first-class format.
-
-See [SCOPE.md](SCOPE.md) for the full rationale.
+* New third-party network connectors beyond КвестБук.
 
 ---
 
 ## How This Roadmap Changes
 
-* Phase boundaries are decided by maintainers, not by individual PRs.
-* If a phase needs to be extended or an item carried over, that is documented here with a short note.
-* Proposals for new phases or reordering should go through a Discussion first.
+* Phase boundaries are decided by the human owner, not by individual changes.
+* If a phase is extended or an item carried over, that is noted here.
+* A planned item is recorded as planned until the code ships; see the documents-follow-code rule in
+  [AGENTS.md](AGENTS.md#documents-follow-code).

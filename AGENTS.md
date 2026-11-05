@@ -1,6 +1,44 @@
-# CrossPoint Reader agent guide
+# PlayTale agent guide
 
-CrossPoint Reader is open-source e-reader firmware for Xteink and other FreeInk-supported devices. Its mission is a lightweight, high-performance reading experience focused on EPUB rendering. The X3/X4's ESP32-C3 remains the resource baseline: roughly 380 KB usable RAM, no PSRAM, and a single framebuffer sized for the selected panel. Other board profiles have different CPUs, display sizes, input, and memory capabilities; check the selected profile before assuming them.
+PlayTale is the firmware behind **КвестБук Читалка**, an open-source e-reader for Xteink and other
+FreeInk-supported devices. Its mission is a lightweight, high-performance reading experience for two
+kinds of long-form content: **EPUB books**, which work today, and **storygames** (interactive gamebooks
+whose rules will run in a scripting engine on the device), which are planned and not implemented. The
+X4's ESP32-C3 remains the resource baseline: roughly 380 KB usable RAM, no PSRAM, and a single
+framebuffer sized for the selected panel. Other board profiles have different CPUs, display sizes,
+input, and memory capabilities; check the selected profile before assuming them.
+
+## Naming and branding
+
+Use these names consistently. They are not interchangeable.
+
+| Context | Value |
+| --- | --- |
+| Human-facing product name | «КвестБук Читалка» |
+| Technical / repository name | PlayTale (`playtale`, `PLAYTALE_*`) |
+| Developer, brand, and service reference | «КвестБук» |
+| Website and the only online source of content | `quest-book.ru` |
+
+**Documentation language.** Agent rules, technical references, and commit messages are English, so they
+stay aligned with the upstream codebase and its English comments. Documents written for people —
+`README.md`, `USER_GUIDE.md`, and any new user-facing feature document — are Russian.
+
+**Names that live in code, not in prose.** A rebrand does not rename these by editing documents. Change
+them only in a dedicated code change, because each one is a stored-format, wire-protocol, or public-API
+contract:
+
+| Identifier | Contract it holds |
+| --- | --- |
+| `/.crosspoint/` | On-SD cache, settings, credentials, and state root. Created in `lib/Serialization/PersistableStore.cpp`; no migration path exists. |
+| `CROSSPOINT_VERSION` | Build macro used by the version display, OTA comparison, web API, and plugin templates. |
+| `CROSSPOINT-BOARD-V1:` | Image magic written by `src/network/FirmwareBoardTag.cpp`; OTA and SD-update validation read it. |
+| `crosspoint.local`, `CrossPoint-Reader` | mDNS hostname and AP SSID as seen by users' browsers and phones. |
+| `CrossPoint-ESP32-*` | HTTP User-Agent sent to servers. |
+| `window.CrossPoint` | Public JavaScript API for SD-card plugins (`src/network/html/js/plugin-host.js`). |
+| `firmwareidentity::FAMILY = "crosspoint"` | Plugin compatibility family advertised to catalogs. |
+
+When a document must mention one of these, keep the identifier verbatim and note that renaming is
+planned but not done. Do not make a document promise a name the firmware does not use yet.
 
 ## FreeInk SDK
 
@@ -15,6 +53,11 @@ for, not silently treated as the pinned firmware dependency.
 ## Start here
 
 At session start, run `uname -s`, `git branch --show-current`, `git remote -v`, and `git status --short`. Integration work targets `develop`.
+
+This repository is a fork. `origin` is the PlayTale fork and `upstream` is the original CrossPoint
+Reader project. Fork work lands on the fork's `develop`; upstream is a read-only source of fixes to
+merge, never a destination to push to. Keep the fork diff narrow so upstream merges stay cheap — see
+[fork maintenance](.agents/rules/git-workflow.md#fork-maintenance).
 
 Act as a senior embedded C++ engineer. Base claims on repository evidence: cite the paths and line numbers that justify a proposed change. Explain the mechanism behind performance or memory claims and justify every new heap allocation. For every fix, tell the human how to verify it.
 
@@ -35,6 +78,7 @@ Use the table to find guidance for the decisions being changed. Read relevant se
 | Activity resources or worker tasks | [activity lifecycle](.agents/rules/ui-activities.md#activity-lifecycle-and-memory-management) and [workers](.agents/rules/ui-activities.md#freertos-task-guidelines) |
 | Runtime font discovery, rendering, or cache lifetime | [font ownership](.agents/rules/ui-activities.md#runtime-fonts-and-cache-ownership) |
 | Plugin, service, web endpoint, or protected-book contracts | [service contracts](.agents/rules/architecture-hal.md#service-and-plugin-contracts) and the linked contract that applies |
+| Storygame formats, the storygame runtime, or download integration | `SCOPE.md` for what is in scope; `ROADMAP.md` for what is only planned |
 | Builds, formatting, or verification | [testing workflow](.agents/rules/testing-debugging.md#testing-and-verification-workflow) and [compact build output](.agents/rules/testing-debugging.md#compact-build-output) |
 | Crashes, CI, or serial measurements | [crash diagnosis](.agents/rules/testing-debugging.md#debugging-crashes) or the matching CI/serial section |
 | Branch creation, merges, commits, or publication | [git-workflow.md](.agents/rules/git-workflow.md) |
@@ -45,6 +89,14 @@ Use the table to find guidance for the decisions being changed. Read relevant se
 | Restructuring, extraction, or separating unrelated cleanup | the `refactor-for-review` skill |
 
 Repository-local skills live under `.agents/skills/`. Their descriptions identify specific procedures to use when needed; a keyword match alone does not require loading a skill.
+
+## Documents follow code
+
+A document describes what the firmware does today. `ROADMAP.md` is the only place that describes
+planned work, and every planned item there is marked as a plan rather than as shipped behavior. When
+code and documentation disagree, the code is right and the document is the bug. Do not edit a document
+to match an intended future state, and do not leave a document claiming behavior the firmware does not
+have.
 
 ## Human ownership
 

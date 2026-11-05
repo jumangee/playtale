@@ -1,7 +1,8 @@
 # Web Server Guide
 
-This guide explains how to use CrossPoint Reader's built-in web server for file
-transfer, device settings, Wi-Fi/OPDS management, and SD-card font management.
+This guide explains how to use the built-in web server of КвестБук Читалка
+(PlayTale) for file transfer, device settings, Wi-Fi/OPDS management, and
+SD-card font management.
 
 ## Overview
 
@@ -26,13 +27,13 @@ networks or in hotspot mode when you control who is connected.
 | Mode | Use when |
 |------|----------|
 | **Join Network** | You want the reader to join an existing Wi-Fi network. |
-| **Calibre Wireless** | You want to receive books from the CrossPoint Calibre plugin workflow. |
+| **Calibre Wireless** | You want to receive books from the PlayTale Calibre plugin workflow. |
 | **Create Hotspot** | You want the reader to create its own open Wi-Fi network. |
 
 ## Join Network Mode
 
 1. Select **Join Network**.
-2. If you have saved Wi-Fi credentials, CrossPoint first tries the last
+2. If you have saved Wi-Fi credentials, PlayTale first tries the last
    connected network, then other visible saved networks in signal-strength
    order. Press **Back** to cancel or **Confirm** to stop auto-connect and show
    the network list.
@@ -46,7 +47,8 @@ After connection, the reader shows:
 - The connected SSID
 - A QR code for the web URL
 - The direct IP URL, for example `http://192.168.1.102/`
-- The mDNS fallback URL, usually `http://crosspoint.local/`
+- The mDNS fallback URL, usually `http://crosspoint.local/` (the mDNS name is
+  not renamed yet)
 
 Use either URL from a phone, tablet, or computer on the same network.
 
@@ -58,6 +60,8 @@ Use either URL from a phone, tablet, or computer on the same network.
 ```text
 CrossPoint-Reader
 ```
+
+   This SSID is still the upstream one; the hotspot name is not renamed yet.
 
 3. Open the URL shown on the reader. `http://crosspoint.local/` is preferred
    when supported; the fallback IP is typically `http://192.168.4.1/`. Some
@@ -71,7 +75,7 @@ opening the web interface.
 
 Calibre Wireless starts the same web server in station mode, then displays setup
 instructions and upload progress on the reader. Use this mode with the
-CrossPoint Calibre plugin or other clients that speak the documented WebSocket
+PlayTale Calibre plugin or other clients that speak the documented WebSocket
 upload protocol.
 
 For Calibre OPDS browsing, add `/opds` to the catalog URL when configuring an
@@ -127,7 +131,7 @@ font magic bytes before accepting the upload.
 Installed fonts appear in **Settings > Reader > Font Family** after the font
 registry refreshes.
 
-On devices with external RAM enabled in CrossPoint, you can use TTF/OTF/TTC
+On devices with external RAM enabled in PlayTale, you can use TTF/OTF/TTC
 fonts directly.
 Copy them into `/fonts/` or `/.fonts/` on the SD card. The Fonts page and
 `/api/fonts/upload` accept `.ttf` and `.otf` files but not `.ttc`. See the

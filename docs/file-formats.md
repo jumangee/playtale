@@ -1,6 +1,8 @@
 # File Formats
 
 These formats describe the SD-card cache files under `/.crosspoint/epub_<hash>/`.
+КвестБук Читалка (PlayTale) keeps the upstream `/.crosspoint/` directory name
+(not renamed yet), because existing cards already store their caches there.
 All POD fields are written in the ESP32 little-endian representation used by
 `Serialization.h`; strings are length-prefixed UTF-8.
 

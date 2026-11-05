@@ -1,6 +1,6 @@
 # Plugin events and the book metadata sidecar
 
-Two firmware surfaces that let SD plugins react to what happens on the reader
+Two firmware surfaces of КвестБук Читалка (PlayTale) that let SD plugins react to what happens on the reader
 and attach service data to books, while keeping all service knowledge out of
 the firmware. They compose with the other plugin surfaces documented in
 `sd-plugins.md`.

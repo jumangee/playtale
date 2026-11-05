@@ -1,6 +1,6 @@
 # Touch and UI Development
 
-CrossPoint runs on touch devices (Seeed Sticky, M5Paper, M5Stack PaperMono, LilyGo T5, Xteink X4 Pro) alongside the button-only Xteink X3/X4. Every screen must work with both input styles.
+КвестБук Читалка (PlayTale) runs on touch devices (Seeed reTerminal Sticky, M5Stack Paper Mono, Xteink X4 Pro) alongside button-only devices (Xteink X4, Xteink X4 Classic). The Xteink X3 is discontinued and unsupported. Every screen must work with both input styles.
 
 **There is one supported way to build a new screen: FreeInkUI, hosted through the firmware base classes below.** Touch hit-testing, tap highlighting, long-press, swipe scrolling, and button focus navigation all come from the shared stack; you never hand-roll coordinate math.
 
@@ -143,25 +143,27 @@ As with all input: never call the SDK `InputManager` or read GPIO directly. The 
 ## Building and testing on other devices
 
 Select a checked-in environment from `platformio.ini` before creating a local
-profile. CrossPoint's CI and release workflows currently cover:
+profile. PlayTale's CI build matrix currently covers:
 
 | Device | Development environment | MCU |
 | --- | --- | --- |
-| Xteink X3 / X4 | `default` | ESP32-C3 |
+| Xteink X4 | `default` | ESP32-C3 |
 | Seeed reTerminal Sticky | `sticky` | ESP32-S3 |
 | Xteink X4 Pro | `x4pro` | ESP32-S3 |
 | Xteink X4 Classic | `x4c` | ESP32-S3 |
 | M5Stack Paper Mono | `papermono` | ESP32-S3 |
-| Metalio E-Ink 4 | `metalio_eink4` | ESP32-S3 |
-| Onyx BOOX Picco | `picco` | ESP32-S3 |
+| Metalio E-Ink 4 (build check only, not a supported target) | `metalio_eink4` | ESP32-S3 |
+| Onyx BOOX Picco (build check only, not a supported target) | `picco` | ESP32-S3 |
 
-Build with `pio run -e <environment>`. X3 and X4 share a binary with runtime
-board selection; different MCU families require separate binaries. Check the
-current workflow matrices before claiming build coverage or published assets.
+Build with `pio run -e <environment>`. The X4 and X3 share a binary with runtime
+board selection (the X3 is discontinued and unsupported); different MCU families
+require separate binaries. CI runs build checks only — this fork has no release
+workflow yet. Check the current workflow matrices before claiming build coverage
+or published assets.
 
 The [FreeInk SDK profiles](../../freeink-sdk/libs/hardware/BoardConfig/include/BoardConfig.h)
 cover additional hardware. An SDK profile does not by itself establish
-CrossPoint release support or hardware verification. The M5Paper v1.1 and
+PlayTale support or hardware verification. The M5Paper v1.1 and
 LilyGo T5 S3 examples below are local profiles outside the current CI matrix.
 
 Put those profiles in **`platformio.local.ini`**, a gitignored file merged over

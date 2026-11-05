@@ -1,0 +1,1400 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<book guid="f3e2fd35e315965ad9f0191a7ec7bb19">
+  <article id="mitril">
+    <script type="onload"><![CDATA[var mitrilSetup = (function(rawSetup) {
+	function parseMixBoolean(value) {
+		if (value === 'true') return true;
+		if (value === 'false') return false;
+		return parseInt(value);
+	}
+
+	var setup = {
+		groups: {},
+		items: {},
+		functions: {},
+		checkpoints: [],
+		len: /*totallen*/ ,
+		ends: /*totalends*/ ,
+		prod: /*prodstate*/ ,
+		index: '/*gameindex*/',
+		game_id: /*game_id*/
+	};
+	
+	var groups = rawSetup['keywords'];
+	if (groups) {
+		for (var g = 0; g < groups.length; g++) {
+			var group = groups[g];
+			group.type = 'k';
+			group.visible = parseMixBoolean(group.visible);
+			group.limit = parseMixBoolean(group.limit);
+			setup.groups[group.uid] = group;
+			var items = group['items'];
+			var list = [];
+			if (items) {
+				for (var i = 0; i < items.length; i++) {
+					var item = items[i];
+					item.group = group.uid;
+					item.start = parseMixBoolean(item.start);
+					item.limit = (item.limit && item.limit > 0) ? parseInt(item.limit) : 0;
+					setup.items[item.uid] = item;
+					list.push(item.uid);
+				}
+			}
+			group.items = list;
+		}
+	}
+	groups = rawSetup['resources'];
+	if (groups) {
+		for (var g = 0; g < groups.length; g++) {
+			var group = groups[g];
+			group.type = 'r';
+			group.visible = parseMixBoolean(group.visible);
+			group.limit = parseMixBoolean(group.limit);
+			setup.groups[group.uid] = group;
+			var items = group['items'];
+			var list = [];
+			if (items) {
+				for (var i = 0; i < items.length; i++) {
+					var item = items[i];
+					item.group = group.uid;
+					item.start = parseMixBoolean(item.start);
+					setup.items[item.uid] = item;
+					list.push(item.uid);
+				}
+			}
+			group.items = list;
+		}
+	}
+
+	if (rawSetup['functions']) {
+		for (var f = 0; f < rawSetup['functions'].length; f++) {
+			var func = rawSetup['functions'][f];
+			setup.functions[func['func_uid']] = JSON.parse(func['func_script']);
+		}
+	}
+
+	if (rawSetup['soundtrack']) {
+		setup.soundtrack = {
+			type: rawSetup['soundtrack']['type'],
+			owner: rawSetup['soundtrack']['owner'],
+			list: rawSetup['soundtrack']['list'],
+			key: rawSetup['soundtrack']['key']
+		};
+	}
+	if (rawSetup['checkpoints']) {
+		setup.checkpoints = rawSetup['checkpoints'].slice();
+	}
+
+	rawSetup = undefined;
+	return setup;
+})({/*mitrilSetup*/});
+
+function mitrilController() {
+
+	var tpls = {};
+	var saveGameTimer;
+	var lastSaveData;
+	var self = this;
+
+	if (!mitrilSetup.prod) {
+		$('.end-go-edit').attr('href', '/online/edit/' + mitrilSetup.game_id + '/').fadeIn();
+	}
+	$('.btn-error-report').show();
+	$('.ticket-is_prod').val(mitrilSetup.prod);
+
+	$('.display-properties').slideDown();
+
+	if (mitrilSetup.soundtrack) {
+		var snd = mitrilSetup.soundtrack;
+		$.ajax({
+			url: '/online/mitril/soundtrack/',
+			data: snd,
+			dataType: 'json',
+			method: 'GET',
+			success: function(response) {
+				var ost = $('.soundtrack');
+				if (response.result == 'ok') {
+					$('iframe', ost).attr('src', response.data.message);
+					ost.fadeIn();
+				} else {
+					ost.remove();
+				}
+			}
+		});
+	}
+
+	this.ver = 1.4;
+
+	this.getGameID = function() {
+		return mitrilSetup.game_id;
+	}
+
+	this.isProd = function() {
+		return mitrilSetup.prod == 1;
+	}
+
+	var parser = new exprEval.Parser({
+        operators: {
+          'add': true,
+          'concatenate': false,
+          'conditional': true,
+          'divide': true,
+          'factorial': false,
+          'multiply': true,
+          'power': true,
+          'remainder': true,
+          'subtract': true,
+          'logical': true,
+          'comparison': true,
+          'in': true,
+          'assignment': false
+        }
+      });
+	  
+	///
+
+	function checkExpression(items, expr) {
+		if (expr.type === 's' && expr.val) {
+            var script = expr.val;
+			console.log('------------------------------------->-');
+			console.log(script);
+            if (script.length > 2 && script.length < 2000) {
+                var values = {};
+                $.each(mitrilSetup.items, function(uid) {
+                    var item = this; //mitrilSetup.items[uid];
+					var group = mitrilSetup.groups[item.group];
+                    if (item && group) {
+						console.log(group.name + '/' + item.name + '=' + items[uid]);
+                        values[group.type + uid.replace(/-/g, '')] = items[uid] ? items[uid] : 0;
+                    }
+                });
+				console.log('-<-------------------------------------');
+                try {
+                    var expr = parser.parse(script);
+                    return expr.evaluate(values) ? true : false;
+                } catch (e) {
+                }
+            }
+            return false;
+		}
+		
+		var value = items[expr.val];
+
+		if (expr.type === 'k' && value) {
+			return true;
+		}
+
+		if (expr.type === 'r') {
+			if (!value) value = 0;
+			var count;
+			if (isNaN(expr.amnt)) {
+				var v = items[expr.amnt];
+				count = v !== undefined ? v : 0;
+			} else {
+				count = expr.amnt;
+			}
+			if (expr.eq) {
+				return value == count; // && count > 0;	// 06.12.2021
+			}
+			return value >= count;
+		}
+
+		return false;
+	}
+
+	this.checkCondition = function(items, cond, crit) {
+		var modeAND = true;
+		if (cond && cond.or) { //&& cond.c instanceof Array
+			if (cond.or) {
+				modeAND = false;
+			}
+			cond = cond.c;
+		}
+
+		if (!modeAND) {
+			// OR
+			for (var c = 0; c < cond.length; c++) {
+				var expr = cond[c];
+				if (checkExpression(items, expr) === crit) {
+					return true;
+				}
+			}
+			return false;
+		}
+		for (var c = 0; c < cond.length; c++) {
+			var expr = cond[c];
+			if (checkExpression(items, expr) !== crit) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	this.getGroupResourceCount = function(items, uid) {
+		var result = 0;
+		var group = mitrilSetup.groups[uid];
+		if (!group) {
+			return 0;
+		}
+
+		for (var i = 0; i < group.items.length; i++) {
+			var uid = group.items[i];
+			var value = items[uid];
+			if (value) {
+				if (group.type == 'k') {
+					result++;
+				} else {
+					result += Math.abs(value);
+				}
+			}
+		}
+
+		return result;
+	}
+
+	function executeIncTask(items, task) {
+		var uid = task.val;
+		var libItem = mitrilSetup.items[uid];
+		if (!libItem) return false;
+
+		var group = mitrilSetup.groups[libItem.group];
+		if (!group) return false;
+
+		var count = parseInt(task.amnt);
+		if (!count || isNaN(count)) count = 1;
+
+		if (group.limit !== false) {
+			var stored = mitril.getGroupResourceCount(items, group.uid);
+			if (stored + count > group.limit) {
+				if (task.type == 'k') {
+					return true;
+				}
+				count = Math.max(group.limit - stored, 0);
+			}
+		}
+
+		if (task.type == 'k') {
+			items[uid] = true;
+			return true;
+		}
+
+		if (task.type == 'r') {
+			if (!items[uid]) {
+				items[uid] = 0;
+			}
+
+			var curVal = items[uid];
+			if (libItem.limit > 0 && (curVal + count > libItem.limit)) {
+				count = Math.max(libItem.limit - curVal, 0);
+			}
+
+			items[uid] += count;
+			return true;
+		}
+
+		return false;
+	}
+
+	function checkGroupSpaceTask(items, task) {
+		var uid = task.val;
+		var libItem = mitrilSetup.items[uid];
+		if (!libItem) return false;
+
+		var group = mitrilSetup.groups[libItem.group];
+		if (!group) return false;
+
+		if (group.limit !== false) {
+			var stored = mitril.getGroupResourceCount(items, group.uid);
+			if (stored < group.limit) {
+				return true;
+			}
+		}
+
+		return true;
+	}
+
+	function executeSetTask(items, task) {
+		var uid = task.val;
+		var libItem = mitrilSetup.items[uid];
+		if (!libItem) return false;
+
+		var group = mitrilSetup.groups[libItem.group];
+		if (!group) return false;
+
+		var count = parseInt(task.amnt);
+		if (isNaN(count)) count = 0;
+
+		if (task.type == 'k') {
+			return false;
+		}
+		
+		var itemLimit = parseInt(libItem.limit);
+		if (isNaN(itemLimit)) count = 0;
+		
+		if (itemLimit > 0) {
+			items[uid] = Math.min(itemLimit, group.limit > 0 ? (count - mitril.getGroupResourceCount(items, group.uid) - group.limit) : count );
+			return true;
+		}
+
+		if (group.limit !== false) {
+			var oldValue = items[uid];
+			items[uid] = count;
+			var stored = mitril.getGroupResourceCount(items, group.uid);
+			if (stored > group.limit) {
+				items[uid] -= (stored - group.limit);
+			}
+		} else {
+			items[uid] = count;
+		}
+
+		return true;
+	}
+
+	function executeDecTask(items, task) {
+		var uid = task.val;
+		var libItem = mitrilSetup.items[uid];
+		if (!libItem) return false;
+
+		if (task.type == 'k') {
+			items[uid] = false;
+			return true;
+		}
+
+		if (task.type == 'r') {
+			var count = parseInt(task.amnt);
+			if (!count || isNaN(count)) count = 1;
+
+			if (!items[uid]) {
+				items[uid] = 0;
+			}
+
+			items[uid] -= count;
+			if (items[uid] < 0) { // MIN!!!
+				items[uid] = 0;
+			}
+			return true;
+		}
+
+		return false;
+	}
+
+	// remove all keys of group
+	function executeDelTask(items, task) {
+		var uid = task.val;
+		var libGroup = mitrilSetup.groups[uid];
+		if (!libGroup) return false;
+
+		if (task.type == 'r') {
+			return false;
+		}
+
+		var groupItems = libGroup.items;
+		for (var i = 0; i < groupItems.length; i++) {
+			delete items[groupItems[i]];
+		}
+
+		return true;
+	}
+	
+	// set 0 all res of group
+	function executeNlgTask(items, task) {
+		var libGroup = mitrilSetup.groups[task.val];
+		if (!libGroup) return false;
+
+		if (task.type == 'k') {
+			return false;
+		}
+
+		var groupItems = libGroup.items;
+		for (var i = 0; i < groupItems.length; i++) {
+			delete items[groupItems[i]];
+		}
+
+		return true;
+	}
+
+	function rnd(min, max) {
+		return Math.min(max, Math.min(max, Math.floor(Math.random() * (max - min + 1)) + min));
+	}
+
+	function getRandom(min, max) {
+		var results = [];
+		var throws = rnd(5, 10);
+		for (var i = 0; i < throws; i++) {
+			results.push(rnd(min, max));
+		}
+		return results[rnd(0, throws - 1)];
+	}
+
+	// checkpoint
+	function executeSaveTask(items, task) {
+		var checkpoint = task.val;
+		var self = this;
+		if (checkpoint && lastSaveData) {
+			$.ajax({
+				url: '/online/mitril/savegame/',
+				data: {
+					game_id: mitrilSetup.game_id,
+					prod: mitrilSetup.prod,
+					checkpoint: checkpoint,
+					savedata: lastSaveData,
+					testuid: window.playerInfo ? window.playerInfo.testuid : undefined
+				},
+				method: 'POST',
+				dataType: 'json',
+				success: function(response) {
+					if (response.result == 'ok') {
+						items[checkpoint] = true;
+						jsIQ.triggerEvent('update_charsheet', {
+							update: true
+						});
+					}
+				}
+			});
+			return true;
+		}
+
+		return false;
+	}
+
+	// add one random key of group
+	function executeRndTask(items, task) {
+		var uid = task.val;
+		var libGroup = mitrilSetup.groups[uid];
+		if (!libGroup) return false;
+
+		if (task.type == 'r') {
+			return false;
+		}
+
+		var groupItems = libGroup.items;
+		var pos = getRandom(0, groupItems.length - 1);
+		items[groupItems[pos]] = true;
+
+		return true;
+	}
+
+	function executeGotoTask(items, task) {
+		var uid = task.val;
+		jsIQ.showArticle(uid);
+		return true;
+	}
+
+	function executeBackTask(items, task) {
+		if (vars.lastarticle) {
+			jsIQ.showArticle(vars.lastarticle);
+			vars.lastarticle = null;
+			return true;
+		}
+		return false;
+	}
+
+	function executeAchiTask(items, task) {
+		var achi = task.val;
+		if (achi > 0 && achi < 5) {
+			$.ajax({
+				url: '/online/mitril/achi/add/',
+				method: 'POST',
+				dataType: 'json',
+				data: {
+					game_id: mitrilSetup.game_id,
+					prod: mitrilSetup.prod,
+					achi_id: achi,
+					testuid: window.playerInfo ? window.playerInfo.testuid : undefined
+				},
+				success: function(response) {
+					if (response.result != 'error') {
+						// announce
+						var achi = response.data;
+						var msg = '<div style="overflow: hidden; margin-top: 0.5em"><img src="/online/player/mitril/images/' + achi.achi_ico + '" style="float:left; margin-right: 1em; height: 50px;"><h5>' + achi.achi_title + '</h5></div>';
+						if (window.showNotification) {
+							showNotification('<div class="alert alert-success text-dark" role="alert"><h4 class="alert-heading m-0">Получено достижение!</h4><p style="font-size:95%">'+ msg + (response.result == 'fake' ? '\n<i>Внимание! Достижения анонимных пользователей не сохраняются</i>' : '')+'</p></div>');
+						} /*else {
+							$.growl({
+								title: "Получено достижение!",
+								message: ,
+								duration: 10000,
+								size: 'large',
+								style: 'warning'
+							});
+						}*/
+					}
+				}
+			});
+		}
+
+		return true;
+	}
+
+	function executeAddResTask(items, task) {
+		if (task.type == 'k') {
+			return false;
+		}
+
+		var uid = task.val;
+		var libItem = mitrilSetup.items[uid];
+		if (!libItem) return false;
+
+		var group = mitrilSetup.groups[libItem.group];
+		if (!group) return false;
+
+		var count = items[task.param];
+		if (!count) {
+			return true;
+		}
+
+		if (group.limit !== false) {
+			var stored = mitril.getGroupResourceCount(items, group.uid);
+			if (stored + count > group.limit) {
+				if (task.type == 'k') {
+					return true;
+				}
+				count = Math.max(group.limit - stored, 0);
+			}
+		}
+
+		if (!items[uid]) {
+			items[uid] = 0;
+		}
+
+		var curVal = items[uid];
+		if (libItem.limit > 0 && (curVal + count > libItem.limit)) {
+			count = Math.max(libItem.limit - curVal, 0);
+		}
+
+		items[uid] += count;
+		return true;
+	}
+
+	function executeSubResTask(items, task) {
+		if (task.type == 'k') {
+			return false;
+		}
+
+		var uid = task.val;
+		var libItem = mitrilSetup.items[uid];
+		if (!libItem) return false;
+
+		var count = items[task.param];
+		if (!count) {
+			return true;
+		}
+
+		if (!items[uid]) {
+			items[uid] = 0;
+		}
+
+		items[uid] -= count;
+		if (items[uid] < 0) { // MIN!!!
+			items[uid] = 0;
+		}
+		return true;
+	}
+
+	function executeMlpResTask(items, task) {
+		if (task.type == 'k') {
+			return false;
+		}
+
+		var uid = task.val;
+		var libItem = mitrilSetup.items[uid];
+		if (!libItem) return false;
+
+		var group = mitrilSetup.groups[libItem.group];
+		if (!group) return false;
+
+		var count = items[task.param];
+		if (!count) {
+			items[uid] = 0;
+			return true;
+		}
+
+		var result = items[uid] ? (items[uid] * count) : 0;
+		items[uid] = result;
+
+		if (group.limit !== false) {
+			var stored = mitril.getGroupResourceCount(items, group.uid);
+			if (stored > group.limit) {
+				result -= group.limit - stored;
+			}
+		}
+
+		if (libItem.limit > 0 && (result > libItem.limit)) {
+			result = libItem.limit; // - result;
+		}
+
+		items[uid] = result;
+		return true;
+	}
+
+	function executeDivResTask(items, task) {
+		if (task.type == 'k') {
+			return false;
+		}
+
+		var uid = task.val;
+		var libItem = mitrilSetup.items[uid];
+		if (!libItem) return false;
+
+		var group = mitrilSetup.groups[libItem.group];
+		if (!group) return false;
+
+		var count = items[task.param];
+		if (!count) {
+			items[uid] = 0;
+			return true;
+		}
+
+		var result = items[uid] ? (Math.round(items[uid] / count)) : 0;
+
+		items[uid] = result;
+		return true;
+	}
+
+	function executeEqlResTask(items, task) {
+		if (task.type == 'k') {
+			return false;
+		}
+
+		var uid = task.val;
+		var libItem = mitrilSetup.items[uid];
+		if (!libItem) return false;
+
+		var group = mitrilSetup.groups[libItem.group];
+		if (!group) return false;
+
+		var count = items[task.param];
+		if (!count) {
+			items[uid] = 0;
+			return true;
+		}
+
+		items[uid] = count;
+
+		if (group.limit !== false) {
+			var stored = mitril.getGroupResourceCount(items, group.uid);
+			if (stored > group.limit) {
+				count -= group.limit - stored;
+			}
+		}
+
+		if (libItem.limit > 0 && (count > libItem.limit)) {
+			count -= libItem.limit - count;
+		}
+
+		items[uid] = count;
+		return true;
+	}
+
+	function executeRndResTask(items, task) {
+		if (task.type == 'k') {
+			return false;
+		}
+
+		var uid = task.val;
+		var libItem = mitrilSetup.items[uid];
+		if (!libItem) return false;
+
+		var group = mitrilSetup.groups[libItem.group];
+		if (!group) return false;
+
+		var count = getRandom(1, items[task.param]);
+
+		if (group.limit !== false) {
+			var stored = mitril.getGroupResourceCount(items, group.uid);
+			if (stored + count > group.limit) {
+				if (task.type == 'k') {
+					return true;
+				}
+				count = Math.max(group.limit - stored, 0);
+			}
+		}
+
+		if (!items[uid]) {
+			items[uid] = 0;
+		}
+
+		var curVal = items[uid];
+		if (libItem.limit > 0 && (curVal + count > libItem.limit)) {
+			count = Math.min(libItem.limit - curVal, 0);
+		}
+
+		items[uid] += count;
+		return true;
+	}
+
+	function executeRndRemResTask(items, task) {
+		if (task.type == 'k') {
+			return false;
+		}
+
+		var uid = task.val;
+		var libItem = mitrilSetup.items[uid];
+		if (!libItem) return false;
+
+		var group = mitrilSetup.groups[libItem.group];
+		if (!group) return false;
+
+		var count = getRandom(1, items[task.param]);
+
+		if (!items[uid]) {
+			items[uid] = 0;
+		}
+
+		items[uid] = Math.max(items[uid] - count, 0);
+		return true;
+	}
+
+	function executeRndGResTask(items, task) {
+		if (task.type == 'k') {
+			return false;
+		}
+
+		var uid = task.val;
+		var group = mitrilSetup.groups[uid];
+		if (!group) return false;
+		var groupItems = group.items;
+		var pos = getRandom(0, groupItems.length - 1);
+
+		var count = getRandom(1, items[task.param]);
+		var uid = groupItems[pos];
+		var libItem = mitrilSetup.items[uid];
+
+		if (group.limit !== false) {
+			var stored = mitril.getGroupResourceCount(items, group.uid);
+			if (stored + count > group.limit) {
+				count = Math.max(group.limit - stored, 0);
+			}
+		}
+
+		if (!items[uid]) {
+			items[uid] = 0;
+		}
+
+		var curVal = items[uid];
+		if (libItem.limit > 0 && (curVal + count > libItem.limit)) {
+			count = Math.max(libItem.limit - curVal, 0);
+		}
+
+		items[uid] += count;
+		return true;
+	}
+
+	function executeRndRemGResTask(items, task) {
+		if (task.type == 'k') {
+			return false;
+		}
+
+		var uid = task.val;
+		var group = mitrilSetup.groups[uid];
+		if (!group) return false;
+		var groupItems = group.items;
+		var pos = getRandom(0, groupItems.length - 1);
+		var count = getRandom(1, items[task.param]);
+		var uid = groupItems[pos];
+		var libItem = mitrilSetup.items[uid];
+
+		if (!items[uid]) {
+			items[uid] = 0;
+		}
+
+		items[uid] = Math.max(items[uid] - count, 0);
+		return true;
+	}
+
+	function executeIfTask(items, task) {
+		var ifOpnd = $.parseJSON(task.type === '64' ? Base64.decode(task.val) : task.val);
+
+		if (!ifOpnd) return false;
+
+		var cond = ifOpnd['action_if'];
+		if (cond && cond.length > 2) {
+			var r = mitril.checkCondition(items, JSON.parse(cond), true);
+			if (!r) {
+				return true;
+			}
+		}
+
+		cond = ifOpnd['action_ifnot'];
+		if (cond && cond.length > 2) {
+			var r = mitril.checkCondition(items, JSON.parse(cond), false);
+			if (!r) {
+				return true;
+			}
+		}
+
+		mitril.script(items, JSON.parse(ifOpnd['action_script']));
+
+		return true;
+	}
+
+	function executeFunTask(items, task) {
+		var script = mitrilSetup.functions[task.val];
+		if (!script) return false;
+
+		mitril.script(items, script);
+
+		return true;
+	}
+	
+	this.executeCleanTask = function(items, task) {
+		for (var uid in items) {
+			if (mitrilSetup.hasOwnProperty(uid)) continue;
+			delete items[uid];
+		}
+		for (var uid in mitrilSetup.items) {
+			if (mitrilSetup.hasOwnProperty(uid)) continue;
+			var item = mitrilSetup.items[uid];
+			if (item.start) {
+				items[item.uid] = item.start;
+			}
+		}
+
+		return true;
+	}
+
+	function executeTask(items, task) {
+		switch (task.class) {
+			case 'inc': {
+				return executeIncTask(items, task);
+			}
+			case 'dec': {
+				return executeDecTask(items, task);
+			}
+			case 'goto': {
+				return executeGotoTask(items, task);
+			}
+			case 'set': {
+				return executeSetTask(items, task);
+			}
+			case 'del': {
+				return executeDelTask(items, task);
+			}
+			case 'rnd': {
+				return executeRndTask(items, task);
+			}
+			case 'back': {
+				return executeBackTask(items, task);
+			}
+			case 'achi': {
+				return executeAchiTask(items, task);
+			}
+			case 'save': {
+				setTimeout(function() {
+					executeSaveTask(items, task);
+				}, 500);
+				return true;
+			}
+			case 'add': {
+				return executeAddResTask(items, task);
+			}
+			case 'sub': {
+				return executeSubResTask(items, task);
+			}
+			case 'mlp': {
+				return executeMlpResTask(items, task);
+			}
+			case 'div': {
+				return executeDivResTask(items, task);
+			}
+			case 'eql': {
+				return executeEqlResTask(items, task);
+			}
+			case 'rnr': {
+				return executeRndResTask(items, task);
+			}
+			case 'rng': {
+				return executeRndGResTask(items, task);
+			}
+			case 'rrr': {
+				return executeRndRemResTask(items, task);
+			}
+			case 'rrg': {
+				return executeRndRemGResTask(items, task);
+			}
+			case 'if': {
+				return executeIfTask(items, task);
+			}
+			case 'fun': {
+				return executeFunTask(items, task);
+			}
+			case 'nul': {
+				return self.executeCleanTask(items, task);
+			}
+			case 'nlg': {
+				return executeNlgTask(items, task);
+			}
+		}
+		return true;
+	}
+
+	function getItemChangesList(olditems, newitems) {
+		var result = [];
+
+		$.each(mitrilSetup.items, function(uid) {
+			var oldval = olditems[uid];
+			var newval = newitems[uid];
+			if (oldval !== newval) {
+				var itemInfo = mitrilSetup.items[uid];
+				var itemGroup = mitrilSetup.groups[itemInfo.group];
+				if (!itemGroup.visible) {
+					return;
+				}
+				var title = itemGroup.name + '/' + itemInfo.name;
+				var diff;
+				if (itemGroup.type === 'k') {
+					diff = (!newval) ? ('<strike>' + title + '</strike>') : ('<b>' + title + '</b>');
+				} else {
+					if (!oldval) oldval = 0;
+					if (!newval) {
+						diff = '<strike>' + title + '</strike>';
+					} else {
+						diff = newval > oldval ? '+' : '';
+						diff = '' + title + ': <b>' + (diff + (newval - oldval)) + '</b> (' + newval + ')';
+					}
+				}
+				result.push(diff);
+			}
+		});
+		return result;
+	}
+
+	this.scriptWrap = function(varslink, script) {
+		var oldItems = $.extend({}, varslink.items);
+		var history = $('#charsheet-change-history');
+		this.script(varslink.items, script);
+		var changes = getItemChangesList(oldItems, varslink.items);
+		if (changes.length) {
+			$.each(changes, function() {
+				history.append('<div class="charsheet-changed-item"><i class="fad fa-edit"></i> ' + this + '</div>');
+			});
+			history.stop().animate({
+				scrollTop: history.prop('scrollHeight')
+			}, 500);
+		}
+		jsIQ.triggerEvent('update_charsheet', {
+			update: true
+		}); /* real update charsheet! */
+		this.saveGame(jsIQ.current_article.title, varslink);
+		setTimeout(function() {
+			jsIQ.renderArticle();
+		}, 250);
+		return true;
+	}
+
+	this.script = function(items, script) {
+		if (!script || !(script instanceof Array)) return false;
+		for (var s = 0; s < script.length; s++) {
+			var task = script[s];
+			if (!executeTask(items, task)) {
+				return false;
+			}
+		}
+		//jsIQ.triggerEvent('update_charsheet', {update: true});                  /* real update charsheet! */
+		return true;
+	}
+
+	this.getCharsheetData = function(items) {
+		var result = [];
+		var groups = mitrilSetup.groups;
+		for (var g in groups) {
+			if (!groups.hasOwnProperty(g)) continue;
+			var group = groups[g];
+			if (!group.visible || !group.items || !group.items.length) continue;
+			var list = [];
+			var stored = 0;
+			for (var i = 0; i < group.items.length; i++) {
+				var uid = group.items[i];
+				var value = vars.items[uid];
+				if (value) {
+					var item = mitrilSetup.items[uid];
+					list.push({
+						name: item.name,
+						uid: uid,
+						value: value
+					});
+					stored += value;
+				}
+			}
+			if (list.length > 0) {
+				result.push({
+					name: group.name,
+					uid: group.uid,
+					type: group.type,
+					visible: group.visible,
+					limit: group.limit,
+					stored: stored,
+					items: list
+				});
+			}
+		}
+
+		var checkpoints = mitrilSetup.checkpoints;
+		if (checkpoints) {
+			var cpArr = [];
+			for (var c = 0; c < checkpoints.length; c++) {
+				var checkpoint = checkpoints[c];
+				var visited = null;
+				for (var v = 0; v < checkpoint.vars.length; v++) {
+					var variant = checkpoint.vars[v];
+					if (vars.items[checkpoint.uid + '--' + variant.uid] == true) {
+						visited = variant;
+						break;
+					}
+				}
+				if (visited) {
+					for (var d = 0; d < c; d++) {
+						if (cpArr[d].available === 'preview') {
+							// skipped
+							cpArr[d].available = 'skipped';
+						}
+					}
+				}
+				cpArr.push({
+					name: checkpoint.name + (visited ? (': ' + visited.name) : ''),
+					uid: (visited ? (checkpoint.uid + '--' + visited.uid) : undefined),
+					type: 'checkpoint',
+					available: visited ? 'available' : 'preview'
+				});
+			}
+			result = result.concat(cpArr);
+		}
+		return result;
+	}
+
+	this.getTpl = function(id) {
+		if (tpls[id]) {
+			return tpls[id].clone();
+		}
+		tpls[id] = $('.mitril-tpl > .' + id).clone();
+		return tpls[id].clone();
+	}
+
+	this.restartGame = function(callback) {
+		if (confirm('Начать игру с начала?')) {
+			$.ajax({
+				url: '/online/mitril/restart/',
+				data: {
+					game_id: mitrilSetup.game_id,
+					prod: mitrilSetup.prod,
+					testuid: window.playerInfo ? window.playerInfo.testuid : undefined
+				},
+				method: 'POST',
+				success: function() {
+					if (callback) {
+						callback();
+					}
+				}
+			});
+		}
+	}
+
+	this.getSavegame = function(callback) {
+		$.ajax({
+			url: '/online/mitril/loadgame/',
+			data: {
+				game_id: mitrilSetup.game_id,
+				prod: mitrilSetup.prod,
+				testuid: window.playerInfo ? window.playerInfo.testuid : undefined
+			},
+			dataType: 'json',
+			method: 'POST',
+			success: function(response) {
+				if (response.result == 'ok' && response.data) {
+					callback(response.data);
+					return;
+				}
+				callback(false);
+			}
+		});
+	}
+
+	this.loadCheckpoint = function(checkpoint_uid) {
+		$.ajax({
+			url: '/online/mitril/loadgame/',
+			data: {
+				game_id: mitrilSetup.game_id,
+				checkpoint: checkpoint_uid,
+				prod: mitrilSetup.prod
+			},
+			dataType: 'json',
+			method: 'POST',
+			success: function(response) {
+				if (response.result == 'ok' && response.data) {
+					$('.mitril-game-end').hide();
+					result = response.data;
+					vars.items = result.savedata;
+					vars.steps = parseInt(result.steps);
+					if (!vars.steps || isNaN(vars.steps)) vars.steps = 0;
+					if (result.lastarticle) vars.lastarticle = result.lastarticle;
+					jsIQ.showArticle(result.article);
+					jsIQ.triggerEvent('update_charsheet', {
+						update: true
+					});
+				}
+			}
+		});
+	}
+
+	this.saveGame = function(article, vars) {
+		var save = {
+			article: article,
+			savedata: vars.items ? $.extend({}, vars.items) : undefined,
+			steps: vars.steps
+		};
+		if (vars.lastarticle) {
+			save.lastarticle = vars.lastarticle;
+		}
+
+		lastSaveData = JSON.stringify(save);
+		mitrilJs.prepareTicketData(save);
+
+		clearTimeout(saveGameTimer);
+		saveGameTimer = setTimeout(function() {
+			mitrilJs.uploadSavegame(mitrilSetup.game_id, mitrilSetup.prod, lastSaveData);
+		}, 250);
+	}
+
+	this.checkGameEnd = function(vars) {
+		var self = this;
+		$('.mitril-game-end').hide();
+		setTimeout(function() {
+			if (jsIQ.current_article && jsIQ.current_article.title != 'mitril' &&
+				$('.actionContainer.Visible', jsIQ.containers.actions).length === 0
+			) {
+				mitrilJs.gameEnd(mitrilSetup, {
+					steps: vars.steps
+				});
+			}
+		}, 500);
+	}
+
+	$('.end-go-restart').unbind().attr('href', '#').click(function() {
+		window.mitril.restartGame(function() {
+			window.location.reload();
+		});
+		return false;
+	});
+
+	var triggers = jsIQ.getArticle('_mitril_triggers');
+	if (triggers.length === 1 && $('action', triggers).length) {
+		jsIQ.addEventHandler('before_render_article', function(params, vars, process) {
+			jsIQ.current_article.appendArticle(triggers);
+			process.next();
+		});
+	}
+
+	var colors = ['white', 'silver', 'gray', 'black', 'red', 'maroon', 'yellow', 'olive', 'lime', 'green', 'aqua', 'teal', 'blue', 'navy', 'fuchsia', 'purple'];
+
+	var bbcode = [];
+
+	bbcode['^(===) (.+) (===)\\n'] = '<h4><b>$2</b></h4>';
+	bbcode['^(==) (.+) (==)\\n'] = '<h4>$2</h4>';
+
+	bbcode['\\n'] = '<div class="text-breaker"><br/></div>';
+	bbcode['--'] = '—';
+	bbcode['\\[b\\]'] = '<b>';
+	bbcode['\\[/b\\]'] = '</b>';
+	bbcode['\\[u\\]'] = '<u>';
+	bbcode['\\[/u\\]'] = '</u>';
+	bbcode['\\[i\\]'] = '<i>';
+	bbcode['\\[/i\\]'] = '</i>';
+	bbcode['\\[list\\]'] = '<ul>';
+	bbcode['\\[/list\\]'] = '</ul>';
+	bbcode['\\[\\*\\]'] = '<li>';
+	bbcode['\\[/\\*\\]'] = '</li>';
+	bbcode['\\[color=([A-Z,a-z,0-9,\\$,\\#]+)\\](.+?)\\[/color\\]'] = function() {
+		var c = arguments[1];
+		if (colors.indexOf(c) > -1) {
+			return '<span style="color:' + c + '">' + arguments[2] + '</span>';
+		}
+		return arguments[2];
+	};
+	bbcode['\\[sup\\](.+?)\\[/sup\\]'] = '<sup>$1</sup>';
+	bbcode['\\[player\\]'] = playerInfo.name;
+	bbcode['\\[url=((?:(?:https?:\\/\\/)?(?:[\\da-z\\.-]+)\\.(?:[a-z\\.]{2,6})(?:[\\/\\w0-9\\?\\=\\-\\.-]*)*\\/?))\\](.+?)\\[/url\\]'] = '<a href="$1" target="_blank">$2</a>';
+	//bbcode['&#34'] = '"';
+
+	this.getBBCode = function() {
+		return bbcode;
+	}
+
+	this.prepareText = function(text) {
+		for (var i in bbcode)
+			text = text.replace(new RegExp(i, 'gm'), bbcode[i]);
+		return text;
+	}
+
+	return this;
+}
+
+window.mitril = new mitrilController();
+
+window.mitril.getSavegame(function(result) {
+	if (!result) {
+		vars.items = {};
+		window.mitril.executeCleanTask(vars.items);
+		vars.steps = 0;
+		jsIQ.showArticle("/*startUID*/");
+		jsIQ.triggerEvent('update_charsheet', {
+			update: true
+		});
+	} else {
+		vars.items = result.savedata;
+		vars.steps = parseInt(result.steps);
+		if (!vars.steps || isNaN(vars.steps)) vars.steps = 0;
+		if (result.lastarticle) vars.lastarticle = result.lastarticle;
+		if (result.article) {
+			jsIQ.showArticle(result.article, {
+				noPreLoadScript: true
+			});
+		} else {
+			jsIQ.showArticle("/*startUID*/");
+		}
+		jsIQ.triggerEvent('update_charsheet', {
+			update: true
+		});
+	}
+});]]></script>
+  </article>
+  <handlers>
+    <handler name="update_charsheet"><![CDATA[var params = env.params;
+if (params && params.update) {
+    var charsheet = mitril.getCharsheetData(vars.items);
+    var ctx = mitril.getTpl('charsheet');
+    var checkpoints = [];
+    for (var g = 0; g < charsheet.length; g++) {
+        var group = charsheet[g];
+        if (group.type == 'checkpoint') {
+            checkpoints.push(group);
+            continue;
+        }
+        if (!group.visible) continue;
+
+        var html = mitril.getTpl('charsheet-group');
+
+        $('.g-name', html).html( group.name );
+        if (group.limit !== false) {
+            $('.g-limit', html).html( group.limit );
+            $('.g-stored', html).html( group.stored );  /* mitril.getGroupResourceCount(vars.items, group.uid) */
+        } else {
+            $('.g-size', html).remove();
+        }
+        var itemsHtml = $('.g-items', html);
+        var items = group.items;
+        for (var i = 0; i < items.length; i++) {
+            var item = items[i];
+            var itemHtml = mitril.getTpl('charsheet-item-' + group.type);
+            $('.i-name', itemHtml).html( item.name );
+            $('.i-uid', itemHtml).html( item.uid );
+            $('.i-value', itemHtml).html( item.value );
+            itemsHtml.append(itemHtml);
+        }
+        ctx.append( html );
+    }
+    $('#charsheet-data').html('').append( ctx );
+
+    if (checkpoints.length > 0) {
+        var ctx = mitril.getTpl('charsheet-checkpoints');
+        var html = $('.cp-list', ctx);
+        var visited = 0;
+        for (var c = 0; c < checkpoints.length; c++) {
+            var checkpoint = checkpoints[c];
+            var item = mitril.getTpl('charsheet-checkpoint');
+            $('.cp-icon', item).not('.'+checkpoint.available).hide();
+            if (checkpoint.available !== 'preview') {
+                visited++;
+            }
+            var link = $('.cp-label', item).html(checkpoint.name);
+            (function (a, uid) {
+                a.click(function() {
+                    if (uid) {
+                        mitril.loadCheckpoint(uid);
+                    }
+                    return false;
+                });
+            })(link, checkpoint.available === 'available' ? checkpoint.uid : false);
+
+            html.append( item );
+        }
+        var progress = Math.round( ( visited / ( checkpoints.length + 0.3) ) * 100 );
+        $('.progress-value', ctx).html();
+        $('.progress-bar', ctx).width(progress + '%');
+        $('#charsheet-data').append( ctx );
+    }
+}
+
+process.next();]]></handler>
+    <handler name="on_render_images"><![CDATA[$('.mitril-image', jsIQ.containers.text).remove();
+
+var images = env.params.images;
+if (images && images.length > 0) {
+    var image = images[0];
+    image = $('<div class="mitril-image '+image.name+'"><img src="'+image.src+'" style="width: 100%"/></div');
+    jsIQ.containers.text.prepend( image );
+}
+
+process.next();]]></handler>
+    <handler name="on_article_preload"><![CDATA[if (env.params && window.mitril) {
+    if ( env.params.article && env.params.article.title != 'mitril' ) {
+        /*var save = {
+            article: env.params.article.title,
+            savedata: vars.items ? $.extend({}, vars.items) : undefined,
+            steps: vars.steps
+        };
+        if (vars.lastarticle) {
+            save.lastarticle = vars.lastarticle;
+        }
+
+        window.mitril.saveGame(save);*/
+
+        window.mitril.saveGame(env.params.article.title, vars);
+
+        vars.steps++;
+    }
+}
+process.next();]]></handler>
+    <handler name="on_text_render"><![CDATA[/*
+PARSE TEXT, SYNCED!
+*/
+
+var ctx = env.params.container;
+if (ctx) {
+    /*$.each(getTextNodes(env.params.text.link), function() {
+      //var oldText = env.params.text.text;
+      //var text = window.mitril.prepareText(env.params.text.text);
+      //if (text !== oldText) {
+        //$(this).parent().html( window.mitril.prepareText( env.params.text.text ) );
+      //}
+    });*/
+    env.params.text.link.html( window.mitril.prepareText( env.params.text.text ) );
+}
+
+process.next();]]></handler>
+    <handler name="before_article_unload"><![CDATA[
+	mitrilJs.articleFadeAnimStart();
+
+	if (env.params.current) {
+		vars.lastarticle = env.params.current;
+	} else {
+		vars.lastarticle = null;
+	}
+
+process.next();]]></handler>
+    <handler name="on_render_article"><![CDATA[if (window.mitril) {
+		mitril.checkGameEnd(vars);
+	}
+	process.next();
+	]]></handler>
+    <handler name="after_article_loaded"><![CDATA[mitrilJs.articleFadeAnimEnd(null, null, process);]]></handler>
+    <handler name="jsiq_init_done"><![CDATA[jsIQ.addEventHandler('on_action_render', function(params, vars, process)	{
+    if (params.container && params.container.is('.Visible')) {
+        params.container.prepend('<small><i class="a-hover far fa-check-circle mr-2"></i><i class="a-unhover far fa-circle mr-2"></i></small>');
+    }
+
+    process.next();
+});
+
+process.next();]]></handler>
+  </handlers>
+</book>

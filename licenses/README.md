@@ -1,7 +1,8 @@
 # Firmware licenses
 
-CrossPoint's original code uses the MIT license in the root `LICENSE` file.
-Third-party code and assets keep their own licenses.
+The original code of this fork comes from the CrossPoint Reader project and uses
+the MIT license in the root `LICENSE` file, which keeps the original copyright
+notice. Third-party code and assets keep their own licenses.
 The combined firmware executable uses GPLv3 because it includes wolfSSL.
 
 The release `LICENSE` file includes the full license texts and third-party notices.
@@ -12,7 +13,7 @@ These notices do not change the original licenses or grant extra permissions.
 
 Corresponding Source means the source and scripts needed to rebuild the firmware.
 GitHub provides a source archive for each release tag.
-That archive contains CrossPoint's code and patches, but it omits submodule contents and downloaded libraries.
+That archive contains the fork's code and patches, but it omits submodule contents and downloaded libraries.
 
 The release `LICENSE` identifies the source revision and the SDK revision.
 It also lists the source packages for the libraries that PlatformIO downloads.
@@ -20,7 +21,7 @@ Keep these sources and this license file available with the firmware downloads.
 
 To build the same source revision:
 
-1. Clone the repository with `git clone --recursive https://github.com/crosspoint-reader/crosspoint-reader.git`.
+1. Clone the repository with `git clone --recursive https://github.com/jumangee/playtale.git`.
 2. Select the release tag with `git checkout <release-tag>`.
 3. Download the matching SDK with `git submodule update --init --recursive`.
 4. Follow `docs/contributing/getting-started.md` for the build tools.
@@ -28,13 +29,13 @@ To build the same source revision:
 
 `platformio.ini` selects the platform, dependency versions, build flags, and patch scripts.
 The source packages listed in the release file include third-party code that the GitHub source archive omits.
-The `scripts/` directory contains CrossPoint's changes to those dependencies.
+The `scripts/` directory contains the fork's changes to those dependencies.
 
 ## Third-party material
 
 | Material | License and notices |
 | --- | --- |
-| wolfSSL and wolfCrypt | GPL-2.0-or-later. CrossPoint selects GPLv3 for the combined firmware. |
+| wolfSSL and wolfCrypt | GPL-2.0-or-later. This firmware selects GPLv3 for the combined firmware. |
 | Arduino-ESP32 and WebSockets | LGPL-2.1-or-later, with separate terms for some framework files. |
 | NimBLE-Arduino, PNGdec, and JPEGDEC | Apache-2.0 and the applicable upstream notices. |
 | ArduinoJson, SdFat, QRCode, Expat, and miniz | MIT and the original copyright notices. |

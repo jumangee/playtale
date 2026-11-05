@@ -1,6 +1,6 @@
 # Activity & ActivityManager Migration Guide
 
-This document explains the refactoring from the original per-activity render task model to the centralized `ActivityManager` introduced in [PR #1016](https://github.com/crosspoint-reader/crosspoint-reader/pull/1016). It covers the architectural differences, what changed for activity authors, and the FreeRTOS task and locking model that underpins the system.
+This document explains the refactoring from the original per-activity render task model to the centralized `ActivityManager`. It covers the architectural differences, what changed for activity authors, and the FreeRTOS task and locking model that underpins the system.
 
 ## Overview of Changes
 
@@ -244,7 +244,7 @@ This removes `std::function` overhead (~2-4KB per unique signature) and eliminat
 
 ### FreeRTOS Task Model
 
-The firmware runs on an ESP32-C3, a single-core RISC-V microcontroller. FreeRTOS provides cooperative and preemptive multitasking on this single core — only one task executes at any moment, and the scheduler switches between tasks at yield points (blocking calls, `vTaskDelay`, `taskYIELD`) or when a tick interrupt promotes a higher-priority task.
+The resource baseline for this firmware is the ESP32-C3, a single-core RISC-V microcontroller (PlayTale also builds ESP32-S3 boards, which use the same task model). FreeRTOS provides cooperative and preemptive multitasking on this single core — only one task executes at any moment, and the scheduler switches between tasks at yield points (blocking calls, `vTaskDelay`, `taskYIELD`) or when a tick interrupt promotes a higher-priority task.
 
 There are two tasks relevant to the activity system:
 

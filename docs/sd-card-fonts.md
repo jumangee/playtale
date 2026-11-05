@@ -1,9 +1,9 @@
 # SD Card Fonts
 
-CrossPoint supports loading additional fonts from the SD card, including fonts
+КвестБук Читалка (PlayTale) supports loading additional fonts from the SD card, including fonts
 with extended Unicode coverage (CJK, Cyrillic, Greek, etc.).
 
-If CrossPoint enables external RAM on your device, you can load `.ttf`, `.otf`,
+If PlayTale enables external RAM on your device, you can load `.ttf`, `.otf`,
 and `.ttc` files directly. Otherwise, convert them to `.cpfont` files first.
 All devices can use `.cpfont` files.
 
@@ -18,7 +18,11 @@ the manual SD card copy method below.
 
 ### Option 1: Download from device (recommended)
 
-1. Connect your CrossPoint reader to Wi-Fi
+The in-device downloader fetches the font list and files from an
+upstream-hosted font service; this fork will replace that source (no new
+address exists yet). The steps below are unchanged.
+
+1. Connect your PlayTale reader to Wi-Fi
 2. Go to **Settings > Reader > Manage Fonts**
 3. Browse available font families and tap to download
 4. Downloaded fonts appear immediately in **Settings > Reader > Font Family**
@@ -33,7 +37,9 @@ the manual SD card copy method below.
 ### Option 3: Manual SD card copy
 
 1. Download font files from the
-   [crosspoint-fonts repository](https://github.com/crosspoint-reader/crosspoint-fonts)
+   [crosspoint-fonts repository](https://github.com/crosspoint-reader/crosspoint-fonts).
+   This download source is an upstream-hosted service; this fork will replace
+   it, and no replacement URL exists yet.
 2. Copy font family folders to one of two locations on your SD card:
 
    - `/.fonts/` — hidden directory (preferred; keeps the SD root tidy
@@ -59,11 +65,11 @@ the manual SD card copy method below.
                ├── Merriweather_12.cpfont
                └── ...
 
-3. Insert the SD card and power on your CrossPoint reader
+3. Insert the SD card and power on your PlayTale reader
 
 ### Direct TTF/OTF/TTC fonts
 
-If CrossPoint enables external RAM on your device, copy a `.ttf`, `.otf`, or
+If PlayTale enables external RAM on your device, copy a `.ttf`, `.otf`, or
 `.ttc` file directly into `/fonts/` or `/.fonts/`. The filename without its
 extension becomes the family name. For example, `/fonts/Bookerly.ttf` appears as
 `Bookerly` in **Settings > Reader > Font Family**.
@@ -95,14 +101,14 @@ replacement boxes for non-Latin text — CJK, Greek, Cyrillic, Armenian, and any
 other script the SD-font converter ships an interval for — even when book
 *content* renders correctly with a selected SD-card font.
 
-To avoid shipping every script's glyph set in flash, CrossPoint instead reuses
+To avoid shipping every script's glyph set in flash, PlayTale instead reuses
 the SD-card font you already selected: when a UI string contains a character
 the built-in font cannot draw, that whole string is rendered with your selected
 SD-card font instead.
 
 The fallback is **size-matched**. The built-in UI fonts render at 8 pt
 (small/author lines), 10 pt (list rows) and 12 pt (book-cover titles, headers),
-so CrossPoint loads your SD family at those sizes too and maps each UI font to
+so PlayTale loads your SD family at those sizes too and maps each UI font to
 its same-size SD font. Non-Latin book names therefore appear at the same size
 as the Latin text around them. A `.cpfont` family must contain files at sizes
 **8, 10 and 12** for this UI fallback (in addition to the reader sizes 12–18) —
@@ -112,7 +118,7 @@ size keeps showing boxes for that script at that size. Direct TTF/OTF/TTC
 families use the same file at all three UI sizes.
 
 These UI sizes only take effect if the reader-size font also matches one of
-CrossPoint's built-in fallback-detection codepoints — see `kFallbackProbes` in
+PlayTale's built-in fallback-detection codepoints — see `kFallbackProbes` in
 `src/SdCardFontSystem.cpp` for the current list. A script outside that list
 gets no UI fallback even with the correct `.cpfont` sizes present.
 
@@ -154,6 +160,8 @@ What this means in practice:
 
 The current list of pre-built fonts is maintained in the
 [crosspoint-fonts repository](https://github.com/crosspoint-reader/crosspoint-fonts).
+That upstream-hosted source is still the only published list; this fork will
+replace it.
 
 ## Converting Custom Fonts
 

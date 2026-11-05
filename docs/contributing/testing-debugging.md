@@ -1,6 +1,6 @@
 # Testing and Debugging
 
-CrossPoint runs on real hardware, so debugging usually combines local build checks and on-device logs.
+КвестБук Читалка (PlayTale) runs on real hardware, so debugging usually combines local build checks and on-device logs.
 
 ## Local checks
 
@@ -44,5 +44,5 @@ python3 scripts/debugging_monitor.py
 
 ## Common troubleshooting references
 
-- [User Guide troubleshooting section](../../USER_GUIDE.md#7-troubleshooting-issues--escaping-bootloop)
+- [User Guide troubleshooting section](../../USER_GUIDE.md#7-проблемы-и-выход-из-цикла-загрузки)
 - [Webserver troubleshooting](../troubleshooting.md)

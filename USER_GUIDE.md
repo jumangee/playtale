@@ -1,463 +1,660 @@
-# CrossPoint User Guide
+# КвестБук Читалка — руководство пользователя
 
-Welcome to the **CrossPoint** firmware. This guide outlines the hardware controls, navigation, and reading features of the device.
-
-- [CrossPoint User Guide](#crosspoint-user-guide)
-  - [1. Hardware Overview](#1-hardware-overview)
-    - [Button Layout](#button-layout)
-    - [Taking a Screenshot](#taking-a-screenshot)
-    - [Control Center and Frontlight](#control-center-and-frontlight)
-  - [2. Power \& Startup](#2-power--startup)
-    - [Power On / Off](#power-on--off)
-    - [First Launch](#first-launch)
-  - [3. Screens](#3-screens)
-    - [3.1 Home Screen](#31-home-screen)
-    - [3.2 Reading Mode](#32-reading-mode)
-    - [3.3 Browse Files Screen](#33-browse-files-screen)
-    - [3.4 Library Screen](#34-library-screen)
-    - [3.5 File Transfer Screen](#35-file-transfer-screen)
-    - [3.5.1 Calibre Wireless Transfers](#351-calibre-wireless-transfers)
-      - [Installing the Plugin in Calibre](#installing-the-plugin-in-calibre)
-      - [Configuring the CrossPoint Plugin in Calibre](#configuring-the-crosspoint-plugin-in-calibre)
-      - [Uploading Books](#uploading-books)
-      - [Removing a Book](#removing-a-book)
-    - [3.6 Settings](#36-settings)
-      - [3.6.1 Display](#361-display)
-      - [3.6.2 Reader](#362-reader)
-      - [3.6.3 Controls](#363-controls)
-      - [3.6.4 System](#364-system)
-      - [3.6.5 OPDS Servers (Multiple Libraries)](#365-opds-servers-multiple-libraries)
-      - [3.6.6 Web Settings (Wi-Fi + OPDS)](#366-web-settings-wi-fi--opds)
-      - [3.6.7 KOReader Sync Quick Setup](#367-koreader-sync-quick-setup)
-        - [Option A: CrossPoint Sync Server (`sync.crosspointreader.com`, default)](#option-a-crosspoint-sync-server-synccrosspointreadercom-default)
-        - [Option B: Legacy Public KOReader Server (`sync.koreader.rocks`)](#option-b-legacy-public-koreader-server-synckoreaderrocks)
-        - [Option C: Self-Hosted Server (Docker Compose)](#option-c-self-hosted-server-docker-compose)
-        - [Syncing While Reading](#syncing-while-reading)
-    - [3.7 Sleep Screen](#37-sleep-screen)
-      - [Cover settings](#cover-settings)
-      - [Custom images](#custom-images)
-    - [3.8 Custom Fonts (SD Card)](#38-custom-fonts-sd-card)
-  - [4. Reading Mode](#4-reading-mode)
-    - [Page Turning](#page-turning)
-    - [Chapter Navigation](#chapter-navigation)
-    - [Auto Page Turn](#auto-page-turn)
-    - [Tilt Page Turn (X3 only)](#tilt-page-turn-x3-only)
-    - [Links and footnotes](#links-and-footnotes)
-    - [Dictionary Lookup](#dictionary-lookup)
-    - [System Navigation](#system-navigation)
-    - [Supported Languages](#supported-languages)
-  - [5. Reader Menu](#5-reader-menu)
-    - [5.1 Chapter Selection](#51-chapter-selection)
-    - [5.2 Bookmarks](#52-bookmarks)
-    - [5.3 Clippings and Highlights](#53-clippings-and-highlights)
-  - [6. Current Limitations \& Roadmap](#6-current-limitations--roadmap)
-  - [7. Troubleshooting Issues \& Escaping Bootloop](#7-troubleshooting-issues--escaping-bootloop)
-
-## 1. Hardware Overview
-
-The device utilises the standard buttons on the Xteink X4 (in the same layout as the manufacturer firmware, by default):
-
-### Button Layout
-
-| Location        | Buttons                                              |
-| --------------- | ---------------------------------------------------- |
-| **Bottom Edge** | **Back**, **Confirm**, **Left**, **Right**           |
-| **Right Side**  | **Power**, **Side Up**, **Side Down**, **Reset** |
-
-Button layout can be customized in the **[Controls Settings](#363-controls)**.
-
-### Taking a Screenshot
-
-When the Power button and the lower side button (Side Down) are pressed at the same time, it will take a screenshot and save it in the folder `screenshots/`.
-
-Alternatively, while reading a book, press the **Confirm** button to open the reader menu and select **Take screenshot**.
-
-### Control Center and Frontlight
-
-The Control Center is available on all touch devices. Devices with a frontlight also show light controls. The X4 Pro has adjustable brightness and warmth; the Paper Mono has adjustable brightness only.
-
-* **Open the panel:** Swipe down from the top edge of the screen, from almost any screen (Home, Browse Files, Reading Mode, etc.). You can also tap the status bar on Home, Browse Files, or Settings. On devices with a frontlight, drag the brightness slider (and the warmth slider, where available) to adjust the light live, or tap the sun icon to turn it on or off.
-* **Quick controls:** The panel has one row of icons: moon for night mode, circular arrows to refresh the screen, an underlined **T** to cycle reading direction, and the Settings Controls pointer to toggle reader touch controls. On builds with Bluetooth support, a fifth button enables or disables the Bluetooth page turner. Its crossed-out icon means disabled. The **T** rotates with the selected direction. A filled toggle means enabled; an outlined toggle means disabled. Refresh and direction always have outlines. Turning reader touch controls off leaves the panel usable. Bluetooth reconnection follows the normal rules after you close the panel; enabling it does not pair a new remote.
-* **Quick toggle (X4 Pro only):** Double-click the **Power** button to turn the frontlight on or off instantly, without opening the panel.
+Добро пожаловать в прошивку **КвестБук Читалка** (техническое название PlayTale). Это руководство
+описывает органы управления устройства, навигацию и возможности чтения.
 
 > [!NOTE]
-> Frontlight brightness and warmth are intentionally not listed in **[Display Settings](#361-display)** — the swipe panel is the only place to adjust them. On the X4 Pro, the on/off state can also be toggled with the Power-button double-click above.
+> Это форк проекта CrossPoint Reader. Пока в интерфейсе устройства ещё встречается название
+> «CrossPoint», а часть сервисов указывает на серверы исходного проекта — переименование интерфейса
+> запланировано отдельным обновлением. Поэтому на скриншотах и в названиях пунктов меню вы можете
+> видеть старое имя. Ниже описано текущее поведение прошивки.
 
-If the frontlight doesn't come back on after the device wakes from sleep, check **Restore Light on Wake** in **[Display Settings](#361-display)** (on by default). Turning it off is intentional if you'd rather have the light stay off on wake and switch it on yourself each time — but it's easy to forget you changed it.
+- [КвестБук Читалка — руководство пользователя](#квестбук-читалка--руководство-пользователя)
+  - [1. Обзор устройства](#1-обзор-устройства)
+    - [Расположение кнопок](#расположение-кнопок)
+    - [Скриншоты](#скриншоты)
+    - [Пункт управления и подсветка](#пункт-управления-и-подсветка)
+  - [2. Питание и запуск](#2-питание-и-запуск)
+    - [Включение и выключение](#включение-и-выключение)
+    - [Первый запуск](#первый-запуск)
+  - [3. Экраны](#3-экраны)
+    - [3.1 Главный экран](#31-главный-экран)
+    - [3.2 Режим чтения](#32-режим-чтения)
+    - [3.3 Просмотр файлов](#33-просмотр-файлов)
+    - [3.4 Библиотека](#34-библиотека)
+    - [3.5 Передача файлов](#35-передача-файлов)
+    - [3.5.1 Беспроводная передача из Calibre](#351-беспроводная-передача-из-calibre)
+      - [Установка плагина в Calibre](#установка-плагина-в-calibre)
+      - [Настройка плагина в Calibre](#настройка-плагина-в-calibre)
+      - [Отправка книг](#отправка-книг)
+      - [Удаление книги](#удаление-книги)
+    - [3.6 Настройки](#36-настройки)
+      - [3.6.1 Экран](#361-экран)
+      - [3.6.2 Читалка](#362-читалка)
+      - [3.6.3 Управление](#363-управление)
+      - [3.6.4 Система](#364-система)
+      - [3.6.5 Серверы OPDS (несколько библиотек)](#365-серверы-opds-несколько-библиотек)
+      - [3.6.6 Веб-настройки (Wi-Fi и OPDS)](#366-веб-настройки-wi-fi-и-opds)
+      - [3.6.7 Быстрая настройка синхронизации KOReader](#367-быстрая-настройка-синхронизации-koreader)
+        - [Вариант A: сервер CrossPoint Sync (`sync.crosspointreader.com`, по умолчанию)](#вариант-a-сервер-crosspoint-sync-synccrosspointreadercom-по-умолчанию)
+        - [Вариант B: публичный сервер KOReader (`sync.koreader.rocks`)](#вариант-b-публичный-сервер-koreader-synckoreaderrocks)
+        - [Вариант C: свой сервер (Docker Compose)](#вариант-c-свой-сервер-docker-compose)
+        - [Синхронизация во время чтения](#синхронизация-во-время-чтения)
+    - [3.7 Экран сна](#37-экран-сна)
+      - [Настройки обложки](#настройки-обложки)
+      - [Свои изображения](#свои-изображения)
+      - [Прозрачные наложения](#прозрачные-наложения)
+    - [3.8 Свои шрифты (карта памяти)](#38-свои-шрифты-карта-памяти)
+  - [4. Режим чтения](#4-режим-чтения)
+    - [Перелистывание страниц](#перелистывание-страниц)
+    - [Переход по главам](#переход-по-главам)
+    - [Автоперелистывание](#автоперелистывание)
+    - [Переворот наклоном (только X3)](#переворот-наклоном-только-x3)
+    - [Ссылки и сноски](#ссылки-и-сноски)
+    - [Поиск в словаре](#поиск-в-словаре)
+    - [Системная навигация](#системная-навигация)
+    - [Поддерживаемые языки](#поддерживаемые-языки)
+  - [5. Меню читалки](#5-меню-читалки)
+    - [5.1 Выбор главы](#51-выбор-главы)
+    - [5.2 Закладки](#52-закладки)
+    - [5.3 Выписки и выделения](#53-выписки-и-выделения)
+  - [6. Текущие ограничения](#6-текущие-ограничения)
+  - [7. Проблемы и выход из цикла загрузки](#7-проблемы-и-выход-из-цикла-загрузки)
+
+## 1. Обзор устройства
+
+Устройство использует стандартные кнопки Xteink X4 (по умолчанию — в той же раскладке, что и
+заводская прошивка):
+
+### Расположение кнопок
+
+| Расположение       | Кнопки                                                    |
+| ------------------ | --------------------------------------------------------- |
+| **Нижний торец**   | **Назад**, **Подтвердить**, **Влево**, **Вправо**          |
+| **Правая сторона** | **Питание**, **Боковая вверх**, **Боковая вниз**, **Сброс** |
+
+Раскладку кнопок можно изменить в **[настройках управления](#363-управление)**.
+
+### Скриншоты
+
+Если одновременно нажать кнопку **Питание** и нижнюю боковую кнопку (Боковая вниз), будет сделан
+скриншот, который сохранится в папку `screenshots/`.
+
+Кроме того, во время чтения книги можно нажать **Подтвердить**, открыть меню читалки и выбрать
+**Сделать скриншот**.
+
+### Пункт управления и подсветка
+
+Пункт управления доступен на всех устройствах с тачскрином. Устройства с подсветкой также показывают
+регулировку света. У X4 Pro регулируются яркость и теплота, у Paper Mono — только яркость.
+
+* **Открыть панель:** проведите пальцем вниз от верхнего края экрана почти с любого экрана (главный,
+  просмотр файлов, режим чтения и т. д.). Можно также коснуться строки состояния на главном экране,
+  экране просмотра файлов или в настройках. На устройствах с подсветкой перетащите ползунок яркости
+  (а где есть — и теплоты), чтобы менять свет на ходу, или коснитесь значка солнца, чтобы включить или
+  выключить его.
+* **Быстрые действия:** в панели один ряд значков — луна для ночного режима, круговые стрелки для
+  обновления экрана, подчёркнутая **T** для смены направления чтения и указатель настроек управления
+  для переключения сенсорного управления читалки. В сборках с Bluetooth есть пятая кнопка включения и
+  выключения Bluetooth-перелистывателя; перечёркнутый значок означает «выключено». Значок **T**
+  поворачивается вместе с выбранным направлением. Залитый переключатель — включено, контурный —
+  выключено. У обновления и направления всегда контур. Выключение сенсорного управления читалки не
+  делает панель недоступной. После закрытия панели Bluetooth переподключается по обычным правилам;
+  его включение не выполняет сопряжение нового пульта.
+* **Быстрое переключение (только X4 Pro):** двойное нажатие кнопки **Питание** мгновенно включает или
+  выключает подсветку, не открывая панель.
+
+> [!NOTE]
+> Яркость и теплота подсветки намеренно не вынесены в **[настройки экрана](#361-экран)** — менять их
+> можно только в панели жестом сверху вниз. На X4 Pro состояние «вкл/выкл» можно переключать и двойным
+> нажатием кнопки питания, описанным выше.
+
+Если после пробуждения подсветка не включается, проверьте пункт **Восстанавливать свет при
+пробуждении** в **[настройках экрана](#361-экран)** (по умолчанию включён). Его отключение
+осознанно, если вы предпочитаете, чтобы после пробуждения свет оставался выключенным и вы включали
+его сами, — но легко забыть, что вы это изменили.
 
 ---
 
-## 2. Power & Startup
+## 2. Питание и запуск
 
-### Power On / Off
+### Включение и выключение
 
-To turn the device on or off, **press and hold the Power button for approximately half a second**.
-In the **[Controls Settings](#363-controls)** you can configure the power button to turn the device off with a short press instead of a long one.
+Чтобы включить или выключить устройство, **нажмите и удерживайте кнопку Питание примерно полсекунды**.
+В **[настройках управления](#363-управление)** можно назначить выключение по короткому нажатию вместо
+долгого.
 
-To reboot the device (for example after a firmware update or if it's frozen), press and release the Reset button, and then quickly press and hold the Power button for a few seconds.
+Чтобы перезагрузить устройство (например, после обновления прошивки или если оно зависло), нажмите и
+отпустите кнопку **Сброс**, а затем быстро нажмите и удерживайте кнопку **Питание** несколько секунд.
 
-### First Launch
+### Первый запуск
 
-Upon turning the device on for the first time, you will be placed on the **[Home](#31-home-screen)** screen.
+При первом включении устройство откроет **[главный экран](#31-главный-экран)**.
 
 > [!NOTE]
-> On subsequent restarts, the firmware will automatically reopen the last book you were reading.
+> При последующих запусках прошивка автоматически открывает последнюю читавшуюся книгу.
 
 ---
 
-## 3. Screens
+## 3. Экраны
 
-### 3.1 Home Screen
+### 3.1 Главный экран
 
-The Home screen is the main entry point to the firmware. From here you can navigate to **[Reading Mode](#4-reading-mode)** with the most recently read book, **[Browse Files](#33-browse-files-screen)**, the **[Library](#34-library-screen)**, **[File Transfer](#35-file-transfer-screen)**, or **[Settings](#36-settings)**.
+Главный экран — основная точка входа в прошивку. Отсюда можно перейти в
+**[режим чтения](#4-режим-чтения)** с последней читавшейся книгой, в
+**[просмотр файлов](#33-просмотр-файлов)**, **[библиотеку](#34-библиотека)**,
+**[передачу файлов](#35-передача-файлов)** или **[настройки](#36-настройки)**.
 
-### 3.2 Reading Mode
+### 3.2 Режим чтения
 
-See [Reading Mode](#4-reading-mode) below for more information.
+Подробности — в разделе [режим чтения](#4-режим-чтения) ниже.
 
-### 3.3 Browse Files Screen
+### 3.3 Просмотр файлов
 
-The Browse Files screen acts as a file and folder browser. The full path to the current directory is shown at the top of the screen. File extensions are displayed alongside each filename, and directories are shown with brackets (e.g. `[folder-name]`). Hidden directories (those beginning with `.`) are also visible.
+Экран просмотра файлов работает как браузер файлов и папок. Полный путь к текущей папке показан
+сверху. Расширения файлов выводятся рядом с именем, папки показаны в квадратных скобках (например,
+`[имя-папки]`). Скрытые папки (те, что начинаются с `.`) тоже видны.
 
-* **Navigate List:** Use **Left** (or **Side Up**), or **Right** (or **Side Down**) to move the selection cursor up and down through folders and books. You can also long-press these buttons to scroll a full page up or down.
-* **Open Selection:** Press **Confirm** to open a folder or start reading a selected book. Selecting a `.bmp` file will open the image viewer.
-* **Delete Files or Folders:** Hold and release **Confirm** to delete the selected file or folder. You will be given an option to either confirm or cancel. Multiple files can be selected for deletion in a single operation.
-* **Rename or Move:** Files can be renamed or moved to a different folder from within the browse screen.
+* **Навигация по списку:** используйте **Влево** (или **Боковая вверх**) и **Вправо** (или
+  **Боковая вниз**), чтобы перемещать курсор по папкам и книгам. Долгое нажатие прокручивает список
+  на целую страницу вверх или вниз.
+* **Открыть выбранное:** нажмите **Подтвердить**, чтобы открыть папку или начать чтение выбранной
+  книги. Выбор файла `.bmp` открывает просмотр изображений.
+* **Удаление файлов и папок:** нажмите и отпустите **Подтвердить** с удержанием, чтобы удалить
+  выбранный файл или папку. Появится предложение подтвердить или отменить. За одну операцию можно
+  выбрать несколько файлов.
+* **Переименование и перемещение:** файлы можно переименовывать и перемещать в другую папку прямо с
+  экрана просмотра.
 
-### 3.4 Library Screen
+### 3.4 Библиотека
 
-The Library indexes up to 4,096 supported books on the SD card and shows their titles and authors without requiring you to remember their folders. Its four tabs provide different views. An arrow beside an indexed tab shows the sort direction:
+Библиотека индексирует до 4 096 поддерживаемых книг на карте памяти и показывает их названия и
+авторов, так что запоминать папки не нужно. Четыре вкладки дают разные представления. Стрелка рядом с
+активной вкладкой показывает направление сортировки:
 
-- **Recent** lists the ten books you opened most recently. Hold a book to remove it from this list.
-- **Added** keeps books in the order in which the Library first discovered them. Down shows newest additions first; up shows oldest first.
-- **Title** groups books by the first letter of the title. Up sorts A-Z and down sorts Z-A. Titles beginning with numbers or punctuation appear under `#`; letters from non-English scripts, including Hebrew, have their own groups.
-- **Author** groups books by author. Up sorts A-Z and down sorts Z-A.
+- **Недавние** — десять книг, открытых последними. Удержание на книге убирает её из списка.
+- **Добавленные** — книги в том порядке, в котором библиотека впервые их нашла. Стрелка вниз —
+  сначала новые, вверх — сначала старые.
+- **Название** — группировка по первой букве названия. Вверх — А-Я, вниз — Я-А. Названия, начинающиеся
+  с цифр или знаков препинания, попадают в группу `#`; буквы нелатинских письменностей, включая
+  иврит, образуют собственные группы.
+- **Автор** — группировка по автору. Вверх — А-Я, вниз — Я-А.
 
-On a button-only device:
+На устройстве только с кнопками:
 
-- Use **Up/Down** or **Left/Right** to move one row at a time. Hold a direction to move a page at a time.
-- Press **Confirm** to open the selected book.
-- Press **Back** from the book list to focus the tabs. Use **Left/Right** to select another tab, press **Confirm** to reverse its sort direction, or press **Down** to return to the list.
-- While the tabs are focused, hold **Confirm** to open Search.
-- In the Title or Author views, hold **Confirm** on a book to collapse the list to its letter or author groups. The matching group remains selected. Press **Confirm** to enter a group, or **Back** to restore the exact book and position you came from.
+- Используйте **Вверх/Вниз** или **Влево/Вправо**, чтобы перемещаться по одной строке. Удержание
+  направления перемещает на страницу.
+- Нажмите **Подтвердить**, чтобы открыть выбранную книгу.
+- Нажмите **Назад** из списка книг, чтобы перейти к вкладкам. Используйте **Влево/Вправо** для выбора
+  вкладки, **Подтвердить** — чтобы сменить направление сортировки, **Вниз** — чтобы вернуться к списку.
+- Когда выбраны вкладки, удержание **Подтвердить** открывает поиск.
+- В представлениях «Название» и «Автор» удержание **Подтвердить** на книге сворачивает список до
+  групп по буквам или авторам. Нужная группа остаётся выбранной. Нажмите **Подтвердить**, чтобы войти
+  в группу, или **Назад**, чтобы вернуться к той же книге и позиции, откуда вы пришли.
 
-On a touch device, tap tabs, books, and the Search icon directly. Tap an active indexed tab again to reverse its sort direction. Swipe to scroll. Long-press a book in the Recent view to remove it from the list. Long-press a book in a Title or Author view to collapse to the group list, then tap a group to expand it. The **Added** view is not grouped; tapping or long-pressing a book opens it.
+На устройстве с тачскрином касайтесь вкладок, книг и значка поиска напрямую. Повторное касание активной
+вкладки меняет направление сортировки. Пролистывание прокручивает список. Долгое нажатие на книгу в
+списке «Недавние» убирает её. Долгое нажатие на книгу в представлении «Название» или «Автор»
+сворачивает список до групп, затем касание группы разворачивает её. Представление «Добавленные» не
+группируется: касание или долгое нажатие открывает книгу.
 
-The index is created automatically the first time the Library is opened. To pick up later file changes or updated metadata, use **Settings → System → Rebuild library index**. The **Use book metadata** setting controls whether the index reads titles and authors stored inside books.
+Индекс создаётся автоматически при первом открытии библиотеки. Чтобы учесть последующие изменения
+файлов или обновлённые метаданные, используйте **Настройки → Система → Перестроить индекс
+библиотеки**. Пункт **Использовать метаданные книги** определяет, читает ли индекс названия и авторов,
+записанных внутри книг.
 
-### 3.5 File Transfer Screen
+### 3.5 Передача файлов
 
-The File Transfer screen allows you to upload and manage files on the device. When you enter the screen, choose **Join a Network**, **Calibre Wireless**, or **Create Hotspot**. The reader then starts the web server for the selected mode.
+Экран передачи файлов позволяет загружать файлы на устройство и управлять ими. При входе выберите
+**Подключиться к сети**, **Calibre Wireless** или **Создать точку доступа**. Затем читалка запускает
+веб-сервер в выбранном режиме.
 
-See the [web server docs](./docs/webserver.md) for more information on how to connect to the web server and upload files.
+Подробнее о подключении к веб-серверу и загрузке файлов — в
+[документации веб-сервера](./docs/webserver.md).
 
-The web interface also supports **WebDAV**, allowing you to mount the device as a network drive and manage files directly from your computer's file manager.
+Веб-интерфейс также поддерживает **WebDAV**: устройство можно смонтировать как сетевой диск и
+управлять файлами прямо из файлового менеджера компьютера.
 
-Download links for files already on the device are available in the web interface, so you can retrieve books or screenshots over Wi-Fi without connecting a cable.
+В веб-интерфейсе доступны ссылки для скачивания файлов, уже находящихся на устройстве, так что книги
+или скриншоты можно забрать по Wi-Fi без кабеля.
 
-A **Wi-Fi signal strength indicator** (dBm) is displayed on-screen during joined-network web server sessions.
+Во время сеанса веб-сервера в подключённой сети на экране показывается **индикатор уровня сигнала
+Wi-Fi** (дБм).
 
 > [!TIP]
-> Advanced users can also manage files programmatically or via the command line using `curl`. See the [web server docs](./docs/webserver.md) for details.
+> Продвинутые пользователи могут управлять файлами программно или из командной строки через `curl`.
+> Подробности — в [документации веб-сервера](./docs/webserver.md).
 > [!TIP]
-> If your EPUBs have compatibility issues, you can run the built-in **EPUB Optimizer** directly from the device to clean up and reprocess books for better rendering.
-
-### 3.5.1 Calibre Wireless Transfers
+> Если у ваших EPUB есть проблемы совместимости, можно прямо на устройстве запустить встроенный
+> **оптимизатор EPUB**, чтобы почистить и переобработать книги для лучшего рендеринга.
 
-CrossPoint supports sending books from Calibre using the CrossPoint Reader device plugin.
+### 3.5.1 Беспроводная передача из Calibre
 
-#### Installing the Plugin in Calibre
+Читалка принимает книги из Calibre через плагин устройства.
 
-If you don't already have the plugin installed:
-
-1. Head to https://github.com/crosspoint-reader/calibre-plugins/releases to download the latest version of the crosspoint_reader plugin.
-2. Download the zip file.
-3. Open Calibre → Preferences → Plugins → Load plugin from file → Select the zip file.
-4. Restart Calibre.
+> [!NOTE]
+> Плагин для Calibre сейчас распространяется проектом CrossPoint Reader — отдельного релиза плагина
+> для этой прошивки пока нет, поэтому шаги ниже описывают плагин исходного проекта. Когда появится
+> собственный источник, этот раздел будет обновлён.
 
-#### Configuring the CrossPoint Plugin in Calibre
-1. In Calibre select Preferences.
-2. In the Preferences dialog select Plugins.
-3. In Plugins search for "crosspoint".
-4. Click on "Customize plugin".
-5. Update the value for "Host" to match the IP for your device.
-6. Leave the other settings as they are.
-7. [optional] Modify the "Upload path" to point to a subfolder other than the root "/" folder. Enter this as a path relative to the root folder. Example: `/mybooks`
-8. Restart Calibre.
+#### Установка плагина в Calibre
 
-<img width="420" height="385" alt="Image" src="https://github.com/user-attachments/assets/01fc7e33-a9a7-48ba-9e26-2e68d1f9daec" />
+Если плагин ещё не установлен:
 
-#### Uploading Books
+1. Скачайте последнюю версию плагина `crosspoint_reader` из релизов проекта CrossPoint Reader.
+2. Скачайте zip-файл.
+3. Откройте Calibre → «Настройки» → «Плагины» → «Загрузить плагин из файла» → выберите zip-файл.
+4. Перезапустите Calibre.
 
-To upload a book using the CrossPoint plugin in Calibre:
+#### Настройка плагина в Calibre
 
-1. On the device: File Transfer -> Calibre Wireless, then join a network.
-2. Select one or more books.
-3. Right-click on that selection.
-4. Select "Send to Device" > "Send to main memory"
+1. В Calibre откройте «Настройки».
+2. В окне настроек выберите «Плагины».
+3. В поиске по плагинам введите `crosspoint` — так плагин называется сейчас.
+4. Нажмите «Настроить плагин».
+5. В поле «Host» укажите IP-адрес вашего устройства.
+6. Остальные настройки оставьте как есть.
+7. [необязательно] Измените «Upload path», чтобы файлы попадали не в корень `/`, а в подпапку.
+   Указывайте путь относительно корня. Пример: `/mybooks`
+8. Перезапустите Calibre.
 
-The CrossPoint plugin will connect to your device, create a folder for the book's author in the root folder (or the folder you configured for the plugin), then copy the book into that folder.
+#### Отправка книг
 
-<img width="783" height="310" alt="Image" src="https://github.com/user-attachments/assets/741b0909-2e1d-4f16-8af0-2c43fbda5ce6" />
+Чтобы отправить книгу через плагин в Calibre:
 
-#### Removing a Book
+1. На устройстве: «Передача файлов» → «Calibre Wireless», затем подключитесь к сети.
+2. Выберите одну или несколько книг.
+3. Нажмите правой кнопкой на выделение.
+4. Выберите «Отправить на устройство» → «Отправить во внутреннюю память».
 
-Books cannot be removed from your device through Calibre. Use the web interface instead.
+Плагин подключится к устройству, создаст папку с именем автора книги в корне (или в настроенной вами
+папке) и скопирует туда книгу.
 
-### 3.6 Settings
+#### Удаление книги
 
-Settings are grouped into **System**, **Display**, **Reader**, **Controls**, **Library**, and **Connectivity**. System contains language, keyboard layouts, hidden-file visibility, Clock (where available), firmware updates, and About. Library contains Use Book Metadata, Clear Read Books from Recent List, and Move Finished Books to Read Folder. Time to Sleep is under Display; Clear Reading Cache is under Reader. Connectivity contains Wi-Fi, Bluetooth Page Turner, CrossPoint Sync, OPDS, and the Plugins toggle. The options below describe these settings.
+Удалить книгу с устройства через Calibre нельзя. Используйте для этого веб-интерфейс.
 
-#### 3.6.1 Display
+### 3.6 Настройки
 
-- **Sleep Screen**: Which sleep screen to display when the device sleeps:
-  
-  - "Dark" (default) - The default dark Crosspoint logo sleep screen
-  - "Light" - The same default sleep screen, on a white background
-  - "Custom" - Custom images from the SD card; see [Sleep Screen](#37-sleep-screen) below for more information
-  - "Cover" - The book cover image
-  - "None" - A blank screen
-  - "Cover + Custom" - The book cover image while actively reading, falls back to "Custom" behavior otherwise
-  - "Quick resume" - The text of the last page read will be displayed on the sleep screen and a moon icon is shown on the edge of the screen. Waking up the device will return to the same page of the opened book. This is useful for quickly resuming reading without waiting for the device to fully wake up and load the book.
-  - "Transparent" - A transparent overlay image drawn over the current screen; see [Sleep Screen](#37-sleep-screen) below for more information
-  - "Cover + Transparent" - The transparent overlay image drawn over the cover of the last opened book, falls back to "Transparent" behavior if there is no book cover
-- **Sleep Screen Cover Mode**: How to display the book cover or custom sleep image:
-  
-  - "Fit" (default) - Scale the image to fit centered on the screen, padding with white borders as necessary
-  - "Crop" - Scale the image and crop as necessary to try to fill the screen
+Настройки сгруппированы в разделы **Система**, **Экран**, **Читалка**, **Управление**, **Библиотека**
+и **Подключения**. В разделе «Система» — язык, раскладки клавиатуры, показ скрытых файлов, часы (где
+доступны), обновление прошивки и «О программе». В разделе «Библиотека» — использование метаданных
+книг, очистка списка прочитанного и перемещение дочитанных книг в папку Read. «Время до сна» — в
+разделе «Экран», «Очистить кэш чтения» — в разделе «Читалка». В разделе «Подключения» — Wi-Fi,
+Bluetooth-перелистыватель, синхронизация CrossPoint, OPDS и переключатель плагинов. Ниже описаны эти
+настройки.
 
-- **Sleep Screen Cover Filter**: What filter will be applied to the book cover when "Cover" sleep screen is selected:
-  
-  - "None" (default) - The cover image will be converted to a grayscale image and displayed as it is
-  - "Contrast" - The image will be displayed as a black & white image without grayscale conversion
-  - "Inverted" - The image will be inverted as in white & black and will be displayed without grayscale conversion
+#### 3.6.1 Экран
 
-- **Quick Resume on Timeout**: Whether to enable the "Quick Resume" sleep screen when the device goes to sleep due to inactivity (Display > Time to Sleep). This is useful for quickly resuming reading without waiting for the device to fully wake up and load the book. This overwrites the Sleep Screen Cover Mode when enabled.
+- **Экран сна**: какой экран показывать, когда устройство засыпает:
 
-- **Status Bar**: Configure the status bar displayed while reading:
-  
-  - "None" - No status bar
-  - "No Progress" - Show status bar without reading progress
-  - "Full w/ Percentage" - Show status bar with book progress (as percentage)
-  - "Full w/ Book Bar" - Show status bar with book progress (as bar)
-  - "Book Bar Only" - Show book progress (as bar)
-  - "Full w/ Chapter Bar" - Show status bar with chapter progress (as bar)
+  - «Тёмный» (по умолчанию) — стандартный экран сна с логотипом CrossPoint на тёмном фоне
+  - «Светлый» — тот же экран на белом фоне
+  - «Свой» — свои изображения с карты памяти; подробности в разделе [экран сна](#37-экран-сна)
+  - «Обложка» — изображение обложки книги
+  - «Нет» — пустой экран
+  - «Обложка + свой» — обложка книги во время активного чтения, иначе поведение «Свой»
+  - «Быстрое возобновление» — на экране сна показывается текст последней прочитанной страницы и значок
+    луны у края экрана. Пробуждение возвращает на ту же страницу открытой книги. Удобно, чтобы быстро
+    вернуться к чтению, не дожидаясь полного пробуждения и загрузки книги.
+  - «Прозрачный» — прозрачное изображение-наложение поверх текущего экрана; подробности в разделе
+    [экран сна](#37-экран-сна)
+  - «Обложка + прозрачный» — прозрачное наложение поверх обложки последней открытой книги; если
+    обложки нет, поведение как у «Прозрачный»
 
-- **Hide Battery %**: Configure where to suppress the battery percentage display in the status bar; the battery icon will still be shown:
-  
-  - "Never" (default) - Always show battery percentage
-  - "In Reader" - Show battery percentage everywhere except in reading mode
-  - "Always" - Always hide battery percentage
+- **Режим обложки экрана сна**: как показывать обложку книги или своё изображение:
 
-- **Refresh Frequency**: Set how often the screen does a full refresh while reading to reduce ghosting; options are every 1, 5, 10, 15, or 30 pages.
+  - «Вписать» (по умолчанию) — масштабировать изображение по центру экрана, при необходимости
+    добавляя белые поля
+  - «Обрезать» — масштабировать и при необходимости обрезать изображение, стараясь заполнить экран
 
-- **UI Theme**: Set which UI theme to use:
-  
-  - "Classic" - The original Crosspoint theme
-  - "Lyra" - The new theme for Crosspoint featuring rounded elements and menu icons
-  - "Lyra Extended" - Lyra, but displays 3 books instead of 1 on the **[Home Screen](#31-home-screen)**
-  - "RoundedRaff" - A rounded theme with additional visual styling
+- **Фильтр обложки экрана сна**: какой фильтр применять к обложке книги при выборе режима «Обложка»:
 
-- **Sunlight Fading Fix**: Configure whether to enable a software-fix for the issue where white X4 models may fade when used in direct sunlight:
-  
-  - "OFF" (default) - Disable the fix
-  - "ON" - Enable the fix
+  - «Нет» (по умолчанию) — изображение преобразуется в оттенки серого и показывается как есть
+  - «Контраст» — изображение показывается чёрно-белым без преобразования в оттенки серого
+  - «Инверсия» — изображение инвертируется (белое на чёрном) и показывается без оттенков серого
 
-#### 3.6.2 Reader
+- **Быстрое возобновление по тайм-ауту**: включать ли экран сна «Быстрое возобновление», когда
+  устройство засыпает из-за бездействия («Экран» → «Время до сна»). Удобно, чтобы быстро вернуться к
+  чтению. При включении переопределяет режим обложки экрана сна.
 
-- **Reader Font Family**: Choose the font used for reading:
-  
-  - "Noto Sans" (default) - Google's sans-serif font
-  - Installed SD card families
+- **Строка состояния**: настройка строки состояния во время чтения:
 
-- **Reader Font Size**: Choose a point size. Built-in and direct TTF/OTF/TTC fonts offer 12, 14, 16, and 18 pt. A `.cpfont` family offers the sizes installed for that family.
+  - «Нет» — без строки состояния
+  - «Без прогресса» — строка состояния без прогресса чтения
+  - «Полная с процентом» — строка состояния с прогрессом книги в процентах
+  - «Полная с полосой книги» — строка состояния с прогрессом книги в виде полосы
+  - «Только полоса книги» — только прогресс книги в виде полосы
+  - «Полная с полосой главы» — строка состояния с прогрессом главы в виде полосы
 
-- **Reader Line Spacing**: Space added between lines, as a percentage of font size: 0%, +10%, +20% (default), +30%, +45%, +60%, or +75%.
+- **Скрыть процент батареи**: где не показывать процент заряда в строке состояния; значок батареи
+  остаётся:
 
-- **Reader Screen Margin**: Controls the screen margins in Reading Mode between 5 and 40 pixels in 5-pixel increments.
+  - «Никогда» (по умолчанию) — процент показывается всегда
+  - «В читалке» — процент виден везде, кроме режима чтения
+  - «Всегда» — процент скрыт всегда
 
-- **Reader Paragraph Alignment**: Set the alignment of paragraphs; options are "Justified" (default), "Left", "Center", or "Right".
+- **Частота обновления**: как часто экран полностью обновляется во время чтения, чтобы уменьшить
+  остаточные изображения. Варианты: каждые 1, 5, 10, 15 или 30 страниц.
 
-- **Embedded Style**: Whether to use the EPUB file's embedded HTML and CSS stylisation and formatting; options are "ON" or "OFF".
+- **Тема интерфейса**: какую тему использовать:
 
-- **Hyphenation**: Whether to hyphenate text in Reading Mode; options are "ON" or "OFF". Korean text wraps only at spaces when "OFF"; when "ON", a Korean word may also wrap at the end of a line between syllables or where it meets digits, Latin letters, or brackets (no hyphen is drawn).
+  - «Classic» — исходная тема CrossPoint
+  - «Lyra» — новая тема CrossPoint со скруглёнными элементами и значками меню
+  - «Lyra Extended» — Lyra, но на **[главном экране](#31-главный-экран)** показываются 3 книги вместо 1
+  - «RoundedRaff» — скруглённая тема с дополнительным оформлением
 
-- **Reading Orientation**: Set the screen orientation for reading EPUB files:
-  
-  - "Portrait" (default) - Standard portrait orientation
-  - "Landscape CW" - Landscape, rotated clockwise
-  - "Inverted" - Portrait, upside down
-  - "Landscape CCW" - Landscape, rotated counter-clockwise
+- **Исправление выцветания на солнце**: включать ли программное исправление для случая, когда белые
+  модели X4 выцветают под прямыми солнечными лучами:
 
-- **Extra Paragraph Spacing**: Set how to handle paragraph breaks:
-  
-  - "ON" - Vertical space will be added between paragraphs in Reading Mode
-  - "OFF" - Paragraphs will not have vertical space added, but will have first-line indentation
+  - «ВЫКЛ» (по умолчанию) — исправление отключено
+  - «ВКЛ» — исправление включено
 
-- **Dictionary**: Select the StarDict dictionary used for word lookups while reading, or "None" to disable lookups. *(Only shown when at least one dictionary folder exists under `/dictionaries/` on the SD card — see [docs/dictionary.md](docs/dictionary.md) for setup and usage.)*
+#### 3.6.2 Читалка
 
-- **Text Anti-Aliasing**: Whether to show smooth grey edges (anti-aliasing) on text in reading mode. Note this slows down page turns slightly.
+- **Шрифт читалки**: шрифт для чтения:
 
-- **Images**: How embedded images (JPG/PNG/GIF) in EPUB files are shown. GIFs render only the first frame; interlaced GIFs are not supported.
-  - **Display** (default): images in gray levels. Pages with images take an extra grayscale refresh.
-  - **Placeholder**: the image's alt text in place of the image.
-  - **Suppress**: images are left out.
-  - **Black & White**: images drawn as a black-and-white dot pattern. Pages with images turn like text pages, without the extra refresh.
+  - «Noto Sans» (по умолчанию) — шрифт Google без засечек
+  - Установленные семейства с карты памяти
 
-- **Focus Reading**: Bolds the first part of each word to create visual fixation points, similar to Bionic Reading. This can help improve reading speed and focus; options are "ON" or "OFF" (default).
+- **Размер шрифта читалки**: размер в пунктах. Встроенные шрифты и прямые TTF/OTF/TTC дают 12, 14, 16
+  и 18 пт. Семейство `.cpfont` даёт те размеры, которые для него установлены.
 
-#### 3.6.3 Controls
+- **Межстрочный интервал**: дополнительное расстояние между строками в процентах от размера шрифта:
+  0%, +10%, +20% (по умолчанию), +30%, +45%, +60% или +75%.
 
-- **Remap Front Buttons**: A menu for customising the function of each bottom edge button.
+- **Поля экрана читалки**: поля экрана в режиме чтения от 5 до 40 пикселей с шагом 5.
 
-- **Side Button Layout (reader)**: Swap the order of the up and down side buttons from "Prev/Next" (default) to "Next/Prev". You can also disable them entirely. This change is only in effect when reading.
+- **Выравнивание абзацев**: «По ширине» (по умолчанию), «По левому краю», «По центру» или «По
+  правому краю».
 
-- **Long-press Chapter Skip**: Set whether long-pressing page turn buttons skips to the next/previous chapter:
-  
-  - "Chapter Skip" (default) - Long-pressing skips to next/previous chapter
-  - "Page Scroll" - Long-pressing scrolls a page up/down
-- **Long-press Menu**: Selects the function bound to holding the menu button (Confirm) while reading an EPUB. **Cycles through the available functions** each time the setting is selected — additional functions may be added in future releases, so this is not a binary on/off toggle. A short press of Confirm always opens the reader menu as normal:
-  - "Bookmark" (default) - Hold Confirm (~0.4 second) to drop a bookmark at the current page.
-  - "CrossPoint Sync" - Hold Confirm (~1 second) to launch KOReader sync directly.
-  - "Dictionary" - Hold Confirm (~0.4 second) to start dictionary word selection on the current page (see [docs/dictionary.md](docs/dictionary.md)).
-  - "Create Clipping" - Hold Confirm (~0.4 second) to start clipping selection on the current page.
-  - "Disabled" - Long-press is ignored; only short-press opens the reader menu.
+- **Встроенные стили**: использовать ли встроенную в EPUB разметку и стили HTML и CSS. Варианты «ВКЛ»
+  и «ВЫКЛ».
 
-- **Short Power Button Click**: Controls the effect of a short click of the power button:
-  
-  - "Ignore" (default) - Require a long press to turn off the device
-  - "Sleep" - A short press puts the device into sleep mode
-  - "Page Turn" - A short press in reading mode turns to the next page; a long press turns the device off
-  - "Links and Footnotes" - A short press in reading mode opens link selection. If the page has only one link, it opens directly. After following a link, a short press returns to the previous location.
-  - "Refresh" - A short press triggers a manual full-screen refresh, useful for clearing ghosting
-- **Quick return from links**: Controls whether a short press of the power button acts as Back after following a link or footnote.
+- **Переносы**: переносить ли слова в режиме чтения. Варианты «ВКЛ» и «ВЫКЛ». Корейский текст при
+  «ВЫКЛ» переносится только по пробелам; при «ВКЛ» корейское слово может переноситься в конце строки
+  между слогами или на границе с цифрами, латинскими буквами и скобками (дефис не рисуется).
 
-#### 3.6.4 System
+- **Ориентация при чтении**: ориентация экрана для чтения EPUB:
 
-- **Time to Sleep** (**Settings → Display**): Set the duration of inactivity before the device automatically goes to sleep; options are 1, 3, 5, 10 (default), 15 or 30 minutes.
+  - «Портрет» (по умолчанию) — обычная портретная ориентация
+  - «Альбом по часовой» — альбомная, повёрнутая по часовой стрелке
+  - «Перевёрнутый» — портретная, вверх ногами
+  - «Альбом против часовой» — альбомная, повёрнутая против часовой стрелки
 
-- **Wi-Fi Networks**: Connect to Wi-Fi networks for file transfers and firmware updates.
+- **Дополнительный интервал между абзацами**:
 
-- **Bluetooth Page Turner** (**Settings → Connectivity**): Enable Bluetooth, then open **Scan for Remotes** to connect a page turner. **Paired Remotes** lists saved remotes; selecting a row marked **Forget** removes it. Once connected, open **Map Buttons**, choose a page, chapter, Confirm, Back, reader menu, or clipping action, and press the remote button within 15 seconds. Release the button within 15 seconds: a hold of at least 0.7 seconds is mapped separately from its tap. If the remote never reports a release, learning waits 15 seconds and saves the press as a tap. Hold Confirm on an action, or long-press its row, to clear it. Back cancels learning or returns to the Bluetooth menu. Mapping is optional: without custom mappings, the default remote controls remain available. Each button gesture maps to one action; assigning it again replaces its previous action. Confirm and Back act like the device buttons while reading and in the reader list menu. Next/Previous Page navigate items while a reader menu is open and turn pages when it is closed. Bluetooth can also be toggled from the reader list menu or the toolbar’s **More** menu.
+  - «ВКЛ» — между абзацами в режиме чтения добавляется вертикальный отступ
+  - «ВЫКЛ» — вертикальный отступ не добавляется, но появляется отступ первой строки
 
-- **CrossPoint Sync**: Settings for syncing book progress with CrossPoint Sync or a compatible KOSync server. **Smart sync** is the default for new configurations and auto-resolves simple push/pull decisions. Existing credential files retain **Ask every time** when migrated; you can switch Sync Behavior at any time if you prefer manual confirmation.
+- **Словарь**: выбор словаря StarDict для поиска слов во время чтения или «Нет», чтобы отключить
+  поиск. *(Пункт показывается, только если на карте памяти есть хотя бы одна папка словаря в
+  `/dictionaries/` — настройка и использование описаны в [docs/dictionary.md](docs/dictionary.md).)*
 
-- **OPDS Servers**: Manage one or more OPDS [(Open Publication Distribution System)](https://en.wikipedia.org/wiki/Open_Publication_Distribution_System) libraries for browsing and downloading books. See [OPDS Servers (Multiple Libraries)](#365-opds-servers-multiple-libraries) below.
+- **Сглаживание текста**: показывать ли сглаженные серые края (антиалиасинг) у текста в режиме чтения.
+  Учтите, что перелистывание страниц немного замедляется.
 
-- **Clear Reading Cache** (**Settings → Reader**): Clear the internal SD card cache.
+- **Изображения**: как показывать встроенные изображения (JPG/PNG/GIF) в EPUB. У GIF отображается
+  только первый кадр; чересстрочные GIF не поддерживаются.
 
-- **Use book metadata**: Read the title and author stored inside each book when the Library index is rebuilt. When disabled or unavailable, the Library uses the filename.
+  - **Показывать** (по умолчанию): изображения в оттенках серого. Страницы с изображениями требуют
+    дополнительного обновления в градациях серого.
+  - **Заполнитель**: вместо изображения показывается его alt-текст.
+  - **Скрывать**: изображения не показываются.
+  - **Чёрно-белый**: изображения рисуются чёрно-белым точечным узором. Страницы с изображениями
+    листаются как текстовые, без дополнительного обновления.
 
-- **Rebuild library index**: Rescan the SD card for books while preserving the arrival history of books already in the index.
+- **Focus Reading**: выделяет жирным первую часть каждого слова, создавая точки фиксации взгляда,
+  подобно Bionic Reading. Может помочь увеличить скорость и концентрацию чтения. Варианты «ВКЛ» и
+  «ВЫКЛ» (по умолчанию).
 
-- **Check for updates**: Check for Crosspoint firmware updates over Wi-Fi. Firmware can also be updated without a USB connection by placing a `firmware.bin` file on the SD card. Neither option is available on the BOOX Picco, which is updated over USB.
+#### 3.6.3 Управление
 
-- **Plugins** (**Settings → Connectivity**): Enable or disable SD-card plugins. Clean installs start disabled; upgrades with existing plugins are kept enabled automatically. Disabling plugins leaves all plugin files on the SD card but stops plugin discovery and execution until they are enabled again.
-  - Enabling plugins immediately adds **Plugins** to the Home screen, even when no plugins are installed yet. Sideloaded SD-card plugins work without Plugin Hub.
-  - Open **Home → Plugins** to view installed plugins. Hold **Confirm** on a selected installed plugin for one second (or long-press its row on a touch device) to open an uninstall confirmation. Confirming deletes that plugin's installed folder and files; cancelling leaves it installed. If no usable on-device Plugin Hub is available and its installer has not been hidden, a **Plugin Hub — Download, discover, and update plugins** entry is also shown. A manually sideloaded Hub with a valid `device.json` is recognized without requiring the optional README or browser files.
-  - Selecting that Plugin Hub entry offers **Install**, **Hide**, or **Cancel**. **Install** downloads Plugin Hub over Wi-Fi. If you back out of Wi-Fi selection, installation is cancelled, Wi-Fi is turned back off, and you return to Plugins with the installer still available. **Hide** removes only the Plugin Hub install entry; it does not disable plugins or affect sideloaded plugins. **Cancel** leaves the entry unchanged.
-  - **Hide** persists across reboots. Setting **Settings → Connectivity → Plugins** to **Enabled** again brings the installer back.
-  - Plugins with web settings appear on the **Plugins** page of the web UI while **File Transfer** is running. Its link is hidden while plugins are disabled.
-  - Plugin Hub is optional. Users who prefer manual installation can download it directly from [crosspoint-plugin-hub releases](https://github.com/crosspoint-reader/crosspoint-plugin-hub/releases) and copy/extract the `pluginhub` folder so it ends up at `/.crosspoint/plugins/pluginhub/`, `/plugins/pluginhub/`, or `/.plugins/pluginhub/`. Once installed, Plugin Hub appears as a normal entry under **Home → Plugins**.
+- **Переназначить передние кнопки**: меню настройки функции каждой кнопки нижнего торца.
 
-- **Language**: Set the UI language. CrossPoint supports 32 languages: English, Spanish, French, German, Czech, Brazilian Portuguese, European Portuguese, Russian, Swedish, Romanian, Catalan, Ukrainian, Belarusian, Italian, Polish, Finnish, Danish, Dutch, Turkish, Kazakh, Hungarian, Lithuanian, Slovenian, Valencian, Hebrew, Arabic, Slovak, Bosnian, Vietnamese, Norwegian Bokmål, Indonesian, and Orangutan.
+- **Раскладка боковых кнопок (читалка)**: поменять порядок боковых кнопок вверх/вниз с «Назад/Вперёд»
+  (по умолчанию) на «Вперёд/Назад». Их также можно полностью отключить. Изменение действует только во
+  время чтения.
+
+- **Переход по главам долгим нажатием**:
+
+  - «Переход по главам» (по умолчанию) — долгое нажатие переходит к следующей или предыдущей главе
+  - «Прокрутка страницы» — долгое нажатие прокручивает страницу вверх или вниз
+
+- **Меню по долгому нажатию**: функция, привязанная к удержанию кнопки меню (Подтвердить) во время
+  чтения EPUB. **Каждый раз при выборе настройки значение переключается по кругу** — в будущих версиях
+  могут появиться новые функции, так что это не переключатель «вкл/выкл». Короткое нажатие
+  «Подтвердить» всегда открывает меню читалки:
+
+  - «Закладка» (по умолчанию) — удержание «Подтвердить» (~0,4 с) ставит закладку на текущей странице.
+  - «Синхронизация CrossPoint» — удержание «Подтвердить» (~1 с) запускает синхронизацию KOReader.
+  - «Словарь» — удержание «Подтвердить» (~0,4 с) запускает выбор слова в словаре на текущей странице
+    (см. [docs/dictionary.md](docs/dictionary.md)).
+  - «Создать выписку» — удержание «Подтвердить» (~0,4 с) запускает выбор фрагмента для выписки.
+  - «Отключено» — долгое нажатие игнорируется, меню читалки открывает только короткое нажатие.
+
+- **Короткое нажатие кнопки питания**:
+
+  - «Игнорировать» (по умолчанию) — для выключения требуется долгое нажатие
+  - «Сон» — короткое нажатие переводит устройство в сон
+  - «Перелистывание» — короткое нажатие в режиме чтения перелистывает вперёд, долгое выключает устройство
+  - «Ссылки и сноски» — короткое нажатие в режиме чтения открывает выбор ссылки. Если на странице
+    только одна ссылка, она открывается сразу. После перехода по ссылке короткое нажатие возвращает
+    к предыдущему месту.
+  - «Обновить» — короткое нажатие запускает полное обновление экрана, полезно для устранения
+    остаточных изображений
 
-- **Manage Fonts**: Browse, download, and manage custom font families installed from the SD card. See [Custom Fonts (SD Card)](#38-custom-fonts-sd-card) for more information.
+- **Быстрый возврат по ссылкам**: определяет, работает ли короткое нажатие кнопки питания как «Назад»
+  после перехода по ссылке или сноске.
 
-#### 3.6.5 OPDS Servers (Multiple Libraries)
+#### 3.6.4 Система
 
-CrossPoint supports saving multiple OPDS servers and switching between them when browsing catalogs.
+- **Время до сна** (**Настройки → Экран**): время бездействия до автоматического перехода в сон.
+  Варианты: 1, 3, 5, 10 (по умолчанию), 15 или 30 минут.
 
-1. Open **Settings -> Connectivity -> OPDS Servers**.
+- **Сети Wi-Fi**: подключение к сетям Wi-Fi для передачи файлов и обновления прошивки.
 
-2. Select **Add Server** to create a new entry, or select an existing server to edit it.
+- **Bluetooth-перелистыватель** (**Настройки → Подключения**): включите Bluetooth, затем откройте
+  **Поиск пультов**, чтобы подключить перелистыватель. **Сопряжённые пульты** показывают сохранённые
+  устройства; выбор строки с отметкой **Забыть** удаляет пульт. После подключения откройте
+  **Назначить кнопки**, выберите действие (страница, глава, «Подтвердить», «Назад», меню читалки или
+  выписка) и нажмите кнопку пульта в течение 15 секунд. Отпустите кнопку в течение 15 секунд: удержание
+  не менее 0,7 с назначается отдельно от короткого нажатия. Если пульт так и не сообщил об отпускании,
+  обучение ждёт 15 секунд и сохраняет нажатие как короткое. Удержание «Подтвердить» на действии или
+  долгое нажатие на строке очищает назначение. «Назад» отменяет обучение или возвращает в меню
+  Bluetooth. Назначать кнопки не обязательно: без своих назначений работают стандартные действия
+  пульта. Каждый жест кнопки соответствует одному действию; повторное назначение заменяет предыдущее.
+  «Подтвердить» и «Назад» работают как кнопки устройства во время чтения и в меню списка читалки.
+  «Следующая/предыдущая страница» перемещают по пунктам при открытом меню читалки и листают страницы,
+  когда оно закрыто. Bluetooth также можно переключать из меню списка читалки или из меню **Ещё** на
+  панели инструментов.
 
-3. Configure these fields:
-   
-   - **Server Name**: Optional display name (for example, "Home Calibre" or "Public Catalog").
-   
-   - **OPDS Server URL**: Full catalog root URL (for Calibre Content Server, usually ends with `/opds`).
-   
-   - **Username / Password**: Optional credentials for authenticated servers.
+- **Синхронизация CrossPoint**: настройки синхронизации прогресса книги с CrossPoint Sync или
+  совместимым сервером KOSync. **Умная синхронизация** используется по умолчанию для новых настроек и
+  сама разрешает простые случаи отправки и получения. У существующих файлов учётных данных при
+  переносе сохраняется режим **Спрашивать каждый раз**; при желании режим можно сменить в любой момент.
+  *(Это временная возможность: сервер CrossPoint Sync принадлежит исходному проекту. Его планируется
+  заменить аккаунтом КвестБук для учёта игрового опыта — см. [ROADMAP.md](./ROADMAP.md).)*
 
-4. Use **Delete Server** inside a server entry to remove it.
+- **Серверы OPDS**: управление одной или несколькими библиотеками
+  OPDS [(Open Publication Distribution System)](https://en.wikipedia.org/wiki/Open_Publication_Distribution_System)
+  для просмотра и загрузки книг. См. [серверы OPDS](#365-серверы-opds-несколько-библиотек) ниже.
 
-Behavior notes:
+- **Очистить кэш чтения** (**Настройки → Читалка**): очистить внутренний кэш на карте памяти.
 
-- You can store up to 8 OPDS servers.
-- OPDS authentication supports HTTP Basic auth. If you use Calibre Content Server with authentication enabled, set it to Basic (not Digest).
+- **Использовать метаданные книги**: читать название и автора, записанные внутри книги, при
+  перестроении индекса библиотеки. Если выключено или недоступно, библиотека использует имя файла.
 
-You can also manage OPDS servers from the web interface while in File Transfer mode:
+- **Перестроить индекс библиотеки**: заново просканировать карту памяти, сохранив историю появления
+  книг, уже бывших в индексе.
 
-1. Connect to the device web UI.
-2. Open `http://<device-ip>/settings`.
-3. Use the **OPDS Servers** card to add, edit, or delete entries.
+- **Проверить обновления**: проверить обновления прошивки по Wi-Fi. Прошивку можно обновить и без
+  USB-подключения, положив файл `firmware.bin` на карту памяти. Оба способа недоступны на BOOX Picco —
+  он обновляется по USB.
 
-For web-based Wi-Fi network management, see [Web Settings (Wi-Fi + OPDS)](#366-web-settings-wi-fi--opds).
+- **Плагины** (**Настройки → Подключения**): включение и выключение плагинов с карты памяти. После
+  чистой установки они выключены; при обновлении с уже установленными плагинами они автоматически
+  остаются включёнными. Выключение плагинов оставляет все их файлы на карте памяти, но прекращает их
+  поиск и выполнение до повторного включения.
 
-#### 3.6.6 Web Settings (Wi-Fi + OPDS)
+  - Включение плагинов сразу добавляет пункт **Плагины** на главный экран, даже если плагины ещё не
+    установлены. Плагины, скопированные на карту памяти вручную, работают без Plugin Hub.
+  - Откройте **Главная → Плагины**, чтобы увидеть установленные плагины. Удерживайте **Подтвердить**
+    на выбранном плагине одну секунду (или долго нажмите на строку на устройстве с тачскрином), чтобы
+    открыть подтверждение удаления. Подтверждение удаляет папку и файлы плагина, отмена оставляет его
+    установленным. Если доступного встроенного Plugin Hub нет и его установщик не скрыт, показывается
+    также пункт **Plugin Hub — загрузка, поиск и обновление плагинов**. Hub, скопированный вручную и
+    содержащий корректный `device.json`, распознаётся без необязательных README и браузерных файлов.
+  - При выборе пункта Plugin Hub предлагаются **Установить**, **Скрыть** или **Отмена**.
+    **Установить** загружает Plugin Hub по Wi-Fi. Если выйти из выбора сети, установка отменяется,
+    Wi-Fi выключается, и вы возвращаетесь к плагинам, где установщик по-прежнему доступен.
+    **Скрыть** убирает только пункт установки Plugin Hub; плагины при этом не отключаются, а
+    скопированные вручную плагины не затрагиваются. **Отмена** оставляет пункт без изменений.
+  - **Скрыть** сохраняется между перезагрузками. Повторное включение **Настройки → Подключения →
+    Плагины** возвращает установщик.
+  - Плагины с веб-настройками появляются на странице **Плагины** веб-интерфейса, пока работает
+    **Передача файлов**. Ссылка на неё скрыта, пока плагины выключены.
+  - Plugin Hub необязателен. Тем, кто предпочитает ручную установку, его можно скачать из релизов
+    проекта CrossPoint Reader и распаковать папку `pluginhub` так, чтобы она оказалась в
+    `/.crosspoint/plugins/pluginhub/`, `/plugins/pluginhub/` или `/.plugins/pluginhub/`. После
+    установки Plugin Hub появляется как обычный пункт в **Главная → Плагины**. *(Этот источник
+    размещён в проекте CrossPoint Reader и будет заменён; см. [ROADMAP.md](./ROADMAP.md).)*
 
-While in **File Transfer** mode, the web settings page includes management cards for both **Wi-Fi Networks** and **OPDS Servers**.
+- **Язык**: язык интерфейса. Поддерживается 35 языков: English, العربية, Azərbaycanca, Беларуская,
+  Български, Bosanski, Català, Valencià, Čeština, Dansk, Deutsch, Español, فارسی, Suomi, Français,
+  עברית, Magyar, Bahasa Indonesia, Italiano, Қазақша, Lietuvių, Norsk bokmål, Nederlands, Orangutan,
+  Polski, Português (Brasil), Português (Portugal), Română, Русский, Slovenčina, Slovenščina, Svenska,
+  Türkçe, Українська, Tiếng Việt.
 
-1. On device: open **File Transfer** and connect through **Join a Network** or **Create Hotspot**.
-2. In a browser, open `http://<device-ip>/settings` or `http://crosspoint.local`.
-3. In **Wi-Fi Networks**, add, edit, or delete saved network entries (SSID + optional password).
-4. In **OPDS Servers**, add, edit, or delete OPDS catalogs.
+- **Управление шрифтами**: просмотр, загрузка и управление своими семействами шрифтов, установленными с
+  карты памяти. См. [свои шрифты](#38-свои-шрифты-карта-памяти).
 
-Behavior notes:
+#### 3.6.5 Серверы OPDS (несколько библиотек)
 
-- Passwords are never shown back in the web UI after saving.
-- Leaving Password blank while editing keeps the existing saved password unchanged.
-- The web UI can save hidden-network SSIDs, but connecting to hidden networks still depends on the device-side Wi-Fi connection flow.
+Читалка поддерживает сохранение нескольких серверов OPDS и переключение между ними при просмотре
+каталогов.
 
-#### 3.6.7 KOReader Sync Quick Setup
+1. Откройте **Настройки -> Подключения -> Серверы OPDS**.
 
-CrossPoint can sync reading progress with KOReader-compatible sync servers.
-It also interoperates with KOReader apps/devices when they use the same server and credentials.
+2. Выберите **Добавить сервер**, чтобы создать запись, или выберите существующий сервер для
+   изменения.
 
-**Server Type** controls which progress and metadata format CrossPoint sends:
+3. Заполните поля:
 
-- **CrossPoint** - For the default service or a self-hosted CrossPoint-compatible sync server. Sends standard KOReader progress plus CrossPoint's richer reading position when available.
-- **KoSync** - For standard KOReader Sync servers such as `sync.koreader.rocks` or `koreader/kosync`. Uses the strict standard payload without CrossPoint-specific rich position data.
-- **Other** - For custom servers that explicitly support CrossPoint's enhanced payload. Rich position is enabled, and when **Send Metadata** is on CrossPoint may also send recognized ISBN, ASIN, series name, and series index in addition to title/author metadata.
+   - **Имя сервера**: необязательное отображаемое имя (например, «Домашний Calibre» или «Публичный
+     каталог»).
 
-**Send Metadata** remains the privacy switch for bibliographic data. Turn it off if you want to sync progress without sending title, author, ISBN/ASIN, or series information.
+   - **URL сервера OPDS**: полный URL корня каталога (для Calibre Content Server обычно заканчивается
+     на `/opds`).
 
-##### Option A: CrossPoint Sync Server (`sync.crosspointreader.com`, default)
+   - **Имя пользователя / пароль**: необязательные учётные данные для серверов с авторизацией.
 
-When **Sync Server URL** is left empty, CrossPoint uses the free CrossPoint sync server at `https://sync.crosspointreader.com`. It speaks the standard KOReader sync protocol (so KOReader apps can use it too). CrossPoint records page starts as chapter-content offsets and sends the corresponding standard KOReader XPath, so devices with different fonts or layouts can return to the same text.
+4. Чтобы удалить сервер, используйте **Удалить сервер** внутри его записи.
 
-1. On each CrossPoint device:
+Особенности:
 
-   - Go to **Settings -> Connectivity -> CrossPoint Sync**.
+- Можно сохранить до 8 серверов OPDS.
+- Авторизация OPDS поддерживает HTTP Basic. Если вы используете Calibre Content Server с включённой
+  авторизацией, выберите Basic (не Digest).
 
-   - Set **Username** and **Password** (enter the plain password; CrossPoint computes MD5 internally, and use the same values on all devices).
+Управлять серверами OPDS можно и из веб-интерфейса в режиме передачи файлов:
 
-   - Leave **Sync Server URL** empty (or set it to `https://sync.crosspointreader.com`).
+1. Подключитесь к веб-интерфейсу устройства.
+2. Откройте `http://<ip-устройства>/settings`.
+3. В карточке **Серверы OPDS** добавьте, измените или удалите записи.
 
-   - Set **Server Type** to **CrossPoint**.
+Об управлении сетями Wi-Fi через веб-интерфейс см.
+[веб-настройки](#366-веб-настройки-wi-fi-и-opds).
 
-   - On the first device, run **Sign Up** once to create the account directly from the device. On every other device, just run **Authenticate**.
+#### 3.6.6 Веб-настройки (Wi-Fi и OPDS)
 
-Accounts are per server. Existing `sync.koreader.rocks` credentials do not exist on the CrossPoint server; either sign up again with the same username/password or use Option B to keep using the legacy server.
+В режиме **передачи файлов** страница веб-настроек содержит карточки управления и для **сетей Wi-Fi**,
+и для **серверов OPDS**.
 
-##### Option B: Legacy Public KOReader Server (`sync.koreader.rocks`)
+1. На устройстве: откройте **Передача файлов** и подключитесь через **Подключиться к сети** или
+   **Создать точку доступа**.
+2. В браузере откройте `http://<ip-устройства>/settings` или `http://crosspoint.local`.
+3. В разделе **Сети Wi-Fi** добавляйте, изменяйте и удаляйте сохранённые сети (SSID и необязательный
+   пароль).
+4. В разделе **Серверы OPDS** добавляйте, изменяйте и удаляйте каталоги OPDS.
 
-Use this if you already sync KOReader devices against the official public server.
+Особенности:
 
-1. On each CrossPoint device:
+- Пароли никогда не показываются в веб-интерфейсе после сохранения.
+- Если оставить поле пароля пустым при изменении, сохранённый пароль не меняется.
+- Веб-интерфейс может сохранить SSID скрытых сетей, но подключение к скрытым сетям всё равно зависит
+  от порядка подключения на самом устройстве.
 
-   - Go to **Settings -> Connectivity -> CrossPoint Sync**.
+#### 3.6.7 Быстрая настройка синхронизации KOReader
 
-   - Set **Sync Server URL** to `https://sync.koreader.rocks` (required; an empty URL now points at the CrossPoint server instead).
+Читалка умеет синхронизировать прогресс чтения с серверами, совместимыми с KOReader. Она также
+взаимодействует с приложениями и устройствами KOReader, если они используют тот же сервер и учётные
+данные.
 
-   - Set **Server Type** to **KoSync**.
+> [!NOTE]
+> Это временная возможность. Сервер CrossPoint Sync принадлежит исходному проекту CrossPoint Reader.
+> Его планируется заменить аккаунтом КвестБук для учёта игрового опыта — см.
+> [ROADMAP.md](./ROADMAP.md).
 
-   - Set **Username** and **Password** to your existing KOReader Sync credentials.
+**Тип сервера** определяет, в каком формате читалка отправляет прогресс и метаданные:
 
-   - Run **Authenticate**.
+- **CrossPoint** — для сервиса по умолчанию или своего сервера, совместимого с CrossPoint. Отправляет
+  стандартный прогресс KOReader плюс более подробную позицию чтения CrossPoint, когда она доступна.
+- **KoSync** — для стандартных серверов KOReader Sync, таких как `sync.koreader.rocks` или
+  `koreader/kosync`. Использует строгий стандартный набор данных без подробной позиции CrossPoint.
+- **Другое** — для своих серверов, которые явно поддерживают расширенный набор данных CrossPoint.
+  Подробная позиция включается, и при включённой **отправке метаданных** читалка может дополнительно
+  отправить распознанные ISBN, ASIN, название серии и номер в серии, помимо названия и автора.
 
-2. If you do not have an account yet, run **Sign Up** on the device, or register once with curl:
+**Отправка метаданных** остаётся переключателем приватности для библиографических данных. Выключите
+его, если хотите синхронизировать прогресс без отправки названия, автора, ISBN/ASIN и данных о серии.
+
+##### Вариант A: сервер CrossPoint Sync (`sync.crosspointreader.com`, по умолчанию)
+
+Если оставить **URL сервера синхронизации** пустым, читалка использует бесплатный сервер CrossPoint
+Sync по адресу `https://sync.crosspointreader.com`. Он говорит на стандартном протоколе синхронизации
+KOReader (поэтому им могут пользоваться и приложения KOReader). Читалка записывает начала страниц как
+смещения в содержимом главы и отправляет соответствующий стандартный XPath KOReader, поэтому
+устройства с другими шрифтами или вёрсткой возвращаются к тому же тексту.
+
+1. На каждом устройстве:
+
+   - Откройте **Настройки -> Подключения -> Синхронизация CrossPoint**.
+
+   - Задайте **имя пользователя** и **пароль** (вводите пароль в открытом виде; читалка сама считает
+     MD5, и на всех устройствах значения должны совпадать).
+
+   - Оставьте **URL сервера синхронизации** пустым (или укажите `https://sync.crosspointreader.com`).
+
+   - Установите **тип сервера** — **CrossPoint**.
+
+   - На первом устройстве один раз выполните **Регистрацию**, чтобы создать учётную запись прямо с
+     устройства. На остальных достаточно выполнить **Авторизацию**.
+
+Учётные записи привязаны к серверу. Существующие учётные данные `sync.koreader.rocks` на сервере
+CrossPoint не действуют: либо зарегистрируйтесь там с тем же именем и паролем, либо используйте
+вариант B и останьтесь на прежнем сервере.
+
+##### Вариант B: публичный сервер KOReader (`sync.koreader.rocks`)
+
+Используйте этот вариант, если вы уже синхронизируете устройства KOReader с официальным публичным
+сервером.
+
+1. На каждом устройстве:
+
+   - Откройте **Настройки -> Подключения -> Синхронизация CrossPoint**.
+
+   - Укажите **URL сервера синхронизации** — `https://sync.koreader.rocks` (обязательно: пустой URL
+     теперь указывает на сервер CrossPoint).
+
+   - Установите **тип сервера** — **KoSync**.
+
+   - Укажите **имя пользователя** и **пароль** от существующей учётной записи KOReader Sync.
+
+   - Выполните **Авторизацию**.
+
+2. Если учётной записи ещё нет, выполните **Регистрацию** на устройстве или зарегистрируйтесь один
+   раз через curl:
 
 ```bash
 USERNAME="user"
@@ -470,11 +667,12 @@ curl -i "https://sync.koreader.rocks/users/create" \
   --data "{\"username\":\"$USERNAME\",\"password\":\"$PASSWORD_MD5\"}"
 ```
 
-When this returns `HTTP 402` with `{"code":2002,"message":"Username is already registered."}`, pick a different username or use that existing account.
+Если в ответ приходит `HTTP 402` с `{"code":2002,"message":"Username is already registered."}`, выберите
+другое имя пользователя или используйте эту существующую учётную запись.
 
-##### Option C: Self-Hosted Server (Docker Compose)
+##### Вариант C: свой сервер (Docker Compose)
 
-1. Start a sync server:
+1. Запустите сервер синхронизации:
 
 ```bash
 mkdir -p kosync-quickstart
@@ -497,279 +695,416 @@ YAML
 # Docker
 docker compose up -d
 
-# Podman (alternative)
+# Podman (альтернатива)
 podman compose up -d
 ```
 
 > [!NOTE]
-> `ENABLE_USER_REGISTRATION=true` is convenient for first setup. After creating your users, set it to `false` (or remove it) to avoid unexpected registrations.
+> `ENABLE_USER_REGISTRATION=true` удобно для первой настройки. Создав пользователей, поставьте `false`
+> (или уберите строку), чтобы избежать неожиданных регистраций.
 
-2. Verify the server:
+2. Проверьте сервер:
 
 ```bash
-curl -H "Accept: application/vnd.koreader.v1+json" "http://<server-ip>:17200/healthcheck"
-# Expected: {"state":"OK"}
+curl -H "Accept: application/vnd.koreader.v1+json" "http://<ip-сервера>:17200/healthcheck"
+# Ожидается: {"state":"OK"}
 ```
 
-3. Register a user once.
-   CrossPoint authenticates against KOReader Sync (`koreader/kosync`) using an MD5 key, so register using the MD5 of your password:
+3. Зарегистрируйте пользователя один раз.
+   Читалка авторизуется на сервере KOReader Sync (`koreader/kosync`) по ключу MD5, поэтому
+   регистрируйтесь с MD5-хешем пароля:
 
 > [!WARNING]
-> Sending a reusable MD5-derived password over plain HTTP is insecure.
-> Create unique sync-only credentials and do not reuse main account passwords.
-> Prefer `https://<server-ip>:7200` whenever traffic leaves a fully trusted LAN or when using untrusted networks.
-> Use `curl -k` only for self-signed certificate testing.
+> Отправка многоразового пароля, производного от MD5, по открытому HTTP небезопасна.
+> Создавайте отдельные учётные данные только для синхронизации и не используйте пароли от основных
+> аккаунтов.
+> Предпочитайте `https://<ip-сервера>:7200`, как только трафик выходит за пределы полностью
+> доверенной локальной сети или идёт по недоверенным сетям.
+> Используйте `curl -k` только для проверки самоподписанных сертификатов.
 
 ```bash
 USERNAME="user"
 PASSWORD="pass"
 PASSWORD_MD5="$(printf '%s' "$PASSWORD" | openssl md5 | awk '{print $2}')"
 
-curl -i "http://<server-ip>:17200/users/create" \
+curl -i "http://<ip-сервера>:17200/users/create" \
   -H "Accept: application/vnd.koreader.v1+json" \
   -H "Content-Type: application/json" \
   --data "{\"username\":\"$USERNAME\",\"password\":\"$PASSWORD_MD5\"}"
 ```
 
-If this returns `HTTP 402` with `{"code":2002,"message":"Username is already registered."}`, the account already exists.
+Если в ответ приходит `HTTP 402` с `{"code":2002,"message":"Username is already registered."}`, учётная
+запись уже существует.
 
-4. On each CrossPoint device:
-   
-   - Go to **Settings -> Connectivity -> CrossPoint Sync**.
-   
-   - Set **Username** and **Password** (enter the plain password; CrossPoint computes MD5 internally, and use the same values on all devices).
-   
-   - Set **Sync Server URL** to `http://<server-ip>:17200`.
+4. На каждом устройстве:
 
-   - Set **Server Type** to **KoSync**.
-   
-   - Run **Authenticate**.
+   - Откройте **Настройки -> Подключения -> Синхронизация CrossPoint**.
 
-If you use the HTTPS listener, use `https://<server-ip>:7200` (`curl -k` only for self-signed certificate testing).
+   - Задайте **имя пользователя** и **пароль** (вводите пароль в открытом виде; читалка сама считает
+     MD5, и на всех устройствах значения должны совпадать).
 
-##### Syncing While Reading
+   - Укажите **URL сервера синхронизации** — `http://<ip-сервера>:17200`.
 
-Once any of the options above is set up, press **Confirm** while reading to open the reader menu, then select **Sync Progress**. Alternatively, set **Settings -> Controls -> Long-press Menu** to **CrossPoint Sync** and hold Confirm to launch sync directly.
+   - Установите **тип сервера** — **KoSync**.
 
-- **Sync Clippings** is off by default. Enable it only for a compatible CrossPoint Sync server; manual **Sync Progress** then uploads and downloads this book’s clippings too. Leave it off for ordinary KOSync servers.
-- With **Sync Behavior** set to **Ask every time**, choose **Apply Remote** to jump to remote progress or **Upload Local** to push current progress.
-- With **Sync Behavior** set to **Smart sync**, CrossPoint auto-resolves simple cases: upload when no remote progress exists, confirm and leave both unchanged when local and remote progress are already synchronized, upload when local progress is further ahead, or apply remote when remote progress is further ahead.
+   - Выполните **Авторизацию**.
 
-### 3.7 Sleep Screen
+Если вы используете HTTPS-порт, укажите `https://<ip-сервера>:7200` (`curl -k` только для проверки
+самоподписанных сертификатов).
 
-The **Sleep Screen** setting controls what is displayed when the device goes to sleep:
+##### Синхронизация во время чтения
 
-| Mode               | Behavior                                                                                                                     |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
-| **Dark** (default) | The CrossPoint logo on a dark background.                                                                                    |
-| **Light**          | The CrossPoint logo on a white background.                                                                                   |
-| **Custom**         | A custom image from the SD card (see below). Falls back to **Dark** if no custom image is found.                             |
-| **Cover**          | The cover of the currently open book. Falls back to **Dark** if no book is open.                                             |
-| **Cover + Custom** | The cover of the currently open book, shown only while actively reading. Falls back to **Custom** behavior when not reading. |
-| **Transparent**    | A BMP or PNG overlay drawn over the current screen. Supports PNG and 32-bit BGRA alpha transparency, and treats white as transparent in regular BMPs. Falls back to **Dark** if no valid overlay image is found. |
-| **Cover + Transparent** | The **Transparent** overlay drawn over the cover of the last opened book, from any screen. Falls back to **Transparent** behavior if there is no book cover, and to the plain cover if no valid overlay image is found. |
-| **None**           | A blank screen.                                                                                                              |
+Когда один из вариантов выше настроен, нажмите **Подтвердить** во время чтения, чтобы открыть меню
+читалки, и выберите **Синхронизировать прогресс**. Либо задайте **Настройки -> Управление -> Меню по
+долгому нажатию** = **Синхронизация CrossPoint** и удерживайте «Подтвердить» для прямого запуска.
 
-#### Cover settings
+- **Синхронизация выписок** по умолчанию выключена. Включайте её только для совместимого сервера
+  CrossPoint Sync; тогда ручная **синхронизация прогресса** дополнительно отправляет и получает
+  выписки этой книги. Для обычных серверов KOSync оставляйте её выключенной.
+- При режиме **Спрашивать каждый раз** выберите **Применить удалённое**, чтобы перейти к удалённому
+  прогрессу, или **Отправить локальное**, чтобы отправить текущий.
+- При режиме **Умная синхронизация** читалка сама разрешает простые случаи: отправляет, если удалённого
+  прогресса нет; подтверждает и оставляет оба без изменений, если локальный и удалённый прогресс уже
+  совпадают; отправляет, если локальный прогресс дальше; применяет удалённый, если дальше он.
 
-When using **Custom**, **Cover**, **Cover + Custom** or **Cover + Transparent**, two additional settings apply:
+### 3.7 Экран сна
 
-- **Sleep Screen Cover Mode**: **Fit** (scale to fit, white borders) or **Crop** (scale and crop to fill the screen).
-- **Sleep Screen Cover Filter**: **None** (grayscale), **Contrast** (black & white), or **Inverted** (inverted black & white).
+Настройка **Экран сна** определяет, что показывается, когда устройство засыпает:
 
-#### Custom images
+| Режим                        | Поведение                                                                                                                       |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| **Тёмный** (по умолчанию)    | Логотип CrossPoint на тёмном фоне.                                                                                              |
+| **Светлый**                  | Логотип CrossPoint на белом фоне.                                                                                               |
+| **Свой**                     | Своё изображение с карты памяти (см. ниже). Если изображение не найдено, используется **Тёмный**.                                |
+| **Обложка**                  | Обложка текущей открытой книги. Если книга не открыта, используется **Тёмный**.                                                  |
+| **Обложка + свой**           | Обложка текущей книги, показанная только во время активного чтения. Вне чтения работает как **Свой**.                            |
+| **Прозрачный**               | Наложение BMP или PNG поверх текущего экрана. Поддерживаются PNG и 32-битная прозрачность BGRA; в обычных BMP белый считается прозрачным. Если корректного наложения нет, используется **Тёмный**. |
+| **Обложка + прозрачный**     | Наложение **Прозрачный** поверх обложки последней открытой книги, с любого экрана. Если обложки нет, работает как **Прозрачный**, а если нет корректного наложения — как обычная обложка. |
+| **Нет**                      | Пустой экран.                                                                                                                   |
 
-To use custom sleep images, set the sleep screen mode to **Custom** or **Cover + Custom**, then place images on the SD card:
+#### Настройки обложки
 
-- **Multiple Images (recommended):** Create a `.sleep` directory in the root of the SD card and place any number of `.bmp` images inside. One will be randomly selected each time the device sleeps. (A directory named `sleep` is also accepted as a fallback.)
-- **Single Image:** Place a file named `sleep.bmp` in the root directory. This takes priority over the `.sleep`/`sleep` directories.
+При использовании **Свой**, **Обложка**, **Обложка + свой** или **Обложка + прозрачный** действуют
+две дополнительные настройки:
 
-Like book covers, custom images are scaled to the screen using **Sleep Screen Cover Mode**. The first sleep with a new image takes longer while it is converted.
+- **Режим обложки экрана сна**: **Вписать** (масштабировать с белыми полями) или **Обрезать**
+  (масштабировать и обрезать по размеру экрана).
+- **Фильтр обложки экрана сна**: **Нет** (оттенки серого), **Контраст** (чёрно-белое) или
+  **Инверсия** (инвертированное чёрно-белое).
 
-#### Transparent overlay images
+#### Свои изображения
 
-To use transparent sleep overlays, set the sleep screen mode to **Transparent** or **Cover + Transparent**, then place BMP or PNG files on the SD card:
+Чтобы использовать свои изображения для экрана сна, задайте режим **Свой** или **Обложка + свой** и
+положите изображения на карту памяти:
 
-- **Multiple Images (recommended):** Create a `.sleep-overlay` directory in the root of the SD card and place any number of valid overlay `.bmp` or `.png` images inside. One will be randomly selected each time the device sleeps. A directory named `sleep-overlay` is also accepted as a fallback.
-- **Single Image:** Place `sleep-overlay.bmp` or `sleep-overlay.png` in the root directory. A root BMP takes priority over a root PNG, and both take priority over the `.sleep-overlay`/`sleep-overlay` directories.
+- **Несколько изображений (рекомендуется):** создайте папку `.sleep` в корне карты памяти и положите
+  туда любое количество файлов `.bmp`. Одно из них будет выбираться случайно при каждом засыпании.
+  (Папка с именем `sleep` также принимается как запасной вариант.)
+- **Одно изображение:** положите файл с именем `sleep.bmp` в корень карты. Он имеет приоритет над
+  папками `.sleep`/`sleep`.
 
-Transparent overlay files are intentionally separate from normal sleep images. Regular BMP formats supported by CrossPoint are accepted; white pixels leave the existing screen unchanged. For per-pixel alpha transparency, use a PNG with an alpha channel or a 32-bit BGRA BMP with both visible and non-opaque pixels. Opaque white pixels in alpha images erase the content behind them.
+Как и обложки книг, свои изображения масштабируются под экран согласно **режиму обложки экрана сна**.
+Первое засыпание с новым изображением занимает больше времени, пока оно преобразуется.
+
+#### Прозрачные наложения
+
+Чтобы использовать прозрачные наложения, задайте режим **Прозрачный** или **Обложка + прозрачный** и
+положите файлы BMP или PNG на карту памяти:
+
+- **Несколько изображений (рекомендуется):** создайте папку `.sleep-overlay` в корне карты памяти и
+  положите туда любое количество корректных `.bmp` или `.png`. Одно из них будет выбираться случайно
+  при каждом засыпании. Папка с именем `sleep-overlay` также принимается как запасной вариант.
+- **Одно изображение:** положите `sleep-overlay.bmp` или `sleep-overlay.png` в корень. BMP в корне
+  имеет приоритет над PNG в корне, а оба они — над папками `.sleep-overlay`/`sleep-overlay`.
+
+Прозрачные наложения намеренно отделены от обычных изображений экрана сна. Принимаются обычные форматы
+BMP, поддерживаемые прошивкой; белые пиксели оставляют экран без изменений. Для попиксельной
+прозрачности используйте PNG с альфа-каналом или 32-битный BMP BGRA, в котором есть и видимые, и
+непрозрачные пиксели. Непрозрачные белые пиксели в альфа-изображениях стирают содержимое под собой.
 
 > [!TIP]
-> For best results:
-> - For non-transparent **Custom** mode, use uncompressed BMP files with 24-bit color depth.
-> - For **Transparent** mode, use a PNG or uncompressed 32-bit BGRA BMP for per-pixel alpha, or a regular BMP for white-as-transparent artwork.
-> - X4: Use a resolution of 480x800 pixels to match the device's screen resolution.
-> - X3: Use a resolution of 528x792 pixels to match the device's screen resolution.
+> Для лучшего результата:
+> - Для непрозрачного режима **Свой** используйте несжатые BMP с глубиной цвета 24 бита.
+> - Для режима **Прозрачный** используйте PNG или несжатый 32-битный BMP BGRA для попиксельной
+>   прозрачности, либо обычный BMP, если белый должен быть прозрачным.
+> - X4: используйте разрешение 480x800 пикселей по размеру экрана устройства.
+> - X3: используйте разрешение 528x792 пикселя по размеру экрана устройства.
 
 > [!TIP]
-> You can set an image as the sleep screen cover directly from the BMP image viewer in the **[Browse Files](#33-browse-files-screen)** screen. On touch devices, long-press the image.
+> Изображение можно назначить экраном сна прямо из просмотра BMP в разделе
+> **[просмотр файлов](#33-просмотр-файлов)**. На устройствах с тачскрином нажмите на изображение
+> с удержанием.
 
 ---
 
-### 3.8 Custom Fonts (SD Card)
+### 3.8 Свои шрифты (карта памяти)
 
-Noto Serif and OpenDyslexic are optional SD card fonts. Install `NotoSerif` to use
-the former built-in serif family. On upgrade, an existing Noto Serif selection
-uses `NotoSerif` if installed; otherwise, the reader switches to Noto Sans. After
-installing the family later, select it in **Settings → Reader → Font Family**.
+Noto Serif и OpenDyslexic — необязательные шрифты с карты памяти. Установите `NotoSerif`, чтобы
+использовать прежнее встроенное семейство с засечками. При обновлении уже выбранный Noto Serif
+использует `NotoSerif`, если он установлен; иначе читалка переключается на Noto Sans. Установив
+семейство позже, выберите его в **Настройки → Читалка → Шрифт читалки**.
 
-CrossPoint loads additional fonts from the SD card. Custom fonts can add Chinese, Japanese, Korean, and other scripts that the built-in reader fonts lack. If your device have external RAM, you can copy `.ttf`, `.otf`, and `.ttc` files directly. Otherwise, use `.cpfont` files made from those fonts. 
+Читалка загружает дополнительные шрифты с карты памяти. Свои шрифты добавляют китайский, японский,
+корейский и другие письменности, которых нет во встроенных шрифтах читалки. Если у устройства есть
+внешняя память, можно копировать файлы `.ttf`, `.otf` и `.ttc` напрямую. Иначе используйте файлы
+`.cpfont`, сделанные из этих шрифтов.
 
-There are three ways to install fonts:
+Установить шрифты можно тремя способами:
 
-1. **Download from device (recommended):** Go to **Settings -> Reader -> Manage Fonts**, browse the available font families, and select one to download over Wi-Fi.
-2. **Upload via web interface:** While in **File Transfer** mode, open the web UI and use the **Fonts** tab to upload `.cpfont` files. If your device has external RAM, the Fonts tab also accepts `.ttf` and `.otf` files. Choose the folder that contains the font family's files; the picker selects folders, not single files. The Fonts tab does not accept `.ttc` files; on devices with external RAM, copy those to the SD card instead (see item 3).
-3. **Manual SD card copy:** Copy `.cpfont` families from the [crosspoint-fonts repository](https://github.com/crosspoint-reader/crosspoint-fonts) to `/.fonts/` or `/fonts/`. If your device have external RAM, you can also copy TTF/OTF/TTC files there without conversion.
+1. **Загрузка с устройства (рекомендуется):** откройте **Настройки -> Читалка -> Управление шрифтами**,
+   просмотрите доступные семейства и выберите одно для загрузки по Wi-Fi.
+2. **Загрузка через веб-интерфейс:** в режиме **передачи файлов** откройте веб-интерфейс и
+   используйте вкладку **Шрифты** для загрузки файлов `.cpfont`. Если у устройства есть внешняя
+   память, вкладка принимает и `.ttf`, и `.otf`. Выбирайте папку с файлами семейства: выбор идёт по
+   папкам, а не по отдельным файлам. Вкладка не принимает `.ttc`; на устройствах с внешней памятью
+   копируйте их на карту памяти вручную (см. пункт 3).
+3. **Копирование на карту памяти вручную:** скопируйте семейства `.cpfont` в `/.fonts/` или `/fonts/`.
+   Если у устройства есть внешняя память, туда же можно скопировать TTF/OTF/TTC без преобразования.
+   *(Источник готовых шрифтов размещён в проекте CrossPoint Reader и будет заменён; см.
+   [ROADMAP.md](./ROADMAP.md).)*
 
-Once installed, custom fonts appear in **Settings → Reader → Font Family** alongside the built-in fonts.
+После установки свои шрифты появляются в **Настройки → Читалка → Шрифт читалки** рядом со встроенными.
 
-If the reader shows **Damaged font file**, a `.cpfont` file on the SD card is broken (for example, from an interrupted copy). The affected characters are drawn blank. Delete the font family's folder and install it again.
+Если читалка показывает **Повреждённый файл шрифта**, значит файл `.cpfont` на карте памяти испорчен
+(например, из-за прерванного копирования). Затронутые символы рисуются пустыми. Удалите папку этого
+семейства и установите его заново.
 
-See [docs/sd-card-fonts.md](./docs/sd-card-fonts.md) for full installation details and SD card folder structure.
-
----
-
-## 4. Reading Mode
-
-Once you have opened a book, the button layout changes to facilitate reading.
-
-### Page Turning
-
-| Action            | Buttons                              |
-| ----------------- | ------------------------------------ |
-| **Previous Page** | Press **Left** _or_ **Side Up**    |
-| **Next Page**     | Press **Right** _or_ **Side Down** |
-
-The role of the side buttons can be swapped in the **[Controls Settings](#363-controls)**.
-
-If the **Short Power Button Click** setting is set to "Page Turn", you can also turn to the next page by briefly pressing the Power button.
-
-### Chapter Navigation
-
-* **Next Chapter:** Press and **hold** the **Right** (or **Side Down**) button briefly, then release.
-* **Previous Chapter:** Press and **hold** the **Left** (or **Side Up**) button briefly, then release.
-
-This feature can be disabled in the **[Controls Settings](#363-controls)** to help avoid changing chapters by mistake.
-
-### Auto Page Turn
-
-Auto Page Turn automatically advances pages at a set interval, useful for hands-free reading. This feature can be enabled and configured from the **[Reader Menu](#5-reader-menu)** while reading an EPUB.
-
-### Tilt Page Turn (X3 only)
-
-On the **Xteink X3**, the gyroscope can be used to turn pages by tilting the device. This feature is available in the Controls settings.
-
-### Links and footnotes
-
-Internal EPUB links include chapter links, cross-references, and footnotes. Tap a link on a touchscreen device, or choose "Links and Footnotes" from the Reader Menu to select a link. Press Back to return to the previous location.
-
-If the device sleeps or you close the book after following a link, the book reopens on the page you were viewing. Back still returns you to where you followed the link. The reader keeps the three most recent return positions.
-
-### Dictionary Lookup
-
-Words on the current page can be looked up in an offline StarDict dictionary stored on the SD card. Copy a dictionary to the `/dictionaries/` folder, select it in **Settings → Reader → Dictionary**, then start a lookup by choosing **Look Up** in the **[Reader Menu](#5-reader-menu)** (or by holding **Confirm**, if the **Long-press Menu** setting in **[Controls Settings](#363-controls)** is set to "Dictionary"). Use **Left/Right** to highlight a word and press **Confirm** to show its definition.
-
-See [docs/dictionary.md](docs/dictionary.md) for supported formats, setup, and where to find dictionaries.
-
-### System Navigation
-
-* **Return to Home:** Press the **Back** button to close the book and return to the **[Home](#31-home-screen)** screen.
-* **Return to Browse Files:** Press and hold the **Back** button to close the book and return to the **[Browse Files](#33-browse-files-screen)** screen.
-* **Reader Menu:** Press **Confirm** to open the **[Reader Menu](#5-reader-menu)**, which includes chapter navigation, reading options, and more.
-* **Long-press Confirm (configurable):** Holding **Confirm** runs the function chosen by the **Long-press Menu** setting in **[Controls Settings](#363-controls)** — including bookmarks, KOReader Sync, dictionary lookup, or clipping selection. A short press always opens the Reader Menu.
-
-### Supported Languages
-
-CrossPoint renders text using the following Unicode character blocks, enabling support for a wide range of languages:
-
-* **Latin Script (Basic, Supplement, Extended-A/B):** Covers English, German, French, Spanish, Portuguese, Italian, Dutch, Swedish, Norwegian, Danish, Finnish, Polish, Czech, Hungarian, Romanian, Slovak, Slovenian, Turkish, Catalan, and others.
-* **Cyrillic Script (Standard and Extended):** Covers Russian, Ukrainian, Belarusian, Bulgarian, Serbian, Macedonian, Kazakh, Kyrgyz, Mongolian, and others.
-* **Vietnamese:** Supported via extended Latin glyph coverage in the built-in reader fonts.
-
-The UI includes Arabic and Hebrew (menus use built-in fonts with presentation-form coverage). Built-in **reader** fonts do not cover Chinese, Japanese, Korean, Arabic, Greek, Hebrew, or Farsi for book text. **CJK, Hebrew, Arabic, Greek, and other extended scripts can be enabled for reading by installing custom SD card fonts** — see [Custom Fonts (SD Card)](#38-custom-fonts-sd-card).
+Полные подробности установки и структура папок на карте памяти — в
+[docs/sd-card-fonts.md](./docs/sd-card-fonts.md).
 
 ---
 
-## 5. Reader Menu
+## 4. Режим чтения
 
-Press **Confirm** while reading to open the Reader Menu. From here you can access reading utilities and navigation options without leaving the book.
+После открытия книги раскладка кнопок меняется, чтобы было удобнее читать.
 
-The list menu remembers the selected entry while the book stays open. If that entry is no longer available, the cursor returns to the first entry. Closing the book resets the selection.
+### Перелистывание страниц
 
-Available options include:
+| Действие               | Кнопки                                       |
+| ---------------------- | -------------------------------------------- |
+| **Предыдущая страница** | **Влево** _или_ **Боковая вверх**            |
+| **Следующая страница**  | **Вправо** _или_ **Боковая вниз**            |
 
-- **Select Chapter** – Open the table of contents to jump to a specific chapter (see [Chapter Selection](#51-chapter-selection) below).
-- **Links and Footnotes** – Select an internal link on the current page. This option appears when the page contains links.
-- **Look Up** – Select a word on the current page and show its dictionary definition (see [docs/dictionary.md](docs/dictionary.md)). Requires a dictionary to be selected in **Settings → Reader → Dictionary**.
-- **Bluetooth Page Turner** – Toggle Bluetooth for the saved remote. This entry appears after pairing a remote in **Settings → Connectivity → Bluetooth Page Turner** and disappears if that selected remote is forgotten.
-- **Create Clipping** – Select a range of text on the current page and save it as a highlighted clipping.
-- **View Clippings** – Open this book's saved clippings *(shown after the first clipping is saved)*.
-- **Reading Orientation** – Cycle through screen orientations without leaving the reader.
-- **Auto Turn (Pages Per Minute)** – Cycle through automatic page turn speed options for hands-free reading.
-- **Go to %** – Jump to a specific position in the book by percentage.
-- **Take screenshot** – Save a screenshot of the current page to the `screenshots/` folder.
-- **Show page as QR** – Display a QR code encoding the current reading position.
-- **Go Home** – Close the book and return to the Home screen.
-- **Sync Progress** – Push or pull reading progress with a KOReader sync server (see [KOReader Sync Quick Setup](#367-koreader-sync-quick-setup)). This entry appears when sync credentials are saved or an enabled plugin subscribes to device events. Without sync credentials, it connects to Wi-Fi to send queued plugin events.
-- **Delete Book Cache** – Clear the cached layout data for the current book, forcing a re-index on next open.
+Роли боковых кнопок можно поменять местами в **[настройках управления](#363-управление)**.
 
-Press **Back** at any time to close the menu and return to your current page.
+Если для **короткого нажатия кнопки питания** выбрано «Перелистывание», страницу можно листать и
+кратким нажатием кнопки питания.
 
-### 5.1 Chapter Selection
+### Переход по главам
 
-Accessible by selecting **Chapters** from the Reader Menu.
+* **Следующая глава:** нажмите и **удерживайте** кнопку **Вправо** (или **Боковая вниз**) недолго,
+  затем отпустите.
+* **Предыдущая глава:** нажмите и **удерживайте** кнопку **Влево** (или **Боковая вверх**) недолго,
+  затем отпустите.
 
-1. Use **Left** (or **Side Up**), or **Right** (or **Side Down**) to highlight the desired chapter.
-2. Press **Confirm** to jump to that chapter.
-3. *Alternatively, press **Back** to cancel and return to your current page.*
+Эту возможность можно отключить в **[настройках управления](#363-управление)**, чтобы случайно не
+менять главу.
+
+### Автоперелистывание
+
+Автоперелистывание само перелистывает страницы через заданный интервал — удобно для чтения без рук.
+Включается и настраивается в **[меню читалки](#5-меню-читалки)** во время чтения EPUB.
+
+### Переворот наклоном (только X3)
+
+На **Xteink X3** гироскоп позволяет перелистывать страницы наклоном устройства. Эта возможность
+доступна в настройках управления. *(Xteink X3 снят с производства и не поддерживается; сведения
+сохранены только для справки.)*
+
+### Ссылки и сноски
+
+Внутренние ссылки EPUB включают переходы между главами, перекрёстные ссылки и сноски. Коснитесь ссылки
+на устройстве с тачскрином или выберите «Ссылки и сноски» в меню читалки, чтобы выбрать ссылку.
+Нажмите «Назад», чтобы вернуться к предыдущему месту.
+
+Если устройство засыпает или вы закрываете книгу после перехода по ссылке, книга открывается на той
+странице, которую вы смотрели. «Назад» по-прежнему возвращает туда, откуда вы перешли. Читалка хранит
+три последние позиции возврата.
+
+### Поиск в словаре
+
+Слова на текущей странице можно искать в офлайн-словаре StarDict на карте памяти. Скопируйте словарь в
+папку `/dictionaries/`, выберите его в **Настройки → Читалка → Словарь**, затем запустите поиск,
+выбрав **Найти** в **[меню читалки](#5-меню-читалки)** (или удержав **Подтвердить**, если в
+**[настройках управления](#363-управление)** для **меню по долгому нажатию** выбрано «Словарь»).
+Используйте **Влево/Вправо**, чтобы выбрать слово, и **Подтвердить**, чтобы показать его определение.
+
+Поддерживаемые форматы, настройка и где брать словари — в [docs/dictionary.md](docs/dictionary.md).
+
+### Системная навигация
+
+* **Возврат на главный экран:** нажмите **Назад**, чтобы закрыть книгу и вернуться на
+  **[главный экран](#31-главный-экран)**.
+* **Возврат к просмотру файлов:** нажмите и удерживайте **Назад**, чтобы закрыть книгу и вернуться к
+  **[просмотру файлов](#33-просмотр-файлов)**.
+* **Меню читалки:** нажмите **Подтвердить**, чтобы открыть **[меню читалки](#5-меню-читалки)** — там
+  переход по главам, параметры чтения и другое.
+* **Удержание «Подтвердить» (настраивается):** удержание **Подтвердить** выполняет функцию, выбранную
+  в настройке **меню по долгому нажатию** в **[настройках управления](#363-управление)**: закладка,
+  синхронизация KOReader, поиск в словаре или выбор выписки. Короткое нажатие всегда открывает меню
+  читалки.
+
+### Поддерживаемые языки
+
+Читалка отображает текст с использованием следующих блоков Unicode, что обеспечивает поддержку
+широкого набора языков:
+
+* **Латиница (Basic, Supplement, Extended-A/B):** охватывает английский, немецкий, французский,
+  испанский, португальский, итальянский, нидерландский, шведский, норвежский, датский, финский,
+  польский, чешский, венгерский, румынский, словацкий, словенский, турецкий, каталанский и другие.
+* **Кириллица (стандартная и расширенная):** охватывает русский, украинский, белорусский, болгарский,
+  сербский, македонский, казахский, киргизский, монгольский и другие.
+* **Вьетнамский:** поддерживается за счёт расширенного покрытия латинских глифов во встроенных
+  шрифтах читалки.
+
+Интерфейс включает арабский и иврит (меню используют встроенные шрифты с покрытием
+презентационных форм). Встроенные **шрифты читалки** не покрывают китайский, японский, корейский,
+арабский, греческий, иврит и фарси для текста книг. **CJK, иврит, арабский, греческий и другие
+расширенные письменности можно включить для чтения, установив свои шрифты с карты памяти** — см.
+[свои шрифты](#38-свои-шрифты-карта-памяти).
 
 ---
 
-### 5.2 Bookmarks
+## 5. Меню читалки
 
-Bookmarks can be created to quickly save and restore your place in a book.
+Нажмите **Подтвердить** во время чтения, чтобы открыть меню читалки. Отсюда доступны инструменты
+чтения и навигация, не выходя из книги.
 
-To create a bookmark, hold **Confirm** for about half a second while inside a book. A popup will appear letting you know a bookmark was created. The popup message will automatically disappear in a couple of seconds.
+Меню списка запоминает выбранный пункт, пока книга открыта. Если пункт становится недоступен, курсор
+возвращается к первому пункту. Закрытие книги сбрасывает выбор.
 
-To open bookmarks, press **Confirm** while inside a book. Then navigate to the **Bookmarks** menu. Bookmarks can be opened by navigating to them and pressing **Confirm**, which will redirect you to that place in the book. You can delete bookmarks by holding **Confirm** for about 0.7 seconds, and then pressing **Confirm** again to confirm deletion, or **Back** to cancel.
+Доступные пункты:
 
-Bookmarks are stored in the `.crosspoint/bookmarks` folder in the JSON format.
+- **Выбрать главу** — открыть оглавление и перейти к нужной главе (см.
+  [выбор главы](#51-выбор-главы) ниже).
+- **Ссылки и сноски** — выбрать внутреннюю ссылку на текущей странице. Пункт появляется, когда на
+  странице есть ссылки.
+- **Найти** — выбрать слово на текущей странице и показать его определение из словаря (см.
+  [docs/dictionary.md](docs/dictionary.md)). Требует выбранного словаря в
+  **Настройки → Читалка → Словарь**.
+- **Bluetooth-перелистыватель** — включить или выключить Bluetooth для сохранённого пульта. Пункт
+  появляется после сопряжения пульта в **Настройки → Подключения → Bluetooth-перелистыватель** и
+  исчезает, если этот пульт забыт.
+- **Создать выписку** — выбрать диапазон текста на текущей странице и сохранить его как выделенную
+  выписку.
+- **Просмотр выписок** — открыть сохранённые выписки этой книги *(показывается после сохранения первой
+  выписки)*.
+- **Ориентация при чтении** — переключать ориентацию экрана, не выходя из читалки.
+- **Автоперелистывание (страниц в минуту)** — переключать скорость автоматического перелистывания для
+  чтения без рук.
+- **Перейти к %** — перейти к позиции в книге по проценту.
+- **Сделать скриншот** — сохранить скриншот текущей страницы в папку `screenshots/`.
+- **Показать страницу как QR** — показать QR-код с текущей позицией чтения.
+- **На главную** — закрыть книгу и вернуться на главный экран.
+- **Синхронизировать прогресс** — отправить или получить прогресс чтения с сервера синхронизации
+  KOReader (см. [быструю настройку синхронизации](#367-быстрая-настройка-синхронизации-koreader)).
+  Пункт появляется, когда сохранены учётные данные синхронизации или включённый плагин подписан на
+  события устройства. Без учётных данных он подключается к Wi-Fi, чтобы отправить очередь событий
+  плагинов.
+- **Удалить кэш книги** — очистить кэшированные данные вёрстки текущей книги, чтобы при следующем
+  открытии она была переиндексирована.
 
-### 5.3 Clippings and Highlights
+Нажмите **Назад** в любой момент, чтобы закрыть меню и вернуться на текущую страницу.
 
-Select **Create Clipping** from the Reader Menu, move to the first word, and press **Confirm**. Move to the last word and press **Select** again to choose **Look Up**, **Clip**, or **Bookmark**. **Back** closes that popup without losing the selection. On touch devices, press and hold a word in the reader to select it. Drag either selection handle to adjust the range, then tap **Look Up**, **Clip**, or **Bookmark** above it. Hold the ending handle at the bottom edge or over the final word for one second to extend onto the next preloaded page. Selection covers up to three pages in the same chapter, subject to the 240 selectable-word limit. The toolbar overlays the page without shifting the text. Releasing a handle keeps the selection open; tapping outside the text dismisses it. **Look Up** searches the selected text in your dictionary; **Bookmark** toggles the bookmark on the selection’s final page. Saved ranges with source offsets remain highlighted after changes to font, spacing, orientation, or pagination. Ranges without source offsets can only be highlighted when their saved layout still matches. Press and hold highlighted text to remove that clipping; its deletion is sent on the next manual sync when **Sync Clippings** is enabled.
+### 5.1 Выбор главы
 
-Select **View Clippings** to browse saved excerpts for the current book. Press **Confirm** to choose **Open** or **Go to Passage**, or hold **Confirm** for about 0.7 seconds to delete it. **Go to Passage** uses the saved text offset and is available for new, source-anchored clippings. Older clippings can still be read or deleted. Touch devices can open a clipping with a tap or delete it with a long press.
+Доступно по выбору **Главы** в меню читалки.
 
-Each book can store up to **1,024 clippings on ESP32-S3 devices** or **256 on ESP32-C3 devices**. These limits also apply to clippings downloaded through sync.
-
-The structured clipping store under `.crosspoint/clippings` keeps up to **4 KiB of UTF-8 text per clipping**. Longer selections must be shortened before saving. CrossPoint also appends up to **2,000 UTF-8 bytes** of each saved excerpt to `My Clippings.txt` in the root of the SD card, using Kindle-compatible formatting. If that export fails, the clipping remains saved and the message reports the export failure.
-
-Local book and folder moves carry clipping data with them. Deleting a local book removes its local clipping data; it does not delete already synced server copies or historical entries in `My Clippings.txt`. Deleting an individual clipping likewise leaves the text export untouched, but queues its server deletion for the next enabled manual sync. `My Clippings.txt` is an independent append-only export, not the source used to restore or sync highlights.
-
-## 6. Current Limitations & Roadmap
-
-Please note that this firmware is currently in active development. The following features are **not yet supported** but are planned for future updates:
-
-* **Cover Images:** Large cover images embedded into EPUB require several seconds (~10s for ~2000 pixel tall image) to convert for sleep screen and home screen thumbnail. Consider optimizing the EPUB with e.g. https://github.com/bigbag/epub-to-xtc-converter to speed this up.
-* **Image Support:** Most JPG, PNG and non-interlaced GIF images in EPUBs render correctly, including book covers. Animated GIFs show only the first frame. Interlaced GIFs are not supported and use an outlined image placeholder.
+1. Используйте **Влево** (или **Боковая вверх**) и **Вправо** (или **Боковая вниз**), чтобы выделить
+   нужную главу.
+2. Нажмите **Подтвердить**, чтобы перейти к ней.
+3. *Либо нажмите **Назад**, чтобы отменить и вернуться на текущую страницу.*
 
 ---
 
-## 7. Troubleshooting Issues & Escaping Bootloop
+### 5.2 Закладки
 
-If an issue or crash is encountered while using Crosspoint, feel free to raise an issue ticket and attach the logs.
+Закладки позволяют быстро сохранять и восстанавливать место в книге.
 
-**Crash reports on SD card:** After a crash, CrossPoint automatically saves a crash report to the SD card (no USB connection needed). Check the root of the SD card for a crash log file and include it with any bug report.
+Чтобы поставить закладку, удерживайте **Подтвердить** около половины секунды, находясь в книге. Появится
+всплывающее сообщение о том, что закладка создана. Через пару секунд оно исчезнет само.
 
-**Serial monitor logs:** For more detailed debugging, connect the device to a computer and run the custom debugging monitor script (requires Python 3 with `pyserial`, `colorama`, and `matplotlib`; install via `pip3 install pyserial colorama matplotlib`):
+Чтобы открыть закладки, нажмите **Подтвердить**, находясь в книге, и перейдите в меню **Закладки**.
+Закладки открываются переходом к нужной и нажатием **Подтвердить** — вы вернётесь к этому месту в
+книге. Удалить закладку можно, удерживая **Подтвердить** около 0,7 секунды, а затем нажав
+**Подтвердить** ещё раз для подтверждения удаления или **Назад** для отмены.
+
+Закладки хранятся в папке `.crosspoint/bookmarks` в формате JSON. *(Имя папки — идентификатор в коде;
+его переименование запланировано, механизма миграции нет.)*
+
+### 5.3 Выписки и выделения
+
+Выберите **Создать выписку** в меню читалки, перейдите к первому слову и нажмите **Подтвердить**.
+Перейдите к последнему слову и нажмите **Выбрать** ещё раз, чтобы выбрать **Найти**, **Выписка** или
+**Закладка**. **Назад** закрывает это окно, не теряя выделение. На устройствах с тачскрином нажмите и
+удерживайте слово в читалке, чтобы выделить его. Перетащите любой маркер выделения, чтобы изменить
+диапазон, затем коснитесь **Найти**, **Выписка** или **Закладка** над ним. Удерживайте конечный маркер
+у нижнего края или на последнем слове одну секунду, чтобы продлить выделение на следующую
+предзагруженную страницу. Выделение охватывает до трёх страниц в пределах одной главы, с ограничением
+в 240 выбираемых слов. Панель инструментов накладывается на страницу, не сдвигая текст. Отпускание
+маркера оставляет выделение открытым; касание вне текста закрывает его. **Найти** ищет выделенный
+текст в словаре; **Закладка** переключает закладку на последней странице выделения. Сохранённые
+диапазоны со смещениями в исходном тексте остаются выделенными после изменения шрифта, интервалов,
+ориентации или разбиения на страницы. Диапазоны без смещений в исходном тексте можно подсветить,
+только пока сохранённая вёрстка совпадает. Удерживайте выделенный текст, чтобы удалить эту выписку; её
+удаление будет отправлено при следующей ручной синхронизации, если включена **синхронизация выписок**.
+
+Выберите **Просмотр выписок**, чтобы просмотреть сохранённые отрывки текущей книги. Нажмите
+**Подтвердить**, чтобы выбрать **Открыть** или **Перейти к фрагменту**, либо удерживайте
+**Подтвердить** около 0,7 секунды, чтобы удалить выписку. **Перейти к фрагменту** использует
+сохранённое смещение текста и доступен для новых выписок, привязанных к исходному тексту. Более
+старые выписки по-прежнему можно читать и удалять. На устройствах с тачскрином выписку можно открыть
+касанием или удалить долгим нажатием.
+
+Каждая книга может хранить до **1 024 выписок на устройствах ESP32-S3** или **256 на устройствах
+ESP32-C3**. Эти же ограничения действуют для выписок, полученных при синхронизации.
+
+Структурированное хранилище выписок в `.crosspoint/clippings` хранит до **4 КиБ текста UTF-8 на одну
+выписку**. Более длинные выделения нужно сократить перед сохранением. Кроме того, читалка дописывает
+до **2 000 байт UTF-8** каждого сохранённого отрывка в `My Clippings.txt` в корне карты памяти, в
+формате, совместимом с Kindle. Если экспорт не удался, выписка остаётся сохранённой, а сообщение
+указывает на ошибку экспорта.
+
+Перемещение книг и папок на устройстве переносит данные выписок вместе с ними. Удаление локальной
+книги удаляет её локальные данные выписок; уже синхронизированные копии на сервере и историю в
+`My Clippings.txt` оно не удаляет. Удаление отдельной выписки также не затрагивает текстовый экспорт,
+но ставит её удаление на сервере в очередь до следующей включённой ручной синхронизации.
+`My Clippings.txt` — независимый экспорт, дописываемый только в конец; это не источник для
+восстановления или синхронизации выделений.
+
+## 6. Текущие ограничения
+
+Прошивка находится в активной разработке. Следующие возможности **пока не поддерживаются**:
+
+* **Обложки:** большие обложки, встроенные в EPUB, требуют нескольких секунд на преобразование
+  (~10 с для изображения высотой ~2000 пикселей) — и для экрана сна, и для миниатюры на главном
+  экране. Чтобы ускорить это, рассмотрите оптимизацию EPUB, например с помощью
+  https://github.com/bigbag/epub-to-xtc-converter.
+* **Изображения:** большинство изображений JPG, PNG и чересстрочных GIF в EPUB отображаются корректно,
+  включая обложки книг. Анимированные GIF показывают только первый кадр. Чересстрочные GIF не
+  поддерживаются — вместо них используется контурный заполнитель.
+
+Планы развития, включая поддержку сторигеймов, описаны в [ROADMAP.md](./ROADMAP.md).
+
+---
+
+## 7. Проблемы и выход из цикла загрузки
+
+Если при использовании читалки возникает проблема или сбой, сообщите о ней и приложите логи.
+
+**Отчёты о сбоях на карте памяти:** после сбоя читалка автоматически сохраняет отчёт на карту памяти
+(USB-подключение не нужно). Проверьте корень карты памяти на наличие файла журнала сбоя и приложите
+его к сообщению об ошибке.
+
+**Логи монитора последовательного порта:** для более подробной отладки подключите устройство к
+компьютеру и запустите скрипт монитора (нужен Python 3 с `pyserial`, `colorama` и `matplotlib`;
+устанавливается через `pip3 install pyserial colorama matplotlib`):
 
 ```
 python3 scripts/debugging_monitor.py
 ```
 
-The script auto-detects the serial port. You can also specify one explicitly:
+Скрипт сам определяет последовательный порт. Можно указать его явно:
 
 ```
 python3 scripts/debugging_monitor.py /dev/ttyACM0        # Linux
@@ -777,33 +1112,37 @@ python3 scripts/debugging_monitor.py /dev/tty.usbmodem1  # macOS
 python3 scripts/debugging_monitor.py COM7                # Windows
 ```
 
-**Features:**
+**Возможности:**
 
-- Color-coded log output by category (errors, memory, display, EPUB parsing, etc.)
-- Live memory usage graph (free RAM, total RAM, max contiguous allocation) updated every second
-- Interactive command prompt — type a command and press Enter to send it to the device
-- Screenshot capture — saves the current display to `screenshot.bmp` when triggered by the device
+- Цветной вывод логов по категориям (ошибки, память, экран, разбор EPUB и т. д.)
+- График использования памяти в реальном времени (свободная память, вся память, максимальный
+  непрерывный блок), обновляется каждую секунду
+- Интерактивная командная строка — введите команду и нажмите Enter, чтобы отправить её на устройство
+- Снятие скриншота — сохраняет текущий экран в `screenshot.bmp` по команде с устройства
 
-**Options:**
+**Параметры:**
 
-| Option               | Description                                               |
-| -------------------- | --------------------------------------------------------- |
-| `--baud RATE`        | Baud rate (default: 115200)                               |
-| `--filter KEYWORD`   | Show only lines containing the keyword (case-insensitive) |
-| `--suppress KEYWORD` | Hide lines containing the keyword (case-insensitive)      |
+| Параметр             | Описание                                                       |
+| -------------------- | -------------------------------------------------------------- |
+| `--baud RATE`        | Скорость порта (по умолчанию: 115200)                           |
+| `--filter KEYWORD`   | Показывать только строки с этим словом (без учёта регистра)     |
+| `--suppress KEYWORD` | Скрывать строки с этим словом (без учёта регистра)              |
 
-**Examples:**
+**Примеры:**
 
 ```
-# Show only memory-related log lines
+# Показывать только строки о памяти
 python3 scripts/debugging_monitor.py --filter MEM
 
-# Hide noisy SD card log lines
+# Скрыть шумные строки о карте памяти
 python3 scripts/debugging_monitor.py --suppress "[SD]"
 ```
 
-Press **Ctrl-C** or close the graph window to exit.
+Нажмите **Ctrl-C** или закройте окно графика, чтобы выйти.
 
-If the device is stuck in a bootloop, press and release the Reset button. Then, press and hold on to the configured Back button and the Power Button to boot to the Home Screen.
+Если устройство застряло в цикле загрузки, нажмите и отпустите кнопку **Сброс**. Затем нажмите и
+удерживайте назначенную кнопку «Назад» вместе с кнопкой питания, чтобы загрузиться на главный экран.
 
-There can be issues with broken cache or config. In this case, delete the `.crosspoint` directory on your SD card (or consider deleting only `settings.json`, `state.json`, or `epub_*` cache directories in the `.crosspoint/` folder).
+Проблемы могут быть связаны с повреждённым кэшем или настройками. В этом случае удалите папку
+`.crosspoint` на карте памяти (либо удалите только `settings.json`, `state.json` или папки кэша
+`epub_*` внутри `.crosspoint/`).

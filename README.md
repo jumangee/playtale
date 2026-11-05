@@ -1,300 +1,268 @@
-# CrossPoint Reader
+# КвестБук Читалка (PlayTale)
 
-[![Fund contributors](https://img.shields.io/badge/%F0%9F%91%91_Fund_contributors-royalty.dev-BB953A?style=for-the-badge&labelColor=1a1a1a)](https://app.royalty.dev/crosspoint-reader/crosspoint-reader)
+**КвестБук Читалка** — прошивка для e-ink читалок на ESP32. Открытый исходный код, полностью
+доступная для изменений. Разрабатывается **КвестБук**: [quest-book.ru](https://quest-book.ru).
 
-CrossPoint is open-source e-reader firmware - community-built, fully hackable, free forever. It's maintained by a growing community of developers and readers who believe your device should do what you want - not what a manufacturer decided for you.
+Читалка создана для двух видов длинного чтения:
 
-### Now running on:
+- **Книги** — EPUB 2/3, а также TXT и Markdown через тот же поток вёрстки, и XTC для заранее
+  отрисованных страниц. Работает уже сейчас.
+- **Сторигеймы** — интерактивные книги-игры: автор пишет правила, читатель делает выборы, и сюжет
+  продолжается по карте переходов и игровым параметрам автора. **Ещё не реализовано** — это цель
+  проекта, см. [ROADMAP.md](ROADMAP.md).
 
-- **ESP32C3-based** Xteink X4 and X3.
-- **ESP32S3-based** Xteink X4Pro and X4Classic, Seeed reTerminal Sticky, M5PaperMono, Metalio E-Ink 4, EEGOREAD A4 and Boox Picco.
+> **Статус.** Это форк проекта CrossPoint Reader. Сейчас прошивка во многом совпадает с исходным
+> проектом: в интерфейсе ещё встречается название «CrossPoint», а часть сервисов пока указывает на
+> серверы исходного проекта. Читалка пока работает только с книгами. Что планируется изменить — в
+> [ROADMAP.md](ROADMAP.md).
 
-Check [our Devices page](https://crosspointreader.com/devices) for the full list.
+### Поддерживаемые устройства
 
-![CrossPoint Reader running on Xteink device](./docs/images/cover.jpg)
+- **ESP32-C3:** Xteink X4.
+- **ESP32-S3:** Xteink X4 Pro и X4 Classic, Seeed reTerminal Sticky, M5Stack Paper Mono.
 
-> If you're planning to buy an Xteink device, consider purchasing an **X3/X4 Developer Edition** through https://crosspointreader.com. CrossPoint receives a small share of each sale, helping fund development costs.
+Xteink X3 больше не производится и не поддерживается. Среда сборки для него и для ряда других плат
+(Metalio E-Ink 4, EEGO A4, Boox Picco) сохранена: они собираются, но не выпускаются и не проверяются.
 
-## What can CrossPoint do?
+## Что умеет читалка
 
-- **Reader engine**: EPUB 2/3 rendering with embedded-style option, image handling, hyphenation, kerning, adaptive table layouts, native CJK ruby annotations, chapter navigation, footnotes, bookmarks, dictionary lookups ([StarDict](docs/dictionary.md)), go-to-percent, auto page turn, orientation control, focus reading, KOReader progress sync and more.
+- **Чтение книг**: рендеринг EPUB 2/3 с поддержкой встроенных стилей, работа с изображениями,
+  переносы, кернинг, адаптивные таблицы, CJK-аннотации ruby, навигация по главам, сноски, закладки,
+  словарь ([StarDict](docs/dictionary.md)), переход по проценту, автоперелистывание, управление
+  ориентацией, режим Focus Reading и синхронизация прогресса KOReader.
 
-- **Various formats**: native handling for `.epub`, `.xtc/.xtch`, `.txt`, and `.bmp`.
+- **Форматы**: нативная работа с `.epub`, `.xtc`/`.xtch`, `.txt`, `.md` и `.bmp`.
 
-- **Touch reading**: follow EPUB links and look up words in the dictionary on touch-enabled devices.
+- **Чтение касанием**: переходы по ссылкам EPUB и поиск слов в словаре на устройствах с тачскрином.
 
-- **Highlights and clippings**: highlight text in EPUBs and save excerpts as clippings. Use the reader menu on button devices, or hold a word and drag the selection handles on touch devices. Look up selected words or phrases in the dictionary. Enable Sync Clippings to sync saved excerpts through a compatible CrossPoint Sync server. See [Clippings and Highlights](USER_GUIDE.md#53-clippings-and-highlights).
+- **Выделения и выписки**: выделение текста в EPUB и сохранение отрывков. На кнопочных устройствах —
+  через меню читалки; на тач-устройствах — удержанием слова и перетаскиванием маркеров выделения.
+  Выделенные слова и фразы можно искать в словаре. Синхронизация выписок включается отдельно и
+  работает через совместимый сервер.
 
-- **Screenshots.**
+- **Скриншоты.**
 
-- **Custom fonts**: install your favorite fonts on the SD card.
+- **Свои шрифты**: установка шрифтов с карты памяти.
 
-- **Tilt page turn (X3 and Sticky)**.
+- **Переворот страницы наклоном** (X3 и Sticky). На X3 функция сохранена в коде, но сама плата
+  больше не поддерживается.
 
-- **Bluetooth page turners**: pair a remote under Settings → Connectivity → Bluetooth Page Turner. Map short and long presses to page turns, chapter navigation, the reader menu, or clipping selection.
+- **Bluetooth-перелистыватели**: сопряжение пульта в разделе «Настройки → Подключения → Bluetooth
+  Page Turner». Короткое и длинное нажатие можно назначить на перелистывание, переход по главам,
+  меню читалки или выбор выписок.
 
-- **USB Drive mode (X4Pro)**: access the SD card as USB mass storage.
+- **Режим USB-накопителя** (X4 Pro): доступ к карте памяти как к USB mass storage.
 
-- **Library workflow**: indexed title/author search, recently-added and alphabetical views, multilingual grouping, folder browser, recent books, and SD-cache management.
+- **Библиотека**: поиск по названию и автору, списки недавно добавленных и алфавитный, группировка
+  по языкам, браузер папок, недавние книги и управление кэшем на карте памяти.
 
-- **Wireless workflows**:
-  
-  - File transfer web UI
-  - EPUB Optimizer
-  - Web settings UI/API (edit many device settings from browser)
-  - WebSocket fast uploads
-  - WebDAV handler
-  - AP mode (hotspot) and STA mode (join existing Wi-Fi), both with QR helpers
-  - Calibre wireless connect flow
-  - OPDS browser with saved servers (up to 8), search, pagination, and direct download
-  - OTA update checks and installs from GitHub releases
+- **Работа по сети**:
+  - веб-интерфейс для передачи файлов;
+  - оптимизатор EPUB;
+  - веб-интерфейс и API настроек (много параметров можно менять из браузера);
+  - быстрая загрузка через WebSocket;
+  - обработчик WebDAV;
+  - режим точки доступа и режим подключения к существующей сети Wi-Fi, оба с QR-кодами;
+  - беспроводное подключение Calibre;
+  - браузер OPDS с сохранёнными серверами (до 8), поиском, постраничным выводом и прямой загрузкой;
+  - проверка и установка обновлений по OTA.
 
-- **Customization**: night mode, multiple themes (Classic, Lyra, Lyra Extended, RoundedRaff), sleep screen modes including transparent overlays, front/side button remapping, status bar controls, power-button behavior, refresh cadence, and more.
+- **Настройка под себя**: ночной режим, несколько тем, режимы экрана сна с прозрачными
+  наложениями, переназначение кнопок, управление строкой состояния, поведение кнопки питания,
+  частота обновления экрана и другое.
 
-- **Localization**: 34 UI languages and counting, including CJK font fallback and RTL support.
+- **Локализация**: 35 языков интерфейса, включая CJK-фолбэк и поддержку RTL.
 
-- **SD card plugins**: install plugins for book catalogs, downloads, and tools in the device's web interface. Enable Plugins under Settings → Connectivity to show them on Home. On-device plugins use existing firmware screens and operations. JavaScript runs in a browser on your phone or computer, and its page must stay open while it works. Plugins follow [CrossPoint's reading-focused scope](SCOPE.md#out-of-scope). See the [plugin guide](docs/sd-plugins.md).
+- **Плагины с карты памяти**: плагины каталогов, загрузок и инструментов устанавливаются через
+  веб-интерфейс устройства. Включаются в разделе «Настройки → Подключения», после чего появляются на
+  главном экране. Встроенные плагины используют существующие экраны и операции прошивки. JavaScript
+  выполняется в браузере на телефоне или компьютере, и его страница должна оставаться открытой во
+  время работы. См. [руководство по плагинам](docs/sd-plugins.md).
 
-### Coming soon:
+### Планируется
 
-- More themes.
+- Раздел **«КвестБук»**: выбор и загрузка сторигеймов.
+- **Рантайм сторигеймов**: XML-парсер и движок правил.
+- **Аккаунт КвестБук**: учёт игрового опыта.
 
-- Much more! stay tuned.
+Подробности и порядок работ — в [ROADMAP.md](ROADMAP.md).
 
 ---
 
-## USB-locked devices (Xteink Unlocker)
+## Установка прошивки
 
-Some Xteink units purchased from third-party stores (e.g. AliExpress) ship with USB flashing locked from the factory.
-If your device is locked, you will need to use the **Xteink Unlocker** tool available at
-https://crosspointreader.com/#unlock-tool before you can flash CrossPoint.
+1. Подключите устройство к компьютеру кабелем USB-C и разбудите его.
+2. Скачайте файл прошивки для своей платы со страницы релизов этого репозитория или соберите её
+   самостоятельно (см. ниже).
+3. Прошейте файл через `esptool` (см. ниже).
 
-**You do not need this tool if you bought your device directly from xteink.com.** Those units are not locked.
+### Командная строка
 
-**Not sure if your device is locked?** Power it on, connect the USB-C cable, and try flashing via the web flasher first (see
-[Install firmware](#install-firmware) below). If the browser's serial device picker does not show your device, try a different
-USB port or browser before assuming the device is locked. Only reach for the unlocker if the device still doesn't appear.
-
-> ### ⚠️ WARNING: READ THIS BEFORE USING THE UNLOCKER ⚠️
-> 
-> **The only officially supported firmwares in the unlock tool are CrossPoint and CrossInk.**
-> 
-> Flashing any other firmware on a USB-locked device may **permanently brick the device** or leave it **permanently
-> stuck on that firmware with no recovery path**. Once USB flashing is re-locked, your only way back is via OTA, and if
-> the firmware you flashed doesn't support OTA, **there is no way out**.
-
-## Install firmware
-
-### Web installer (recommended)
-
-1. Connect your device to your computer via USB-C and wake/unlock the device
-2. Go to https://crosspointreader.com/#flash-tools, select your device (X3, X4, Xteink X4Pro, Seeed reTerminal Sticky, or M5PaperMono), and choose an official CrossPoint release.
-
-### Web installer (specific version)
-
-1. Connect your device to your computer via USB-C and wake/unlock the device
-2. Download the firmware file for your device from [Releases](https://github.com/crosspoint-reader/crosspoint-reader/releases), or compile yourself.
-3. Go to https://crosspointreader.com/#flash-tools, select your device, click "Custom .bin" and upload the firmware file.
-
-### Revert to Official Firmware
-
-To revert to the official firmware, you can also flash the latest official firmware using https://crosspointreader.com/#flash-tools.
-
-### Command line
-
-1. Install [`esptool`](https://github.com/espressif/esptool):
+1. Установите [`esptool`](https://github.com/espressif/esptool):
 
 ```bash
 pip install esptool
 ```
 
-2. Download the firmware file for your device from the [releases page](https://github.com/crosspoint-reader/crosspoint-reader/releases).
-3. Connect your device via USB-C.
-4. Find the device port. On Linux, run `dmesg` after connecting. On macOS:
+2. Подключите устройство по USB-C.
+3. Определите порт. В Linux — `dmesg` после подключения, в macOS:
 
 ```bash
 log stream --predicate 'subsystem == "com.apple.iokit"' --info
 ```
 
-5. Flash an X3 or X4:
+4. Прошейте устройство:
 
 ```bash
+# X4 (ESP32-C3)
 esptool.py --chip esp32c3 --port /dev/ttyACM0 --baud 921600 write_flash 0x10000 /path/to/firmware.bin
-```
 
-   Flash an Xteink X4Pro, Seeed reTerminal Sticky, or M5PaperMono:
-
-```bash
+# X4 Pro, X4 Classic, Sticky, Paper Mono (ESP32-S3)
 esptool.py --chip esp32s3 --port /dev/ttyACM0 --baud 921600 write_flash 0x10000 /path/to/firmware.bin
 ```
 
-### Manual
+---
 
-See [Development quick start](#development-quick-start) below.
+## Свои шрифты на карте памяти
+
+На устройствах с включённой внешней памятью скопируйте файлы `.ttf`, `.otf` или `.ttc` на карту
+памяти и выберите их как шрифты читалки. Положите один файл в `/fonts/` или `/.fonts/`, либо файлы
+одного семейства — в подпапку. Раскладка папок и стили описаны в
+[руководстве по шрифтам SD](docs/sd-card-fonts.md).
+
+На остальных устройствах сначала сконвертируйте шрифт в `.cpfont`. Файлы `.cpfont` работают и на
+устройствах с внешней памятью, и отличаются лучшей производительностью. Перепрошивка для добавления
+шрифтов не нужна.
+
+Чтобы получить `.cpfont`:
+
+1. Соберите файлы скриптом `lib/EpdFont/scripts/fontconvert_sdcard.py` (до четырёх стилей: regular,
+   bold, italic, bold-italic; укажите имя семейства, размеры в пунктах и диапазон Unicode).
+2. Скопируйте полученные файлы на карту памяти в `/fonts/ВашШрифт/` (или в `/.fonts/ВашШрифт/`, чтобы
+   скрыть папку).
+3. Выберите шрифт в настройках шрифтов на устройстве.
 
 ---
 
-## Custom SD-card fonts
+## Документация
 
-On devices with external RAM enabled in CrossPoint, copy `.ttf`, `.otf`, or `.ttc` files to the SD card and select them as reader fonts. Put one file in `/fonts/` or `/.fonts/`, or put one family's files in a subfolder. See the [SD card font guide](./docs/sd-card-fonts.md) for the folder layout and styles.
-
-On other devices, convert the font to `.cpfont` first. `.cpfont` files also work on devices with external RAM enabled and have better performance. No firmware reflash is needed to add fonts.
-
-To make `.cpfont` files:
-
-1. Go to https://crosspointreader.com/fonts and open the "SD-card font builder" form.
-2. Upload up to four styles (regular, bold, italic, bold-italic), set the family name, point sizes, and Unicode range.
-3. Download the generated `.cpfont` files.
-4. Copy them to your SD card under `/fonts/YourFont/` (or `/.fonts/YourFont/` to hide the folder).
-5. Select the font on the device from the font settings.
-
-Conversion runs the firmware repo's `lib/EpdFont/scripts/fontconvert_sdcard.py` script unmodified, so output matches a local host build.
+- [Руководство пользователя](./USER_GUIDE.md)
+- [Планы развития](./ROADMAP.md)
+- [Границы проекта](./SCOPE.md)
+- [Веб-интерфейс](./docs/webserver.md)
+- [HTTP- и WebSocket-эндпоинты](./docs/webserver-endpoints.md)
+- [Внутренние форматы файлов](./docs/file-formats.md)
+- [Разработка](./docs/contributing/README.md)
 
 ---
 
-## Documentation
+## Разработка
 
-- [User Guide](./USER_GUIDE.md)
-- [Web server usage](./docs/webserver.md)
-- [Web server endpoints](./docs/webserver-endpoints.md)
-- [Project scope](./SCOPE.md)
-- [Contributing docs](./docs/contributing/README.md)
-- [Touch and UI development](./docs/contributing/touch-and-ui.md) - how to build new screens on the FreeInkUI activity bases (UiListActivity and friends), plus build envs for the non-Xteink touch devices
+### Что нужно
 
----
-
-## Development quick start
-
-### Prerequisites
-
-- [pioarduino PlatformIO Core](https://github.com/pioarduino/platformio-core) or [VS Code + pioarduino IDE](https://github.com/pioarduino/pioarduino-vscode-ide)
-- Python 3.8+
+- [pioarduino PlatformIO Core](https://github.com/pioarduino/platformio-core) или
+  [VS Code + pioarduino IDE](https://github.com/pioarduino/pioarduino-vscode-ide)
+- Python 3.13
 - `clang-format` 21
-- USB-C cable supporting data transfer
+- Кабель USB-C с поддержкой передачи данных
 
-### Setup
+### Подготовка
 
 ```bash
-git clone --recursive https://github.com/crosspoint-reader/crosspoint-reader
-cd crosspoint-reader
+git clone --recursive https://github.com/jumangee/playtale
+cd playtale
 
-# if cloned without --recursive:
+# если клонировали без --recursive:
 git submodule update --init --recursive
 ```
 
-### Nix/NixOS
-
-Nix/NixOS users can enter the development shell with either `nix develop` (flakes) or `nix-shell`:
-
-```bash
-nix develop -f nix
-# or
-nix-shell nix
-```
-
-To flash a connected ESP32-C3 device, enable PlatformIO's udev rules in your NixOS configuration:
-
-```nix
-services.udev.packages = with pkgs; [ platformio-core.udev ];
-```
-
-After rebuilding the system configuration, reconnect the device or reload udev rules.
-
-### Build / flash / monitor
+### Сборка, прошивка, монитор
 
 ```bash
 pio run --target upload
 ```
 
-### Contributor pre-PR checks
+### Проверки перед изменениями
 
 ```bash
-./bin/clang-format-fix
+./bin/clang-format-fix -g
 pio check -e default
 pio run -e default
 ```
 
-### Debugging
+### Отладка
 
-After flashing the new features, it’s recommended to capture detailed logs from the serial port.
+После прошивки удобно снимать подробные логи с последовательного порта.
 
-First, make sure all required Python packages are installed:
+Сначала установите нужные пакеты Python:
 
-```python
+```bash
 python3 -m pip install pyserial colorama matplotlib
 ```
 
-After that run the script:
+Затем запустите скрипт:
 
 ```sh
-# For Linux
-# This was tested on Debian and should work on most Linux systems.
+# Linux
 python3 scripts/debugging_monitor.py
 
-# For macOS
+# macOS
 python3 scripts/debugging_monitor.py /dev/cu.usbmodem2101
 ```
 
-Minor adjustments may be required for Windows.
+В Windows могут потребоваться небольшие правки.
 
 ---
 
-## Internals
+## Как это устроено
 
-CrossPoint Reader is pretty aggressive about caching data down to the SD card to minimise RAM usage. The ESP32-C3 only has ~380KB of usable RAM, so we have to be careful. A lot of the decisions made in the design of the firmware were based on this constraint.
+Прошивка активно кэширует данные на карту памяти, чтобы экономить оперативную память. На ESP32-C3
+доступно всего около 380 КБ, поэтому многие решения продиктованы этим ограничением.
 
-### Data caching
+### Кэширование данных
 
-The first time chapters of a book are loaded, they are cached to the SD card. Subsequent loads are served from the
-cache. This cache directory exists at `.crosspoint` on the SD card. The structure is as follows:
+При первой загрузке главы книги кэшируются на карту памяти, и последующие загрузки идут из кэша.
+Каталог кэша — `.crosspoint` в корне карты:
 
 ```text
 .crosspoint/
-├── epub_<hash>/         # one directory per book, named by content hash
-│   ├── progress.bin     # reading position (chapter, page, etc.)
-│   ├── cover.bmp        # generated cover image
-│   ├── book.bin         # metadata: title, author, spine, TOC
-│   ├── css_rules.cache  # parsed CSS rule cache
-│   ├── img_*            # rendered image cache files
-│   └── sections/        # per-chapter layout cache
+├── epub_<hash>/         # каталог на книгу, имя — хеш содержимого
+│   ├── progress.bin     # позиция чтения (глава, страница и т. д.)
+│   ├── cover.bmp        # сгенерированная обложка
+│   ├── book.bin         # метаданные: название, автор, spine, оглавление
+│   ├── css_rules.cache  # кэш разобранных правил CSS
+│   ├── img_*            # кэш отрисованных изображений
+│   └── sections/        # кэш вёрстки по главам
 │       ├── 0.bin
 │       ├── 1.bin
 │       └── ...
-├── settings.json        # device settings
-├── state.json           # resume/runtime state
-└── recent.json          # recent books list
+├── settings.json        # настройки устройства
+├── state.json           # состояние для возобновления
+└── recent.json          # список недавних книг
 ```
 
-Removing `/.crosspoint` clears all cached metadata and forces a full regeneration on next open. Book deletes, overwrites, and moves done through the firmware or web UI clear or re-key matching caches; manual SD-card edits may leave stale cache directories behind.
+Удаление `/.crosspoint` очищает все кэшированные метаданные и вынуждает собрать их заново при
+следующем открытии. Удаление, перезапись и перемещение книг через прошивку или веб-интерфейс
+очищают или переиндексируют соответствующие кэши; правки на карте памяти вручную могут оставить
+устаревшие каталоги кэша.
 
-For more details on the internal file structures, see the [file formats document](./docs/file-formats.md).
+> Имя каталога `.crosspoint` — идентификатор в коде. Его переименование запланировано, и отдельного
+> механизма миграции кэша нет: см. [ROADMAP.md](ROADMAP.md).
 
----
-
-## Contributing
-
-Contributions are welcome. If you're new to the codebase, start with the [contributing docs](./docs/contributing/README.md). For things to work on, check the [ideas discussion board](https://github.com/crosspoint-reader/crosspoint-reader/discussions/categories/ideas) — leave a comment before starting so we don't duplicate effort.
-
-Everyone here is a volunteer, so please be respectful and patient. For governance and community expectations, see [GOVERNANCE.md](./GOVERNANCE.md).
+Подробнее о внутренних структурах — в [документе о форматах файлов](./docs/file-formats.md).
 
 ---
 
-## Community forks
+## Участие в разработке
 
-One of the best things about open source is that anyone can take the code in a different direction. If you need something outside CrossPoint's [scope](./SCOPE.md), check out the community forks:
+Если вы впервые работаете с этой кодовой базой, начните с
+[документации для разработчиков](./docs/contributing/README.md). Правила для агентов и
+разработчиков — в [AGENTS.md](./AGENTS.md).
 
-- [CrossInk](https://github.com/uxjulia/CrossInk) — UX focused with minimal reading stats and broader customizations for the reading experience.
-
-- [papyrix-reader](https://github.com/bigbag/papyrix-reader) — Adds FB2 and MD format support. Actively maintained with Arabic script support. Custom themes.
-
-- [inx](https://github.com/obijuankenobiii/inx) — Completely reimagines the user interface with tabbed navigation.
-
-- [Witch(hunt) Reader](https://github.com/jpirnay/witchhunt-reader) — More faithful CSS styling and background work for slightly snappier interaction. Weather information panel. Markdown support.
-
-**Note:** Many of these features will make their way into CrossPoint over time. Each project chooses its own priorities and tradeoffs.
-
-Want to build your own device? Be sure to check out the [Silkscreen](https://silkscreenreader.com) project or [OnePage Reader](https://github.com/MoveCall/onepage-reader).
+Это форк. `origin` — репозиторий PlayTale, `upstream` — исходный проект CrossPoint Reader, из
+которого переносятся исправления. Подробности — в
+[правилах работы с git](.agents/rules/git-workflow.md).
 
 ---
 
-CrossPoint Reader is **not affiliated with Xteink or any device manufacturer**.
+КвестБук Читалка **не связана с Xteink и другими производителями устройств**.

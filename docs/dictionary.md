@@ -16,7 +16,7 @@ A dictionary folder must contain:
 Not supported: dictionaries with 64-bit index offsets (`idxoffsetbits=64` in the `.ifo` — rare, and rejected with an error).
 
 > [!NOTE]  
-> If you use .dict.dz and Crosspoint failed to load your dictionary with error message "Not enough memory", try unzipping it.
+> If you use .dict.dz and the reader failed to load your dictionary with error message "Not enough memory", try unzipping it.
 
 ## Setting Up a Dictionary
 
