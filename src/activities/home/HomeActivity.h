@@ -38,14 +38,21 @@ class HomeActivity final : public Activity {
   const HomeMenuItem initialMenuItem;
   const bool cleanInitialRefresh;
 
-  // Convert HomeMenuItem to menu index (used in onEnter)
+  // Convert HomeMenuItem to menu index (used in onEnter). КвестБук leads the
+  // menu; the library slot follows the Library entry and is present only when
+  // the home screen has one. These two converters and getMenuItemCount() must
+  // agree, and so must CoverGridHomeUi's tab order.
   static int menuItemToIndex(HomeMenuItem item, bool hasOpdsUrl) {
     int i = 0;
+    if (item == HomeMenuItem::QUESTBOOK) return i;
+    ++i;
     if (item == HomeMenuItem::FILE_BROWSER) return i;
     ++i;
     if (item == HomeMenuItem::LIBRARY) return i;
     ++i;
-    if (item == HomeMenuItem::OPDS_BROWSER) return hasOpdsUrl ? i : 0;
+    // Without a library slot the OPDS entry does not exist; a caller that asks
+    // for it lands on File Browser, which is where that slot used to be.
+    if (item == HomeMenuItem::OPDS_BROWSER) return hasOpdsUrl ? i : 1;
     if (hasOpdsUrl) ++i;
     if (item == HomeMenuItem::FILE_TRANSFER) return i;
     ++i;
@@ -56,6 +63,7 @@ class HomeActivity final : public Activity {
   // Convert menu index to HomeMenuItem (used in loop)
   static HomeMenuItem indexToMenuItem(int idx, bool hasOpdsUrl) {
     int i = 0;
+    if (idx == i++) return HomeMenuItem::QUESTBOOK;
     if (idx == i++) return HomeMenuItem::FILE_BROWSER;
     if (idx == i++) return HomeMenuItem::LIBRARY;
     if (hasOpdsUrl && idx == i++) return HomeMenuItem::OPDS_BROWSER;
@@ -64,6 +72,7 @@ class HomeActivity final : public Activity {
     return HomeMenuItem::NONE;
   }
   void onRecentBookSelected(const std::string& path);
+  void onQuestBookOpen();
   void onFileBrowserOpen();
   void onLibraryOpen();
   void onSettingsOpen();

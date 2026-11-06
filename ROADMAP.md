@@ -38,18 +38,32 @@ Phase 0 is closed.
 * A storygame file format placed under the library root, so downloaded games appear in the existing
   library and file browser.
 
+**Shipped so far.** The **КвестБук** entry leads the home menu (behind «Продолжить чтение» in themes
+that put it there) and opens `QuestBookCatalogActivity`: the service's `new` and `editorial` lists,
+twelve games per page, each row showing the game's name and author. Selecting a row opens
+`StorygameDetailsActivity` — name, author, tags, rating, like counts and the game's description. For
+the reader's view of these screens see [USER_GUIDE.md](USER_GUIDE.md#311-квестбук).
+
+Nothing is downloaded yet: the game page is reference information until the on-SD layout is decided,
+so this step validates the service contract and the memory plan without the runtime.
+
+**Still planned:** the game's own download, and the on-SD layout it lands in.
+
+**Why a built-in section rather than a plugin catalogue.** The SD-plugin path below could list the
+same games with no new firmware, and it is the cheaper route for a generic catalogue. It was not taken
+because КвестБук is the project's own service: the download, the on-SD format and the runtime are
+firmware work either way, and the list endpoint's contract is already recorded in
+`docs/storygames/ARCHITECTURE.md` §2.1. A plugin manifest would add a second description of that
+contract without removing any of the firmware work.
+
 **What already exists and should be reused rather than rebuilt:**
 
-* The SD-card plugin system already provides declarative catalogues with server-side list paging,
-  item details, and multi-file bundle download (`docs/sd-plugins.md`). A catalogue-driven first version
-  can be shipped **without new firmware code**.
 * `CatalogActivity` (`src/activities/CatalogActivity.h`) already owns the shared catalogue flow: Wi-Fi
   check, search keyboard, loading, download with progress and cancel, and error screens.
 * The home screen's library slot already swaps between Plugins and OPDS
   (`src/activities/home/HomeActivity.h`).
 
-**Open question:** whether Phase 1 ships as a plugin catalogue or as a built-in section. The decision
-depends on whether КвестБук accounts are needed during browsing, which pulls Phase 3 forward.
+**Open question:** whether КвестБук accounts are needed during browsing, which pulls Phase 3 forward.
 
 ---
 

@@ -14,6 +14,7 @@
 #include "icons/book.h"
 #include "icons/folder.h"
 #include "icons/library.h"
+#include "icons/listIcons.h"
 #include "icons/settings2.h"
 #include "icons/transfer.h"
 #include "util/BookProgress.h"
@@ -25,6 +26,12 @@ constexpr fui::ActionId SELECT = 1;
 // inset so the cover columns land on the header chrome's inset line.
 constexpr int16_t COVER_CELL_INSET = 6;
 constexpr int COVER_ROW_EXTRA_HEIGHT = 8;
+// Tab order matches HomeActivity's indexToMenuItem(): КвестБук leads, then the
+// library slot, which is the one entry the home screen can omit.
+constexpr int TAB_LIBRARY_SLOT = 3;
+constexpr const uint8_t* TAB_ICONS[] = {icon_book_open_32_bits, FolderIcon,   LibraryIcon,
+                                        BlocksIcon,          TransferIcon, Settings2Icon};
+constexpr int TAB_SLOT_COUNT = static_cast<int>(sizeof(TAB_ICONS) / sizeof(TAB_ICONS[0]));
 }  // namespace
 
 CoverGridHomeUi::CoverGridHomeUi(GfxRenderer& renderer)
@@ -283,10 +290,9 @@ void CoverGridHomeUi::drawGrid(UiScreen& screen) {
 }
 
 void CoverGridHomeUi::drawTabs(UiScreen& screen, fui::Rect rect) {
-  static constexpr const uint8_t* ICONS[] = {FolderIcon, LibraryIcon, BlocksIcon, TransferIcon, Settings2Icon};
   int count = 0;
-  for (int i = 0; i < 5; ++i) {
-    if (i == 2 && !hasOpds) continue;
+  for (int i = 0; i < TAB_SLOT_COUNT; ++i) {
+    if (i == TAB_LIBRARY_SLOT && !hasOpds) continue;
     auto& tab = tabItems[count];
     tab.value = books->size() + count;
     tab.selected = selected == tab.value;
@@ -303,8 +309,10 @@ void CoverGridHomeUi::drawTabs(UiScreen& screen, fui::Rect rect) {
   tabs.iconPainter = [](fui::DrawTarget&, fui::Rect iconRect, const fui::TabItem& tab, uint8_t, void* user) {
     const auto& self = *static_cast<CoverGridHomeUi*>(user);
     const int index = tab.value - static_cast<int>(self.books->size());
-    const int icon = !self.hasOpds && index >= 2 ? index + 1 : index;
-    self.renderer.drawIcon(ICONS[icon], iconRect.x, iconRect.y, iconRect.width);
+    // The library slot is the one that can be absent, so ordinals past it
+    // address the next icon in the table.
+    const int icon = !self.hasOpds && index >= TAB_LIBRARY_SLOT ? index + 1 : index;
+    self.renderer.drawIcon(TAB_ICONS[icon], iconRect.x, iconRect.y, iconRect.width);
     return true;
   };
   // No pill fill; the underline marks the selected tab.

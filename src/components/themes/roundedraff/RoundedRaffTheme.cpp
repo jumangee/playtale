@@ -141,6 +141,16 @@ int RoundedRaffTheme::getMenuRowHeight(const GfxRenderer& renderer) const {
   return renderer.getLineHeight(kTitleFontId) + 20;  // 10px top + 10px bottom
 }
 
+// A menu taller than its band pages instead of overflowing, so the caller's
+// touch grid needs this same page start.
+int RoundedRaffTheme::homeMenuPageStart(const GfxRenderer& renderer, const int menuHeight,
+                                        const int selectedIndex) const {
+  const int rowStep = getMenuRowHeight(renderer) + kSelectableRowGap;
+  const int pageItems = std::max(1, menuHeight / rowStep);
+  const int safeSelectedIndex = std::max(0, selectedIndex);
+  return (safeSelectedIndex / pageItems) * pageItems;
+}
+
 void RoundedRaffTheme::drawButtonMenu(GfxRenderer& renderer, Rect rect, int buttonCount, int selectedIndex,
                                       const std::function<std::string(int index)>& buttonLabel,
                                       const std::function<UIIcon(int index)>& rowIcon) const {
@@ -151,8 +161,7 @@ void RoundedRaffTheme::drawButtonMenu(GfxRenderer& renderer, Rect rect, int butt
   const int rowGap = kSelectableRowGap;
   const int rowStep = rowHeight + rowGap;
   const int pageItems = std::max(1, rect.height / rowStep);
-  const int safeSelectedIndex = std::max(0, selectedIndex);
-  const int pageStartIndex = (safeSelectedIndex / pageItems) * pageItems;
+  const int pageStartIndex = homeMenuPageStart(renderer, rect.height, selectedIndex);
   const int menuTop = rect.y;
   const int textLineHeight = renderer.getLineHeight(kTitleFontId);
   const int menuMaxWidth = std::max(0, rect.width - sidePadding * 2);

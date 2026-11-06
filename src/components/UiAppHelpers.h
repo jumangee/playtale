@@ -13,6 +13,8 @@
 #include "components/UIThemeTokens.h"
 #include "components/icons/customListIcons.h"
 #include "components/icons/listIcons.h"
+#include "components/icons/storygame.h"
+#include "components/icons/storygame24.h"
 
 // Shared glue for activities hosting a FreeInkApp: the font-bound render
 // target and the touch snapshot FreeInkApp routing consumes.
@@ -109,6 +111,8 @@ inline freeink::ui::BitmapRef listIconFor(const UIIcon icon, const int size = 24
         return freeink::ui::bitmapFromIcon(icon_bookmark_32);
       case UIIcon::Blocks:
         return freeink::ui::bitmapFromIcon(icon_blocks_32);
+      case UIIcon::Storygame:
+        return freeink::ui::bitmapFromIcon(freeink::Icon({32, 32, 16, StorygameIcon}));
       default:
         return {};
     }
@@ -138,6 +142,8 @@ inline freeink::ui::BitmapRef listIconFor(const UIIcon icon, const int size = 24
       return freeink::ui::bitmapFromIcon(icon_bookmark_24);
     case UIIcon::Blocks:
       return freeink::ui::bitmapFromIcon(icon_blocks_24);
+    case UIIcon::Storygame:
+      return freeink::ui::bitmapFromIcon(freeink::Icon({32, 32, 16, StorygameIcon24}));
     default:
       return {};
   }

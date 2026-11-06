@@ -147,7 +147,8 @@ enum UIIcon {
   Hotspot,
   Bookmark,
   Usb,
-  Blocks
+  Blocks,
+  Storygame
 };
 
 // Default theme implementation (Classic Theme)
@@ -254,6 +255,11 @@ class BaseTheme {
   // grid from this, so hit bands always match the visuals (RoundedRaff derives
   // its row height from the font, not the metrics table).
   virtual int getMenuRowHeight(const GfxRenderer& renderer) const;
+  // First menu row drawn at the top of a drawButtonMenu() band of `menuHeight`.
+  // Themes that page a menu taller than its band return that page's first index,
+  // so a caller placing touch targets over the drawn rows (HomeActivity) offsets
+  // them the same way; 0 means the menu draws from its first row.
+  virtual int homeMenuPageStart(const GfxRenderer& renderer, int menuHeight, int selectedIndex) const;
   // Also draws the wall clock opposite the battery when the user enabled
   // SETTINGS.clockShowInHeader and an RTC is present. On touch boards a
   // tappable back button leads the band (see HeaderBackTapTarget); root

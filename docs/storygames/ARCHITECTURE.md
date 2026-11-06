@@ -1,8 +1,10 @@
 # КвестБук integration and storygame runtime — architecture draft
 
-> **Status: draft for review.** This document describes a design that is **not implemented**. It is a
-> plan, not a record of current behaviour. Once parts of it ship, the shipped parts must move to the
-> documents that describe current behaviour, and this text must be reduced to whatever is still
+> **Status: draft for review.** Most of this document describes a design that is **not implemented**.
+> It is a plan, not a record of current behaviour. The one shipped part is the catalogue and its game
+> page (§6), which now exist as `QuestBookCatalogActivity` and `StorygameDetailsActivity`; that section
+> says what those screens do today and what is still a plan. Once further parts ship, they must move to
+> the documents that describe current behaviour, and this text must be reduced to whatever is still
 > unbuilt. See the "Documents follow code" rule in `AGENTS.md`.
 
 This document covers two connected pieces of planned work:
@@ -152,7 +154,10 @@ count constructs in the remaining game data.
 | `checkpoints` in setup | **0** | 0 |
 | `<action go="…">` (legacy attribute) | **0** | 0 |
 
-So the device needs **BBCode lowering and spoilers**, and can ignore music, CSS and links. `goto` is
+So the device needs **BBCode lowering and spoilers**. Music, CSS and links can be ignored. Source
+`<img>` elements are recognised but deliberately omitted from the first converted format: the ESP32
+should not download, resize or render paragraph images in the initial implementation. Paragraph-image
+support is a deferred rendering enhancement, not a requirement for the first runtime. `goto` is
 always used; `go` never appears, but the reference accepts it and so should the parser.
 
 ### 1.5 Scale [M]
@@ -391,27 +396,29 @@ byte-oriented JSON reader [M].
 - Corpus range: 0–322 parameter items; median 26 [M].
 - `functions` embeds task arrays as JSON **strings** that must be parsed a second time.
 
-### 3.4 What the runtime must do at load [M]
+### 3.4 Source data required for conversion [M]
 
-Needed before the first paragraph can be shown:
+These source components explain the startup data and the conversion boundary:
 
-| Item | Size |
+| Source item | Size |
 | --- | --- |
-| `<handlers>` block | 5 079 bytes |
-| Framework bootstrap | ~2 160 bytes |
-| `rawSetup` | 5–16 KB |
-| `_mitril_triggers` article | 48–521 bytes |
+| `<handlers>` block | 5 079 bytes; measured during format research, but not needed by the converter or copied to the output |
+| Framework bootstrap | ~2 160 bytes; parsed on the server to locate `rawSetup` and the start paragraph |
+| `rawSetup` | 5–16 KB; converted into header tables |
+| `_mitril_triggers` article | 48–521 bytes; converted to the trigger paragraph ordinal/payload |
 
-That is ~13–21 KB — **about 87 % of a game file is never needed at start-up** and can stay on the SD
-card until the player reaches that paragraph.
+The device does not load the source bootstrap or handler block. It receives only the converted
+header and paragraph payloads. In the source game, **about 87 % of the file is never needed at
+start-up** and can remain on the SD card until the player reaches the relevant paragraph.
 
 `_mitril_triggers` deserves emphasis: when it contains an `<action>`, the framework appends it to
 **every** paragraph, which is how games implement a global rule such as "if health ≤ 0, go to the
 death ending" [C: `game_tpl.xml:1179-1185`]. The runtime must reproduce that behaviour.
 
-Under the server conversion of §4 this whole section becomes the server's problem: it moves
-`rawSetup`, the start id, the handler bodies and the `_mitril_triggers` flag into the header, and the
-device simply reads the header at load.
+Under the server conversion of §4, the server extracts `rawSetup`, the start id and the
+`_mitril_triggers` ordinal/flag into the converted header. The platform handler bodies are not copied
+into the output: their behaviour is reimplemented natively and compatibility is maintained manually
+(§4.4). The device simply reads the converted header at load.
 
 ---
 
@@ -447,19 +454,29 @@ Two properties of the source format make this cheap, and both were verified rath
 ### 4.2 Files on the device
 
 ```
-/<library>/Storygames/<index_name>/
-  game.hdr      header: start paragraph, parameter tables, functions, flags, hashes
+/<library>/storygames/<index_name>/
+  game.hdr      header: start paragraph, parameter tables, functions, flags, record counts
   game.idx      paragraph index, fixed stride
   game.dat      paragraph payloads, back to back
-  meta.json     catalogue fields for offline display (title, author, tags, cover, likes, stars)
+  meta.json     catalogue fields needed for offline display (title, author, tags, description)
   state.bin     player state: vars, current paragraph, steps, lastarticle
 ```
+
+The tree above is the **permanent** game layout. Catalogue actions also use the same five files in
+one shared temporary workspace, `/<library>/storygames/___temp/` (without an `<index_name>`
+subdirectory). That workspace is opened by Play but is never registered as a library item. Its
+contents belong only to the currently played temporary game; cleanup/replacement timing is specified
+in §6.3.
 
 `meta.json` is the one deliberate exception to the "XML everywhere" rule, and it is JSON for a
 concrete reason: these fields originate in the catalogue's own JSON API (§2.1) and are read exactly
 once, when the library is built — never on the play path — so re-encoding them buys nothing. It is a
-flat object of short strings, far below the size where the 2 KB reader limit matters. Everything the
-runtime reads per step is fixed-layout binary plus one payload slice.
+flat object of short strings, far below the size where the 2 KB reader limit matters. Store only the
+fields needed to identify and describe an offline game: title (`fullname`), author (`author_name`),
+tags, and description (`desc`), plus identifiers needed for catalogue/service integration
+(`game_id`, `index_name`) where useful. Covers and popularity/rating counters (`likes`, `dislikes`,
+`stars`) are not part of the on-device game metadata contract. Everything the runtime reads per step
+is fixed-layout binary plus one payload slice.
 
 ### 4.3 The import document
 
@@ -473,14 +490,17 @@ Content-Type: text/xml; charset=utf-8
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<pt v="1">
-  <header hash="…" n="411" params="53" groups="12">…</header>   <!-- §4.4 -->
+<storygame v="1">
+  <header>                                                        <!-- §4.4 -->
+    <counts g="12" i="53" p="67" f="0" />
+    …
+  </header>
   <data>                                                          <!-- §4.6 -->
     <p n="0" f="1">…</p>
     <p n="1" f="0">…</p>
   </data>
   <meta>…</meta>                                                  <!-- catalogue fields -->
-</pt>
+</storygame>
 ```
 
 The loader walks the document once, writing `game.hdr`, `game.idx` and `game.dat` as it goes, and
@@ -492,13 +512,19 @@ Three requirements on this document:
 - **It must be streamed, not buffered.** The largest game is 2.46 MB and one paragraph alone reaches
   72 KB; expat is fed in bounded chunks and never holds the document
   [C: `.agents/rules/architecture-hal.md:103-108`].
-- **It must be self-verifying.** `<header>` carries a content hash and the paragraph count; the loader
-  compares them against what it wrote. A truncated download must be detected before the game is
-  offered, not mid-play. This follows the `selfSize` precedent in the existing library index
-  [C: `lib/LibraryIndex/LibraryFormat.h:87-89`, `:157-177`].
-- **`meta` must repeat what the catalogue list already returned** (`fullname`, `author_name`, `tags`,
-  `cover`, `likes`, `dislikes`, `stars`, `game_id`, `index_name`), so a downloaded game is fully
-  describable offline.
+- **It must validate structural completeness using record counts.** `<header>` carries
+  `<counts g="…" i="…" p="…" f="…" />`: group, item/parameter, paragraph, and function counts.
+  These declared counts are the format's completeness check for v1: the loader counts the corresponding
+  records while importing and compares the actual totals with the declared values. It also checks that
+  paragraph-index end offsets agree with the number of bytes written to `game.dat`. A mismatch means
+  the import is incomplete or structurally inconsistent, so the partial game is rejected. No content
+  hash or checksum is calculated or required. This check does not detect arbitrary content changes
+  that leave record counts and offsets consistent; detecting that kind of corruption is outside the
+  v1 requirements.
+- **`meta` must contain the catalogue fields needed for offline identification and description**:
+  `fullname`, `author_name`, `tags`, `desc`, and the identifiers `game_id`/`index_name`. It does not
+  need to preserve `cover`, `likes`, `dislikes` or `stars`; those fields are not required by the
+  on-device game experience.
 
 The original `.../data/` XML endpoint stays as it is. The converted endpoint is additive, so a
 converter regression cannot break existing clients.
@@ -506,23 +532,28 @@ converter regression cannot break existing clients.
 ### 4.4 `game.hdr`
 
 Everything needed before the first paragraph renders. Modeled on the existing `CLX1` header rather
-than invented: magic + format version + explicit section offsets + a size/self-check field, all
-sections 512-aligned so reads are aligned by construction
+than invented: magic + format version + explicit section offsets and sizes, all sections 512-aligned
+so reads are aligned by construction
 [C: `lib/LibraryIndex/LibraryFormat.h:9-21`, `:71-92`].
 
 | Field group | Contents |
 | --- | --- |
-| Identity | magic, `formatVersion`, `foldVersion`, flags, content hash |
-| Counts | `paragraphCount`, `paramCount`, `groupCount`, `functionCount` |
+| Identity | magic, `formatVersion`, flags, the source `<book guid>` |
+| Platform | whether a `mitril` bootstrap was present |
+| Counts | `groupCount`, `itemCount`, `paragraphCount`, `functionCount` (from `<counts g i p f>` in the import document) |
 | Start | `startParagraph` — the entry ordinal extracted from the framework (§3.2) |
+| Triggers | the ordinal of `_mitril_triggers`, or absent (§3.4) |
 | Groups | per group: name, type (`k`/`r`), `visible`, `limit`, and the **contiguous ordinal range** of its items |
-| Params | per param: type (`k`/`r`), owning group ordinal, `visible`, `limit`, name |
+| Params | per param: type (`k`/`r`), owning group ordinal, start value, limit, name |
 | Functions | per function: ordinal, name, and its task list (§4.5) |
 | Names | one string blob holding group and item names, for the character sheet |
-| Triggers | whether `_mitril_triggers` exists and whether it carries an action (§3.4) |
 
 Two deliberate choices:
 
+- **Platform handler compatibility is maintained manually.** The runtime reimplements the fixed
+  platform behaviour rather than interpreting the source JavaScript. The converted header does not
+  store handler names or a fingerprint. If the platform handlers change, compatibility is reviewed
+  and updated manually; automatic change detection is explicitly out of scope for this format version.
 - **Items of a group are stored as one contiguous ordinal range.** The server is free to order
   parameters, so it can lay each group's items next to each other. Then `getGroupResourceCount` — the
   group-limit sum the task interpreter needs [C: `game_tpl.xml:233-253`] — is a loop over
@@ -565,8 +596,24 @@ Two source details the server must normalise, both verified across the corpus:
   `action_if`, `action_ifnot` and `action_script` (all three always present) [M]. Base64 must be
   decoded **on the server**, so the device never carries a base64 decoder for this purpose.
 
-Task field usage across the corpus (which classes carry which fields) is in Appendix D; it is the
-field list the converter must emit, and the runtime must accept.
+**Published games contain dangling parameter references, and they exist only inside base64.** In
+`game18152` (the largest in the corpus) two `if` tasks reference parameter uids that appear nowhere
+else in the file — not in the markup, and not in `rawSetup`'s parameter tables. They are visible only
+after decoding the base64 payload, so a converter that scanned the raw XML would not see them at all,
+and a reference implementation would leave `items[uid]` undefined.
+
+This has two consequences:
+
+1. **The converter must report unresolvable references rather than silently emitting `-1`.** The
+   script does; four warnings on that game are correct behaviour, not a bug. Whoever runs it should
+   expect them on real content and check whether the game still plays.
+2. **The runtime must tolerate an out-of-range ordinal.** A missing parameter already reads as `0`
+   [C: `game_tpl.xml:168`], so reading ordinal `-1` as `0` is the closest equivalent to the reference
+   behaviour and is what the runtime should do. Rejecting the game outright would refuse a game that
+   the platform itself plays.
+
+Task field usage across the corpus (which classes carry which fields) is in Appendix D; it is the field
+list the converter must emit, and the runtime must accept.
 
 Note on `save`: 37 `save` tasks exist in the corpus, but **no game in it declares checkpoints**, and
 `checkpoints` and `soundtrack` are absent from every `rawSetup` [M]. Server-side checkpoints are out
@@ -623,39 +670,64 @@ corpus need `&lt;`/`&gt;`/`&amp;` escaping, versus a 15-byte CDATA wrapper per f
 (292 284 bytes of pure overhead across the corpus) [M].
 
 **Paragraph payload.** One `<p>` element per paragraph, its ordinal as an attribute, its text as
-content:
+content. This is the shape `playtale.php` emits, verbatim:
 
 ```xml
-<p n="12" f="1">
-  <s k="c"><c o="0"><e t="r" v="7" a="5" eq="1"/></c></s>
-  <s k="t"><k c="inc" t="r" v="7" a="3"/></s>
+<p n="12" f="6">
+  <s k="c" slot="0" or="0" crit="1" not="0">
+    <e t="r" v="15" a="5"/>
+  </s>
+  <s k="c" slot="1" or="0" crit="0" not="1">
+    <e t="k" v="4"/>
+  </s>
+  <s k="t" slot="2">
+    <k c="inc" t="k" v="4"/>
+    <k c="dec" t="r" v="15" a="5"/>
+  </s>
   <t i="0" n="1" sp="Правила">Текст абзаца
 вторая строка</t>
   <a g="42" d="1" i="0" c="btnBlue">Текст кнопки</a>
-  <i>article-img1</i>
 </p>
 ```
 
 | Element or attribute | Meaning |
 | --- | --- |
 | `p@n` | paragraph ordinal (sanity check against the index) |
-| `p@f` | flags: entry, ending, has image, has script, appends triggers |
-| `s` | script slot; **document order is the slot number** that `t@i`, `t@n`, `a@i`, `a@n`, `a@d` refer to |
-| `s@k` | `c` condition, `t` task list |
-| `c@o` | 1 = OR, 0 = AND |
-| `e` | one condition expression: `@t` type, `@v` value (parameter ordinal or expression text), `@a` amount, `@eq` equality |
-| `k` | one task: `@c` class, `@t` type, `@v` value, `@a` amount, `@p` param |
-| `t` | text block: `@i` if-slot, `@n` ifnot-slot, `@sp` spoiler heading, content is the text |
-| `a` | choice: `@g` goto ordinal, `@d` do-slot, `@i`/`@n` condition slots, `@c` class, content is the label |
-| `i` | image name (the URL is derivable from the paragraph id, §3.1) |
+| `p@f` | bit flags: 1 ending (no choices), 2 reserved (always 0 in v1; paragraph images are omitted), 4 has scripts, 8 is the start, 16 is the triggers paragraph |
+| `s@k` | `c` = condition, `t` = task list, `x` = unrecognised script kept verbatim |
+| `s@slot` | the script's own index within the paragraph; `t@i`, `t@n`, `a@d` name it |
+| `s@r` | role, present only when it is not a plain local script: `p` = preload, `u` = unload |
+| `s@or` | 1 = the expressions are OR-ed, 0 = AND-ed |
+| `s@crit` | the reference's `crit` argument: 1 expects the expressions true, 0 expects them false |
+| `s@not` | 1 when the predicate was negated with a leading `!` |
+| `e` | one condition expression: `@t` type, `@v` parameter ordinal, `@a` literal amount, `@ap` amount read from another parameter, `@eq` equality instead of `>=` |
+| `e` with `@t="s"` | a text expression; its source is **element content**, with `k`/`r` identifiers already rewritten to ordinals |
+| `k` | one task: `@c` class, `@t` type, `@v` operand, `@a` literal amount, `@p` parameter whose value is read |
+| `t` | text block: `@i` if-slot, `@n` ifnot-slot, `@sp` spoiler heading, `@cl` class, `@id` element id; content is the text |
+| `a` | choice: `@g` goto ordinal, `@d` do-slot, `@i`/`@n` condition slots, `@c` class; content is the label |
+| `m` | a music track; content is the URL. Absent from every game in the corpus, preserved for completeness |
 
-The `s` type of condition, whose value is an expression source string, carries that string as
-element content under its `<e>`, because it can contain characters that attributes would mangle
-(§1.3). Everything else in a payload is a number.
+A conditional task nests instead of carrying a payload:
 
-Deliberately absent: condition and task semantics stay declarative but are described by field tables
-rather than by JavaScript (§5.1), and no base64 or nested JSON string survives conversion — all 530
-nested `if` tasks are decoded by the server.
+```xml
+<k c="if">
+  <if><c or="0" crit="1"><e t="k" v="14"/></c></if>
+  <ifnot><none/></ifnot>
+  <then><k c="inc" t="k" v="57"/></then>
+</k>
+```
+
+`<none/>` records a branch the reference skips, which it does when the source string is two
+characters or shorter (an empty `[]`). `<raw>` appears only when a payload does not decode.
+
+Two attributes deliberately carry the reference's own parameter names (`or`, `crit`, `not`) rather
+than a normalised form. Collapsing them into "all true"/"any true" is possible, but the reference
+combines `crit` with a possibly-negated return in a way that is easy to get subtly wrong, so the
+runtime implements the reference algorithm and the attributes carry its inputs.
+
+Deliberately absent: no name survives anywhere on the play path — paragraph references, script
+references, parameters, groups and functions are all ordinals — and no base64 or nested JSON string
+survives conversion, because all 530 nested `if` tasks are decoded by the converter.
 
 **Buffer bounds** this format must fit, measured [M]:
 
@@ -665,7 +737,13 @@ nested `if` tasks are decoded by the server.
 | Local script body bytes | 124 | 599 | 16 571 |
 | Choice labels per paragraph | 1 | 10 | 156 |
 | Text blocks per paragraph | 1 | 9 | 123 |
-| Images per paragraph | 0 | 1 | 1 |
+| Source images per paragraph (not emitted in v1) | 0 | 1 | 1 |
+
+The source corpus contains paragraph images, but the v1 converter intentionally drops them: it does
+not emit an image element, retain an image URL, or set the image flag. This avoids image downloads,
+resizing and rendering costs on ESP32 devices with small displays. The `2` flag bit remains reserved
+for format compatibility. Paragraph-image support may be added in a later rendering iteration, with
+a separate decision about image delivery, scaling and device-specific presentation.
 
 The index gives the payload length before the read, so the runtime sizes its buffer from the index
 rather than guessing; the maxima above are what the occasional large paragraph needs.
@@ -735,8 +813,11 @@ decision before the builder is touched (§8).
 1. Open `/playtale/`, stream it with a bounded buffer, and write `game.hdr`, `game.idx` and
    `game.dat` in one forward pass (offsets are known as payloads are written, so no second pass).
 2. Write `meta.json` from the `meta` section.
-3. Verify: content hash, paragraph count, and that `idx` end offsets agree with the written `dat`
-   length. A mismatch deletes the partial game rather than offering it.
+3. Validate structural completeness using the declared counts in `<counts g="…" i="…" p="…" f="…" />`
+   and check that `idx` end offsets agree with the written `dat` length. These are the complete
+   integrity checks required by v1: a mismatch deletes the partial game rather than offering it.
+   The importer does not calculate or verify a content hash/checksum. Arbitrary content corruption
+   that leaves record counts and offsets consistent is outside the v1 integrity-checking scope.
 
 The device does not parse the source game XML, extract `rawSetup`, discover the start paragraph,
 validate references, or decode base64. All of that is the server's, done once per game instead of
@@ -809,8 +890,10 @@ replaces with its own rendering and its own save file.
   it. The reference engine ignores the attribute entirely — it is the web portal that renders it
   [C: `STORYGAME_TECH.md` §6.1] — so this is a device-side presentation decision with no reference
   behaviour to copy. A list row per spoiler, opened by Confirm, is the natural fit.
-- **Images**: `<img>` per paragraph. The URL is derivable from the paragraph id, which makes caching
-  predictable.
+- **Paragraph images are deferred.** Although source games may contain `<img>`, v1 conversion
+  drops these elements and their URLs (§4.6). Supporting them later requires a separate design for
+  image delivery, resizing and rendering on small device displays; predictable source URLs alone do
+  not make that work suitable for the ESP32.
 
 ### 5.3 The expression evaluator
 
@@ -890,12 +973,18 @@ nothing today.
 
 ## 6. Device UI
 
+> **Partly shipped.** §6.1's catalogue and game-page rows describe code that now exists:
+> `src/activities/browser/QuestBookCatalogActivity.*` and `StorygameDetailsActivity.*`, with the home
+> menu entry that opens them. The shipped catalogue offers the `new` and `editorial` lists only, shows
+> no covers, and downloads nothing; tags, search, and the reader remain unbuilt. Where this section
+> describes those parts it is still a plan.
+
 ### 6.1 Screens
 
 | Screen | Base | Responsibility |
 | --- | --- | --- |
-| КвестБук catalogue | `CatalogActivity` | list of games with paging, entry to tags and search |
-| Game page | `DetailsActivity` + `DetailsSpec` | cover, name, author, tags, description, likes/dislikes, stars, Download/Play |
+| КвестБук catalogue | `CatalogActivity` | list of games with paging; **shipped** for `new` + `editorial`, no tags/search entry yet |
+| Game page | own activity, `freeink::ui::publicationPage` | name, author, tags, description, likes/dislikes, stars; **shipped** without a cover and without Download/Play |
 | Tag list | `UiListActivity` | the tag catalogue from §2.2; selecting one lists its games |
 | Tag results | catalogue list with a filter | [O] blocked on §2.3 |
 | Search | `CatalogActivity::launchSearch()` | [O] blocked on §2.4 |
@@ -905,25 +994,65 @@ nothing today.
 
 `CatalogActivity` already owns the whole flow this feature needs: Wi-Fi check and selection, the
 search keyboard, loading and error screens, download with progress and cancel, and the auto-sleep
-policy [C: `src/activities/CatalogActivity.h:40-57`]. It is an abstract base with three existing
-subclasses (`OpdsBookBrowserActivity`, `PluginCatalogActivity`, `PluginHubInstallActivity`), so a
-`QuestBookCatalogActivity` follows an established pattern rather than adding a new one.
+policy [C: `src/activities/CatalogActivity.h:40-57`]. It is an abstract base with four existing
+subclasses (`OpdsBookBrowserActivity`, `PluginCatalogActivity`, `PluginHubInstallActivity`, and now
+`QuestBookCatalogActivity`), so the catalogue follows an established pattern rather than adding a new
+one.
 
-### 6.3 Why the game page reuses `DetailsActivity`
+### 6.3 Why the game page is not `DetailsActivity`
 
-`DetailsActivity` already renders a portrait cover, a hero title/author line, a metadata line, a
-description and a primary action button [C: `src/activities/util/DetailsActivity.h:13-29`], and OPDS
-wires it up in about a dozen lines [C: `src/activities/browser/OpdsBookBrowserActivity.cpp:871-883`].
-The required fields map directly:
+The shipped page is its own activity (`StorygameDetailsActivity`), built on the same
+`freeink::ui::publicationPage` component `DetailsActivity` uses. `DetailsSpec` could have carried most
+of this page (`source` for the tags, `metadata` for the facts, `description` for the text, an empty
+action label for no button), and one extra field — a line count for the tags — would have closed the
+gap. The page is separate anyway, for two reasons:
+
+- **The fork diff stays out of an upstream file.** `DetailsActivity` came from upstream (OPDS 2.0, then
+  the stack-safety fix in `f73d788a`); a storygame-only field there means carrying it through every
+  upstream merge, while a separate file merges as "added by us".
+- **No HTML layout pass.** The service's description is plain text capped at 140 characters (§2.1), so
+  the page needs none of `DetailsActivity`'s styled-description machinery and none of its `More`
+  viewer.
+
+The cost is a second screen with the same shape: if upstream changes `publicationPage`'s contract,
+both must be revisited. No cover is fetched, because cover caching is still open (§8 #5). Download
+and Play are planned actions; their storage behavior is defined below. The hero gives the title the
+space a cover would take.
 
 | Required | Where it goes |
 | --- | --- |
-| `fullname` | `spec.title` |
-| `author_name` | `spec.author` |
-| `tags` | `spec.source` |
-| `likes` / `dislikes` / `stars` | `spec.metadata` |
-| `desc` | `spec.description` |
-| `cover` | `spec.coverPath` after downloading to an SD temp file |
+| `fullname` | `props.book.title` |
+| `author_name` | `props.book.author` |
+| `tags` | `props.book.series` (the hero's extra text line) |
+| `likes` / `dislikes` / `stars` | `props.metadata`, as `Rating 4/5 · Likes: 6 · Dislikes: 1` |
+| `desc` | `props.description` |
+
+#### Download and Play actions
+
+The game page exposes two distinct actions. Both fetch the converted `/playtale/` document using
+`index_name` (§2.5, §4.3), then import it into the on-device file layout (§4.2). They differ in the
+destination and in whether the game becomes a permanent library item:
+
+- **Download** stores the game persistently at
+  `/<library>/storygames/<index_name>/`. The game becomes a regular library item and remains
+  available for later offline play. Downloading a game that is already present updates/replaces its
+  files in that directory; it must not create a second library item.
+- **Play** downloads and imports the game into the reserved temporary workspace
+  `/<library>/storygames/___temp/`, then opens the reader from that workspace. From the player's
+  perspective this behaves as if the game had been opened directly from the catalogue without a
+  download: it does not create a permanent game entry in the library. Technically, however, the game
+  is downloaded in full before it can be played, because the server does not support ranged or
+  resumable downloads (§2.5).
+
+The `___temp` directory is a single shared workspace, not a per-game directory. A Play operation
+must therefore treat its contents as belonging only to the game currently being played and must not
+register that workspace as a library item. The exact cleanup policy (for example, clearing it before
+the next Play operation and/or when leaving the reader) is an implementation detail to settle when
+the loader and library integration are built; it must not affect games stored in permanent
+`<index_name>` directories.
+
+Covers are not fetched at all yet: §8 #5 is unresolved, so the page draws no cover and gives the
+title the space instead.
 
 ### 6.4 Resource constraint that shapes the navigation
 
@@ -934,7 +1063,13 @@ so the catalogue's parsed page and a cover decode can overlap.
 
 OPDS solves exactly this by releasing its entries before fetching a cover and re-fetching the
 catalogue when the detail page closes [C: `src/activities/browser/OpdsBookBrowserActivity.cpp:866-869`].
-The КвестБук flow should do the same. This is a design requirement, not an optimisation.
+The shipped КвестБук flow keeps the page instead of re-fetching, and pays for that with a budget it can
+state: a page is at most sixteen rows of capped strings (title 160 B, author 64 B, tags 128 B,
+description 288 B, plus ids), against the ~40 KB a fresh TLS session needs. That figure is arithmetic
+from the parser's caps, not a measurement — 16 × ~688 B of fields is ~11 KB before `std::string` and
+allocator overhead, so expect ~13–16 KB, still small against the session and unverified on a device.
+The game page will offer two distinct actions, described below. Neither action fetches a catalogue cover, so no cover decode overlaps the retained page. The release
+of those rows takes the render lock, because a queued repaint may still be reading their strings.
 
 ### 6.5 Stars have no glyph
 
@@ -943,19 +1078,24 @@ the geometric-shapes and miscellaneous-symbols ranges [C: `lib/EpdFont/scripts/f
 The SD-font `symbols` preset does include that range [C: `lib/EpdFont/scripts/fontconvert_sdcard.py:66-68`],
 but SD fonts are optional and cannot be assumed.
 
-Therefore the rating must be rendered either as an icon from the existing icon set
-[C: `src/components/icons/`] or as text such as `4/5`. This document proposes text for the list row
-and an icon-or-text decision for the game page.
+Therefore the rating is rendered as text, `Rating 4/5`, on the game page. The list rows carry no
+rating at all.
 
 ### 6.6 New strings and a new menu entry cost real work
 
 - Every new user-visible string goes to `lib/I18n/translations/english.yaml` and requires running the
-  generator [C: `docs/i18n.md:123-156`].
+  generator [C: `docs/i18n.md:123-156`]. Seven keys were added for this section
+  (`STR_QUESTBOOK`, the two list names, rating, likes, dislikes, and the description heading).
 - A new entry on the home screen is an enum value plus hand-maintained index arithmetic in
   `HomeActivity::menuItemToIndex`, `indexToMenuItem` and `getMenuItemCount`, which are easy to
   desynchronise [C: `src/activities/ActivityManager.h:21`,
-  `src/activities/home/HomeActivity.cpp:531-534`]. The home "library" slot is currently binary
-  (Plugins replaces OPDS), so a КвестБук entry needs a deliberate placement decision [O].
+  `src/activities/home/HomeActivity.cpp`]. **Decided:** the КвестБук entry leads the menu
+  unconditionally, so it needs no settings flag; in themes that put «Продолжить чтение» in the menu it
+  sits behind that row, and it is still the first constant entry. The cover-grid home's tab table
+  follows the same order, and a theme that pages a tall menu now exposes its page start
+  (`BaseTheme::homeMenuPageStart`) so the home screen's touch targets follow the drawn rows. The order
+  is now stated in five places (the two converters, the count, the render vectors, and the cover-grid
+  tab table); collapsing them into one table is the next change that adds an entry, not this one.
 
 ---
 
@@ -968,11 +1108,13 @@ Against `SCOPE.md`:
   third-party connector is added.
 - Replacing the scripting-engine assumption with a task interpreter **reduces** flash and RAM
   pressure, which serves the project's stated priorities [C: `SCOPE.md:53-64`].
-- Storing cover files on SD interacts with the "no cover cache yet" decision recorded in §8.
+- Catalogue cover caching is a separate, still-open UI concern (§8 #5); it is not part of the
+  paragraph-image payload, which is omitted from the v1 storygame format.
 
 The one genuine scope risk is feature creep in the runtime: the character sheet, spoilers and BBCode
-are all required by real games, but each adds rendering surface. The mitigation is to implement
-exactly the twelve BBCode constructs measured in §1.4 and no more.
+are all required by real games, but each adds rendering surface. Paragraph images are deliberately
+excluded from v1. The mitigation is to implement exactly the twelve BBCode constructs measured in
+§1.4 and no more.
 
 ---
 
@@ -984,12 +1126,12 @@ exactly the twelve BBCode constructs measured in §1.4 and no more.
 | 2 | Who owns and maintains the server converter, and how its format version is tracked against the platform framework (§4.1) | Everything downstream |
 | 3 | JSON API for listing games by tag (§2.3) | Tag screen results beyond one page |
 | 4 | JSON API for substring search (§2.4) | The search screen |
-| 5 | Cover caching: ship without it and re-download per view, or add a cache keyed by `game_id`? | Storage design, offline behaviour |
+| 5 | Catalogue cover handling: keep the current no-cover experience, re-download per view, or add a cache keyed by `game_id`? This is separate from paragraph images, which are omitted from v1 (§4.6). | Catalogue UI, storage and offline behaviour |
 | 6 | TLS posture for a first-party service: keep `setInsecure()`, add a CA bundle, or pin | Security review |
 | 7 | Expression evaluator: vendor `tinyexpr` with adaptations, or write the small evaluator (§5.3) | Runtime |
 | 8 | Compression: `uzlib` + 32 KB ring, a server switch to raw deflate, or neither (§4.11) | Download flow, memory |
-| 9 | Game file root under the library (§4.2) | Storage layout |
-| 10 | Home-screen placement for the КвестБук entry (§6.6) | UI |
+| 9 | ~~Game file root under the library (§4.2)~~ **Decided:** permanent games use `/<library>/storygames/<index_name>/`; catalogue Play uses the shared `/<library>/storygames/___temp/` workspace (§6.3) | — |
+| 10 | ~~Home-screen placement for the КвестБук entry (§6.6)~~ **Decided:** the first constant entry of the home menu | — |
 | 11 | Whether the storygame screen reuses the reader's paginated layout or needs its own view (§5.2) | Runtime |
 | 12 | Should `STORYGAME_TECH.md` be translated to English and corrected to match this study? | Documentation |
 
@@ -997,9 +1139,10 @@ exactly the twelve BBCode constructs measured in §1.4 and no more.
 
 ## 9. Suggested sequencing
 
-1. **Catalogue only** — `QuestBookCatalogActivity`, the game page, and download of the current XML.
-   Useful on its own, no runtime, no server dependency. Validates the HTTP contract and the memory
-   plan.
+1. **Catalogue only** — `QuestBookCatalogActivity` and the game page. Useful on its own, no runtime,
+   no server dependency. Validates the catalogue contract and the memory plan. **Partly shipped:**
+   the catalogue (two list kinds, paging) and the game page exist; Download/Play actions are not
+   implemented yet.
 2. **Settle the remaining format questions** — how a game appears in `CLX1` (question 1) and who owns
    the converter (question 2). Both are cheap to decide now and expensive to change later.
 3. **Server converter** — implement §4.4–§4.8 on quest-book.ru and publish the XML document at
@@ -1007,7 +1150,8 @@ exactly the twelve BBCode constructs measured in §1.4 and no more.
 4. **Device loader** — stream the document into `game.hdr`/`game.idx`/`game.dat`, verify, register the
    game in the library. Small, and testable against the corpus without a device.
 5. **Minimal runtime** — text, choices, conditions, tasks, saves. Enough to play a simple game.
-6. **Rendering extras** — BBCode, spoilers, images, character sheet.
+6. **Rendering extras** — BBCode, spoilers and character sheet. Paragraph images are deferred to a
+   later enhancement and are not part of the initial converted format or runtime.
 7. **Tags and search** — once questions 3 and 4 are answered.
 
 Steps 3–5 are where host-side tests pay off: the corpus is downloadable, the format is declarative,
@@ -1057,37 +1201,54 @@ Recorded because they changed the plan:
   3. **Decode entities before judging text content.** `<text>` looked like pure BBCode until entity
      decoding revealed real `<h6 style=…>` markup in one game. A raw-tag scan finds nothing.
 
-## Appendix C — Prototype converter (deleted)
+## Appendix C — The converter
 
-A prototype was used to produce the size figures that informed §4, and was removed at the user's
-request after the format decision. Recorded here so the measurements are reproducible if needed.
+`playtale.php` in this directory is the converter. It is PHP 5.3 compatible, takes a game XML and
+writes the `/playtale/` document described in §4.3 and §4.6. The response root is `<storygame v="1">`.
 
-It did the following, and a re-implementation should follow the same shape:
+```
+php playtale.php <input.xml> [output.xml] [options]
+```
 
-| Step | What it did |
+With no output path it writes to stdout. The options (`--name=`, `--author=`, `--index=`, `--tags=`, `--desc=`, `--game_id=`) fill the
+`<meta>` section. `--author=` supplies `author_name`; the converter recovers `game_id` and `index`
+from the bootstrap when they are not given. Cover and popularity/rating fields (`--cover=`,
+`--likes=`, `--dislikes=`, `--stars=`, `--level=`, `--created=`) are not required in the on-device
+metadata contract.
+
+What it does, in order:
+
+| Step | What it does |
 | --- | --- |
-| Parse | Split a game into paragraphs; for each, its texts, choices, scripts and images |
-| Classify | Reduce every script to one of the three declarative shapes, or flag it unclassified |
-| Renumber | Assign paragraph and script ordinals and rewrite every reference to them |
-| Emit | Produce candidate payload encodings, plus a fixed-stride index |
-| Measure | Compare raw and gzipped sizes of each candidate against the source XML |
+| Split | Reads the file once and splits it on `<article>` boundaries; the prologue yields `<book guid>` |
+| Bootstrap | Extracts `rawSetup`, the start paragraph and the platform scalars from the mitril article's JavaScript |
+| Number | Assigns paragraph, group, parameter and function ordinals |
+| Rewrite | Replaces every GUID and script name with an ordinal, including `k…`/`r…` identifiers inside `s` expressions |
+| Decode | Decodes base64 nested `if` tasks and the JSON inside them |
+| Emit | Writes `<header>` (tables and start), `<data>` (one `<p>` per paragraph) and `<meta>` |
 
-What it proved, and the server implementation can rely on:
+Two implementation notes that matter if it is ever rewritten:
 
-- Every script in the corpus reduces to a declarative shape — nothing was left unclassified except
-  the platform's own `mitril` framework, which is dropped by design.
-- The start paragraph and `rawSetup` are extractable from the `mitril` article mechanically.
-- Task lists are valid JSON in all 3 395 observed cases, and all 530 nested `if` tasks are base64
-  around a three-key object.
+- **It parses by string search, not with a DOM.** It runs on the server, where a 2.4 MB document is
+  nothing. `<article>` elements are flat children of `<book>`, and the literal `<article` never
+  appears inside the CDATA of any published game, so the delimiters are unambiguous. It counts start
+  tags against split results and warns on a mismatch, so a future export that nests articles or
+  embeds those literals is reported rather than silently truncated.
+- **Scripts are extracted before anything else.** The platform's own JavaScript contains HTML inside
+  its CDATA, so scanning for `<text>`/`<action>` in the raw article would match that markup.
 
-What it did **not** cover, and the server implementation must:
+An earlier throwaway prototype produced the size figures quoted in §4 and was deleted after the
+format decision. Its findings, which the converter inherits, were: every script in the corpus reduces
+to a declarative shape; the start paragraph and `rawSetup` are extractable mechanically; task lists
+are valid JSON in all 3 395 observed cases; and all 530 nested `if` tasks are base64 around a
+three-key object.
 
-- Serving the document over HTTP, and choosing the route (proposed: an additive `/playtale/`).
-- Re-conversion when the platform's framework version changes — the format embeds assumptions about
-  condition and task shapes.
-- Escaping: the prototype wrote raw UTF-8 with ASCII control separators. The format is now XML
-  (§4.6), so text must be escaped (`&amp;`, `&lt;`, `&gt;` — only 161 characters in the whole corpus)
-  and carried as element content, never as an attribute value.
+What the converter does **not** do, and the service around it must:
+
+- Serve the document over HTTP, and choose the route (proposed: an additive `/playtale/`).
+- Keep the converter/runtime implementation compatible with platform framework changes. There is
+  no handler fingerprint in the converted header; changes are reviewed and handled manually when
+  needed (§4.4).
 
 ## Appendix D — Task and condition schema
 
