@@ -142,306 +142,6 @@ Dependency Graph
 |-- DeviceSecret
 |-- Txt
 Building in release mode
-Retrieved `.pio/build/simulator_x4_pro/src/ClippingStore.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/CrossPointSettings.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/CrossPointState.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/FontInstaller.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/LcpPassphraseStore.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/MappedInputManager.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/OpdsServerStore.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/OpdsTokenStore.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/ReaderFontSizes.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/RecentBooksStore.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/SdCardFontSystem.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/SettingsList.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/WifiCredentialStore.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/Activity.o' from cache
-Compiling .pio/build/simulator_x4_pro/src/activities/ActivityManager.o
-Retrieved `.pio/build/simulator_x4_pro/src/activities/UiListActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/UiTabListActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/CatalogActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/boot_sleep/BootActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/boot_sleep/SleepActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/browser/OpdsBookBrowserActivity.o' from cache
-Compiling .pio/build/simulator_x4_pro/src/activities/browser/QuestBookCatalogActivity.o
-Compiling .pio/build/simulator_x4_pro/src/activities/browser/StorygameDetailsActivity.o
-Retrieved `.pio/build/simulator_x4_pro/src/activities/home/CrashActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/home/FileBrowserActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/home/HomeActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/library/LibraryListActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/network/CrossPointWebServerActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/network/CalibreConnectActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/network/WifiSelectionActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/network/NetworkModeSelectionActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/network/UsbDriveActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/plugins/PluginCatalogActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/reader/ClipSelectionActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/reader/DictionaryDefinitionActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/reader/DictionaryWordSelectActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/reader/EndOfBookOptions.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/reader/EpubReaderActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/reader/EpubReaderBookmarksActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/reader/EpubReaderChapterSelectionActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/reader/EpubReaderClippingListActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/reader/EpubReaderFootnoteSelectActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/reader/EpubReaderMenuActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/reader/EpubReaderPercentSelectionActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/reader/KOReaderSyncActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/reader/QrDisplayActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/reader/ReaderActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/reader/ReaderSession.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/reader/ReaderToolbarUi.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/reader/XtcReaderActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/reader/XtcReaderChapterSelectionActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/settings/AboutActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/settings/BleSettingsActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/settings/ButtonRemapActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/settings/ClearCacheActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/settings/ClockSettingsActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/settings/ClockSyncActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/settings/FontDownloadActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/settings/HomeButtonSettingsActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/settings/KOReaderAuthActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/settings/KOReaderSettingsActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/settings/KeyboardLayoutsActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/settings/LanguageSelectActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/settings/OpdsServerListActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/settings/OpdsSettingsActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/settings/OtaUpdateActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/settings/PluginHubInstallActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/settings/SdFirmwareUpdateActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/settings/SettingsActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/settings/SettingsListActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/settings/StatusBarSettingsActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/settings/TextSettingsActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/settings/TextSettingsPreview.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/settings/TimezonePickerActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/util/BmpViewerActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/util/ConfirmationActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/util/FrontlightPanelActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/util/FullScreenMessageActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/util/IntervalSelectionActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/util/DetailsActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/util/KeyboardEntryActivity.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/activities/util/KeyboardLayoutSet.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/clippings/ClippingSync.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/clippings/ClippingsManager.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/components/CatalogScreens.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/components/CoverGridHomeUi.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/components/HomeCoverCache.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/components/UITheme.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/components/UiAppHost.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/components/themes/BaseTheme.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/components/themes/lyra/Lyra3CoversTheme.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/components/themes/lyra/LyraTheme.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/components/themes/roundedraff/RoundedRaffTheme.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/main.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/network/CrossPointWebServer.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/network/FirmwareBoardTag.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/network/HttpDownloader.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/network/LcpDevice.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/network/OpdsHttpTransport.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/network/WebDAVHandler.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/platform/UsbSerialJtagHandoff.o' from cache
-Compiling .pio/build/simulator_x4_pro/src/util/BookCacheUtils.o
-Retrieved `.pio/build/simulator_x4_pro/src/util/BookProgress.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/util/BookmarkFile.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/util/BookmarkUtil.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/util/ButtonNavigator.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/util/DictHtmlPages.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/util/DictZip.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/util/Dictionary.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/util/DictionaryRegistry.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/util/HtmlToPlainText.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/util/NextBookFinder.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/util/OpdsFilename.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/util/PluginEvents.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/util/PluginHttp.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/util/PluginLocations.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/util/QrUtils.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/util/ScreenshotUtil.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/util/StringUtils.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/util/Timezones.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/src/util/UrlUtils.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libfa3/Utf8/Utf8.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib438/uzlib/tinflate.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libfa3/libUtf8.a' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib5e1/InflateReader/InflateReader.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib438/libuzlib.a' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib57d/FreeInkFont/FontAlloc.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib5e1/libInflateReader.a' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib57d/FreeInkFont/FtFont.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib57d/FreeInkFont/Gpos.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib57d/FreeInkFont/Gsub.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib57d/FreeInkFont/TtfFont.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib57d/FreeInkFont/freetype/ft_autofit.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib57d/FreeInkFont/freetype/ft_cff.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib57d/FreeInkFont/freetype/ft_ftbase.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib57d/FreeInkFont/freetype/ft_ftbitmap.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib57d/FreeInkFont/freetype/ft_ftdebug.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib57d/FreeInkFont/freetype/ft_ftglyph.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib57d/FreeInkFont/freetype/ft_ftgzip.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib57d/FreeInkFont/freetype/ft_ftinit.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib57d/FreeInkFont/freetype/ft_ftmm.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib57d/FreeInkFont/freetype/ft_ftsystem.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib57d/FreeInkFont/freetype/ft_psaux.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib57d/FreeInkFont/freetype/ft_pshinter.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib57d/FreeInkFont/freetype/ft_psnames.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib57d/FreeInkFont/freetype/ft_raster.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib57d/FreeInkFont/freetype/ft_sfnt.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib57d/FreeInkFont/freetype/ft_smooth.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib57d/FreeInkFont/freetype/ft_truetype.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libb5b/Logging/Logging.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libb67/Memory/BuildScratch.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libb5b/libLogging.a' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib57d/libFreeInkFont.a' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib8f6/EpdFont/EpdFont.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libb67/libMemory.a' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib8f6/EpdFont/EpdFontFamily.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib8f6/EpdFont/FontDecompressor.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib8f6/EpdFont/SdCardFont.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib8f6/EpdFont/SdCardFontManager.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib8f6/EpdFont/SdCardFontRegistry.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib8f6/EpdFont/TtfEpdFont.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libe6f/MiniBidi/BidiUtils.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libe6f/MiniBidi/minibidi.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib8f6/libEpdFont.a' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib545/GfxRenderer/Bitmap.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libe6f/libMiniBidi.a' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib545/GfxRenderer/BitmapHelpers.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib545/GfxRenderer/FontCacheManager.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib545/GfxRenderer/GfxRenderer.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib4a8/simulator/CrossPointWebServer.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib545/libGfxRenderer.a' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib4a8/simulator/ESP.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib4a8/simulator/HalClock.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib4a8/simulator/HalDisplay.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib4a8/simulator/HalFrontlight.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib4a8/simulator/HalGPIO.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib4a8/simulator/HalMemory.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib4a8/simulator/HalPowerManager.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib4a8/simulator/HalStorage.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib4a8/simulator/HalSystem.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib4a8/simulator/HalTiltSensor.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib4a8/simulator/NetworkClient.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib4a8/simulator/SimulatorImageDecode.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib4a8/simulator/SimulatorLifecycle.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib4a8/simulator/WebServer.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib4a8/simulator/WebSocketsServer.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib4a8/simulator/firmware_link_stubs.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib4a8/simulator/qrcode.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib4a8/simulator/simulator_firmware.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib4a8/simulator/simulator_main.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib4a8/simulator/simulator_ota.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib618/JsonSax/StreamingJsonParser.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib4a8/libsimulator.a' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib0d4/expat/xmlparse.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib618/libJsonSax.a' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib0d4/expat/xmlrole.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib0d4/expat/xmltok.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib955/Opds/Opds2Parser.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib0d4/libexpat.a' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib955/Opds/OpdsAuthDoc.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib955/Opds/OpdsClient.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib955/Opds/OpdsFeedParser.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib955/Opds/OpdsImplicitAuth.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib955/Opds/OpdsLoginForm.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib955/Opds/OpdsParser.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib955/Opds/OpdsPublicationDoc.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib955/Opds/OpdsSearchTemplate.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib955/Opds/OpenSearchDescParser.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libbf4/CatalogList/JsonListParser.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib955/libOpds.a' from cache
-Retrieved `.pio/build/simulator_x4_pro/libbf4/CatalogList/XmlListParser.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib4a4/FreeInkUI/FreeInkUI.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libbf4/libCatalogList.a' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib4a4/libFreeInkUI.a' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib7f1/QRCode/qrcode.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib0ad/AnimatedGIF/AnimatedGIF.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib7f1/libQRCode.a' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib2b1/Serialization/ObfuscationUtils.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib0ad/libAnimatedGIF.a' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib2b1/Serialization/PersistableStore.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libc57/BlePageTurner/NoRadio.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libc57/BlePageTurner/Runtime.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib2b1/libSerialization.a' from cache
-Retrieved `.pio/build/simulator_x4_pro/libc57/BlePageTurner/SdkRadio.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/liba56/FsHelpers/FsHelpers.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libce9/GifToBmpConverter/GifToBmpConverter.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/liba56/libFsHelpers.a' from cache
-Retrieved `.pio/build/simulator_x4_pro/libc57/libBlePageTurner.a' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib34c/JpegToBmpConverter/JpegToBmpConverter.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libce9/libGifToBmpConverter.a' from cache
-Retrieved `.pio/build/simulator_x4_pro/libacb/miniz/InflateStream.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib34c/libJpegToBmpConverter.a' from cache
-Retrieved `.pio/build/simulator_x4_pro/libacb/miniz/miniz_impl.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib9ae/PngToBmpConverter/PngToBmpConverter.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libacb/libminiz.a' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib9c8/Txt/Txt.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib9c8/Txt/TxtToHtml.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib9ae/libPngToBmpConverter.a' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib12c/ZipFile/ZipFile.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib9c8/libTxt.a' from cache
-Retrieved `.pio/build/simulator_x4_pro/libf6d/DeviceSecret/DeviceSecret.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib12c/libZipFile.a' from cache
-Retrieved `.pio/build/simulator_x4_pro/liba8b/TrustedTime/TrustedTime.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libf6d/libDeviceSecret.a' from cache
-Retrieved `.pio/build/simulator_x4_pro/libdf6/Epub/BookKey.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/liba8b/libTrustedTime.a' from cache
-Retrieved `.pio/build/simulator_x4_pro/libdf6/Epub/Epub.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libdf6/Epub/Epub/BookMetadataCache.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libdf6/Epub/Epub/CjkBreaks.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libdf6/Epub/Epub/Page.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libdf6/Epub/Epub/ParsedText.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libdf6/Epub/Epub/Section.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libdf6/Epub/Epub/WordStore.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libdf6/Epub/Epub/blocks/ImageBlock.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libdf6/Epub/Epub/blocks/TextBlock.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libdf6/Epub/Epub/converters/GifToFramebufferConverter.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libdf6/Epub/Epub/converters/ImageDecoderFactory.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libdf6/Epub/Epub/converters/ImageDimsProbe.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libdf6/Epub/Epub/converters/ImageToFramebufferDecoder.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libdf6/Epub/Epub/converters/JpegToFramebufferConverter.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libdf6/Epub/Epub/css/CssParser.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libdf6/Epub/Epub/converters/PngToFramebufferConverter.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libdf6/Epub/Epub/htmlEntities.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libdf6/Epub/Epub/hyphenation/HyphenationCommon.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libdf6/Epub/Epub/hyphenation/Hyphenator.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libdf6/Epub/Epub/hyphenation/LanguageRegistry.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libdf6/Epub/Epub/hyphenation/LiangHyphenation.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libdf6/Epub/Epub/parsers/ChapterHtmlSlimParser.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libdf6/Epub/Epub/parsers/ContainerParser.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libdf6/Epub/Epub/parsers/ContentOpfParser.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libdf6/Epub/Epub/parsers/TocNavParser.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libdf6/Epub/Epub/parsers/TocNcxParser.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libd11/I18n/I18n.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libdf6/libEpub.a' from cache
-Retrieved `.pio/build/simulator_x4_pro/libd11/I18n/I18nStrings.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib4b4/HttpHeader/HttpHeader.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libd11/libI18n.a' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib0e8/KOReaderSync/ChapterXPathResolver.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib4b4/libHttpHeader.a' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib0e8/KOReaderSync/KOReaderCredentialStore.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib0e8/KOReaderSync/KOReaderDocumentId.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib0e8/KOReaderSync/KOReaderSyncClient.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib0e8/KOReaderSync/ProgressComparison.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib0e8/KOReaderSync/ProgressMapper.o' from cache
-Compiling .pio/build/simulator_x4_pro/libb11/QuestBook/QuestBookCover.o
-Compiling .pio/build/simulator_x4_pro/libb11/QuestBook/QuestBookListParser.o
-Retrieved `.pio/build/simulator_x4_pro/lib0e8/libKOReaderSync.a' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib213/Xtc/Xtc.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib213/Xtc/Xtc/XtcParser.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libb3a/LibraryIndex/LibraryBuilder.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libb3a/LibraryIndex/LibraryFormat.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libb3a/LibraryIndex/LibraryIndexFile.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libb3a/LibraryIndex/LibraryText.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libbf8/BmpToBmpConverter/BmpToBmpConverter.o' from cache
-Retrieved `.pio/build/simulator_x4_pro/libb3a/libLibraryIndex.a' from cache
-Retrieved `.pio/build/simulator_x4_pro/lib213/libXtc.a' from cache
-Retrieved `.pio/build/simulator_x4_pro/libbf8/libBmpToBmpConverter.a' from cache
-Archiving .pio/build/simulator_x4_pro/libb11/libQuestBook.a
-Indexing .pio/build/simulator_x4_pro/libb11/libQuestBook.a
-Linking .pio/build/simulator_x4_pro/program
 _run_simulator(["run_simulator"], [".pio/build/simulator_x4_pro/program"])
 [0] [DBG] [UI] Using Lyra theme
 [0] [INF] [MAIN] Device: xteink_x4_pro
@@ -449,383 +149,108 @@ _run_simulator(["run_simulator"], [".pio/build/simulator_x4_pro/program"])
 [1] [DBG] [UI] Using Lyra theme
 [SIM] open failed: ./fs_/plugins (flags=0x0 errno=2 No such file or directory)
 [SIM] open failed: ./fs_/.plugins (flags=0x0 errno=2 No such file or directory)
-[2] [INF] [CLK] RTC clock read: 2026-11-08 11:51
+[2] [INF] [CLK] RTC clock read: 2026-11-08 12:10
 [SIM] Frontlight: on, brightness=69%, warmth=44%
 [2] [DBG] [MAIN] Starting CrossPoint version dev-simulator
-[732] [DBG] [MAIN] Display initialized
+[203] [DBG] [MAIN] Display initialized
 [SIM] open failed: ./fs_/.fonts (flags=0x0 errno=2 No such file or directory)
-[732] [DBG] [SDREG] Fonts directory not found: /.fonts
+[204] [DBG] [SDREG] Fonts directory not found: /.fonts
 [SIM] open failed: ./fs_/fonts (flags=0x0 errno=2 No such file or directory)
-[732] [DBG] [SDREG] Fonts directory not found: /fonts
-[732] [DBG] [SDREG] Discovery complete: 0 families
-[732] [DBG] [SDFS] SD font system ready (0 families discovered)
-[732] [DBG] [MAIN] Fonts setup
-[732] [DBG] [ACT] Entering activity: Boot
-[732] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[754] [DBG] [ACT] Exiting activity: Boot
-[754] [DBG] [ACT] Entering activity: Home
-[755] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[768] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[3551] [DBG] [ACT] Exiting activity: Home
-[3551] [DBG] [ACT] Entering activity: QuestBookCatalog
-[3551] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[4797] [DBG] [ACT] Pushed to activity stack, new size = 1
-[4797] [DBG] [ACT] Entering activity: WifiSelection
-[4798] [DBG] [WCS] Loaded 0 WiFi credentials from file
-[4798] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[4903] [DBG] [LOOP] New max loop duration: 106 ms (activity: 106 ms)
-[4904] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[4921] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[5929] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[5942] [DBG] [WIFI] Connected BSSID: 02:00:00:00:00:02, channel: 1, RSSI: -45 dBm
-[5942] [DBG] [WIFI] Connected with saved/open credentials, completing immediately
-[5942] [DBG] [ACT] Exiting activity: WifiSelection
-[5942] [DBG] [WIFI] Free heap at onExit start: 1048576 bytes
-[5942] [DBG] [WIFI] Deleting WiFi scan...
-[5942] [DBG] [WIFI] Free heap after scanDelete: 1048576 bytes
-[5942] [DBG] [WIFI] Free heap at onExit end: 1048576 bytes
-[5942] [DBG] [ACT] Popped from activity stack, new size = 0
-[5942] [DBG] [ACT] Handling result for popped activity
-[5942] [DBG] [HTTP] Fetching: https://quest-book.ru/online/api/list/new/?page=1
-[5942] [DBG] [HTTP] wolfSSL GET: https://quest-book.ru/online/api/list/new/?page=1 (heap 1048576, max block 1048576)
-[5942] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[15747] [DBG] [LOOP] New max loop duration: 9805 ms (activity: 9805 ms)
-[15748] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[15805] [INF] [MEM] Free: 1048576 bytes, Total: 1048576 bytes, Min Free: 1048576 bytes, MaxAlloc: 1048576 bytes
-[15806] [INF] [MEM] PSRAM: Free: 8388608 bytes, Total: 8388608 bytes, Min Free: 8388608 bytes, MaxAlloc: 8388608 bytes
-[17873] [DBG] [ACT] Pushed to activity stack, new size = 1
-[17873] [DBG] [ACT] Entering activity: StorygameDetails
-[17874] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[17887] [DBG] [HTTP] Downloading: https://quest-book.ru/online/cover/game19568/?w=128&h=192 -> /.crosspoint/qbcover/5b68e2d938adf27a6c866e3fcf5360c4_v1_128x192.bmp
-[17887] [DBG] [HTTP] wolfSSL GET: https://quest-book.ru/online/cover/game19568/?w=128&h=192 (heap 1048576, max block 1048576)
-[27582] [DBG] [HTTP] Downloaded 2558 bytes
-[27585] [DBG] [GFX] Time = 2 ms from clearScreen to displayBuffer
-[27636] [INF] [MEM] Free: 1048576 bytes, Total: 1048576 bytes, Min Free: 1048576 bytes, MaxAlloc: 1048576 bytes
-[27636] [INF] [MEM] PSRAM: Free: 8388608 bytes, Total: 8388608 bytes, Min Free: 8388608 bytes, MaxAlloc: 8388608 bytes
-[37651] [INF] [MEM] Free: 1048576 bytes, Total: 1048576 bytes, Min Free: 1048576 bytes, MaxAlloc: 1048576 bytes
-[37651] [INF] [MEM] PSRAM: Free: 8388608 bytes, Total: 8388608 bytes, Min Free: 8388608 bytes, MaxAlloc: 8388608 bytes
-[39755] [DBG] [ACT] Exiting activity: StorygameDetails
-[39755] [DBG] [ACT] Popped from activity stack, new size = 0
-[39755] [DBG] [ACT] Handling result for popped activity
-[39757] [DBG] [GFX] Time = 2 ms from clearScreen to displayBuffer
-[40873] [DBG] [ACT] Pushed to activity stack, new size = 1
-[40873] [DBG] [ACT] Entering activity: StorygameDetails
-[40874] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[40887] [DBG] [HTTP] Downloading: https://quest-book.ru/online/cover/game19327/?w=128&h=192 -> /.crosspoint/qbcover/5275137b3dcbe4880f4e36100040dd42_v1_128x192.bmp
-[40887] [DBG] [HTTP] wolfSSL GET: https://quest-book.ru/online/cover/game19327/?w=128&h=192 (heap 1048576, max block 1048576)
-[41078] [DBG] [HTTP] Downloaded 2990 bytes
-[41081] [DBG] [GFX] Time = 3 ms from clearScreen to displayBuffer
-[47659] [INF] [MEM] Free: 1048576 bytes, Total: 1048576 bytes, Min Free: 1048576 bytes, MaxAlloc: 1048576 bytes
-[47660] [INF] [MEM] PSRAM: Free: 8388608 bytes, Total: 8388608 bytes, Min Free: 8388608 bytes, MaxAlloc: 8388608 bytes
-[49248] [DBG] [ACT] Exiting activity: StorygameDetails
-[49248] [DBG] [ACT] Popped from activity stack, new size = 0
-[49248] [DBG] [ACT] Handling result for popped activity
-[49249] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[50389] [DBG] [ACT] Pushed to activity stack, new size = 1
-[50389] [DBG] [ACT] Entering activity: StorygameDetails
-[50390] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[50403] [DBG] [HTTP] Downloading: https://quest-book.ru/online/cover/game19406/?w=128&h=192 -> /.crosspoint/qbcover/c96b4c11058be869106f92b790af38f3_v1_128x192.bmp
-[50403] [DBG] [HTTP] wolfSSL GET: https://quest-book.ru/online/cover/game19406/?w=128&h=192 (heap 1048576, max block 1048576)
-[72947] [DBG] [HTTP] Downloaded 2110 bytes
-[72948] [DBG] [LOOP] New max loop duration: 22545 ms (activity: 22545 ms)
-[72950] [DBG] [GFX] Time = 2 ms from clearScreen to displayBuffer
-[73004] [INF] [MEM] Free: 1048576 bytes, Total: 1048576 bytes, Min Free: 1048576 bytes, MaxAlloc: 1048576 bytes
-[73004] [INF] [MEM] PSRAM: Free: 8388608 bytes, Total: 8388608 bytes, Min Free: 8388608 bytes, MaxAlloc: 8388608 bytes
-[80534] [DBG] [ACT] Exiting activity: StorygameDetails
-[80534] [DBG] [ACT] Popped from activity stack, new size = 0
-[80534] [DBG] [ACT] Handling result for popped activity
-[80535] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[81881] [DBG] [ACT] Pushed to activity stack, new size = 1
-[81881] [DBG] [ACT] Entering activity: StorygameDetails
-[81882] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[81894] [DBG] [HTTP] Downloading: https://quest-book.ru/online/cover/game19421/?w=128&h=192 -> /.crosspoint/qbcover/a351122c17552208ab7e3f66212cddf7_v1_128x192.bmp
-[81894] [DBG] [HTTP] wolfSSL GET: https://quest-book.ru/online/cover/game19421/?w=128&h=192 (heap 1048576, max block 1048576)
-[103291] [DBG] [HTTP] Downloaded 3038 bytes
-[103293] [DBG] [GFX] Time = 2 ms from clearScreen to displayBuffer
-[103346] [INF] [MEM] Free: 1048576 bytes, Total: 1048576 bytes, Min Free: 1048576 bytes, MaxAlloc: 1048576 bytes
-[103346] [INF] [MEM] PSRAM: Free: 8388608 bytes, Total: 8388608 bytes, Min Free: 8388608 bytes, MaxAlloc: 8388608 bytes
-[110039] [DBG] [ACT] Exiting activity: StorygameDetails
-[110039] [DBG] [ACT] Popped from activity stack, new size = 0
-[110039] [DBG] [ACT] Handling result for popped activity
-[110040] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[110969] [DBG] [ACT] Pushed to activity stack, new size = 1
-[110969] [DBG] [ACT] Entering activity: StorygameDetails
-[110971] [DBG] [GFX] Time = 2 ms from clearScreen to displayBuffer
-[110985] [DBG] [GFX] Time = 2 ms from clearScreen to displayBuffer
-[112407] [DBG] [ACT] Exiting activity: StorygameDetails
-[112407] [DBG] [ACT] Popped from activity stack, new size = 0
-[112407] [DBG] [ACT] Handling result for popped activity
-[112408] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[113339] [DBG] [ACT] Pushed to activity stack, new size = 1
-[113339] [DBG] [ACT] Entering activity: StorygameDetails
-[113340] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[113352] [INF] [MEM] Free: 1048576 bytes, Total: 1048576 bytes, Min Free: 1048576 bytes, MaxAlloc: 1048576 bytes
-[113352] [INF] [MEM] PSRAM: Free: 8388608 bytes, Total: 8388608 bytes, Min Free: 8388608 bytes, MaxAlloc: 8388608 bytes
-[113354] [DBG] [GFX] Time = 2 ms from clearScreen to displayBuffer
-[114354] [DBG] [ACT] Exiting activity: StorygameDetails
-[114354] [DBG] [ACT] Popped from activity stack, new size = 0
-[114354] [DBG] [ACT] Handling result for popped activity
-[114355] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[114768] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[116166] [DBG] [ACT] Exiting activity: QuestBookCatalog
-[116197] [DBG] [MAIN] Silent restart (target=home)
-[116197] [DBG] [GFX] Time = 1429 ms from clearScreen to displayBuffer
-[116254] [DBG] [ACT] No more activities on stack, going home
-[116254] [DBG] [ACT] Entering activity: Home
-[116254] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[116268] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[117232] [DBG] [ACT] Exiting activity: Home
-[117232] [DBG] [ACT] Entering activity: FileBrowser
-[117232] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[118736] [DBG] [ACT] Exiting activity: FileBrowser
-[118736] [DBG] [ACT] Entering activity: Home
-[118736] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[118750] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[119704] [DBG] [ACT] Exiting activity: Home
-[119704] [DBG] [ACT] Entering activity: Library
-[119706] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[119709] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[121734] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[122334] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[123355] [INF] [MEM] Free: 1048576 bytes, Total: 1048576 bytes, Min Free: 1048576 bytes, MaxAlloc: 1048576 bytes
-[123355] [INF] [MEM] PSRAM: Free: 8388608 bytes, Total: 8388608 bytes, Min Free: 8388608 bytes, MaxAlloc: 8388608 bytes
-[123731] [DBG] [ACT] Exiting activity: Library
-[123731] [DBG] [ACT] Entering activity: Home
-[123731] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[123745] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[125964] [DBG] [ACT] Exiting activity: Home
-[125964] [DBG] [ACT] Entering activity: CrossPointWebServer
-[125964] [DBG] [WEBACT] Free heap at onEnter: 1048576 bytes
-[125964] [DBG] [WEBACT] Free heap after SD font cache release: 1048576 bytes
-[125964] [DBG] [WEBACT] Launching NetworkModeSelectionActivity...
-[125964] [DBG] [ACT] Pushed to activity stack, new size = 1
-[125964] [DBG] [ACT] Entering activity: NetworkModeSelection
-[125965] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[127223] [DBG] [ACT] Exiting activity: NetworkModeSelection
-[127223] [DBG] [ACT] Popped from activity stack, new size = 0
-[127223] [DBG] [ACT] Handling result for popped activity
-[127223] [DBG] [ACT] Exiting activity: CrossPointWebServer
-[127223] [DBG] [WEBACT] Free heap at onExit start: 1048576 bytes
-[SIM] open failed: ./fs_/plugins (flags=0x0 errno=2 No such file or directory)
-[SIM] open failed: ./fs_/.plugins (flags=0x0 errno=2 No such file or directory)
-[127258] [DBG] [MAIN] Silent restart (target=home)
-[127258] [DBG] [GFX] Time = 1294 ms from clearScreen to displayBuffer
-[127312] [DBG] [WEBACT] Free heap at onExit end: 1048576 bytes
-[127312] [DBG] [ACT] Entering activity: Home
-[127313] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[127326] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[128161] [DBG] [ACT] Exiting activity: Home
-[128161] [DBG] [ACT] Entering activity: QuestBookCatalog
-[128161] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[129207] [DBG] [ACT] Pushed to activity stack, new size = 1
-[129207] [DBG] [ACT] Entering activity: WifiSelection
-[129207] [DBG] [WCS] Loaded 0 WiFi credentials from file
-[129207] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[129308] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[129322] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[130098] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[130111] [DBG] [WIFI] Connected BSSID: 02:00:00:00:00:02, channel: 1, RSSI: -45 dBm
-[130111] [DBG] [WIFI] Connected with saved/open credentials, completing immediately
-[130111] [DBG] [ACT] Exiting activity: WifiSelection
-[130111] [DBG] [WIFI] Free heap at onExit start: 1048576 bytes
-[130111] [DBG] [WIFI] Deleting WiFi scan...
-[130111] [DBG] [WIFI] Free heap after scanDelete: 1048576 bytes
-[130111] [DBG] [WIFI] Free heap at onExit end: 1048576 bytes
-[130111] [DBG] [ACT] Popped from activity stack, new size = 0
-[130111] [DBG] [ACT] Handling result for popped activity
-[130111] [DBG] [HTTP] Fetching: https://quest-book.ru/online/api/list/editorial/?page=1
-[130111] [DBG] [HTTP] wolfSSL GET: https://quest-book.ru/online/api/list/editorial/?page=1 (heap 1048576, max block 1048576)
-[130112] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[137799] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[137852] [INF] [MEM] Free: 1048576 bytes, Total: 1048576 bytes, Min Free: 1048576 bytes, MaxAlloc: 1048576 bytes
-[137852] [INF] [MEM] PSRAM: Free: 8388608 bytes, Total: 8388608 bytes, Min Free: 8388608 bytes, MaxAlloc: 8388608 bytes
-[139435] [DBG] [ACT] Pushed to activity stack, new size = 1
-[139435] [DBG] [ACT] Entering activity: StorygameDetails
-[139436] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[139449] [DBG] [HTTP] Downloading: https://quest-book.ru/online/cover/game18152/?w=128&h=192 -> /.crosspoint/qbcover/8167531204066a1f7fca76686ef80233_v1_128x192.bmp
-[139449] [DBG] [HTTP] wolfSSL GET: https://quest-book.ru/online/cover/game18152/?w=128&h=192 (heap 1048576, max block 1048576)
-[159729] [DBG] [HTTP] Downloaded 3134 bytes
-[159731] [DBG] [GFX] Time = 2 ms from clearScreen to displayBuffer
-[159783] [INF] [MEM] Free: 1048576 bytes, Total: 1048576 bytes, Min Free: 1048576 bytes, MaxAlloc: 1048576 bytes
-[159783] [INF] [MEM] PSRAM: Free: 8388608 bytes, Total: 8388608 bytes, Min Free: 8388608 bytes, MaxAlloc: 8388608 bytes
-[169799] [INF] [MEM] Free: 1048576 bytes, Total: 1048576 bytes, Min Free: 1048576 bytes, MaxAlloc: 1048576 bytes
-[169799] [INF] [MEM] PSRAM: Free: 8388608 bytes, Total: 8388608 bytes, Min Free: 8388608 bytes, MaxAlloc: 8388608 bytes
-[169978] [DBG] [ACT] Exiting activity: StorygameDetails
-[169978] [DBG] [ACT] Popped from activity stack, new size = 0
-[169978] [DBG] [ACT] Handling result for popped activity
-[169979] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[170886] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[171969] [DBG] [ACT] Exiting activity: QuestBookCatalog
-[172000] [DBG] [MAIN] Silent restart (target=home)
-[172000] [DBG] [GFX] Time = 1114 ms from clearScreen to displayBuffer
-[172055] [DBG] [ACT] No more activities on stack, going home
-[172055] [DBG] [ACT] Entering activity: Home
-[172056] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[172069] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[173437] [DBG] [ACT] Exiting activity: Home
-[173437] [DBG] [ACT] Entering activity: QuestBookCatalog
-[173437] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[174704] [DBG] [ACT] Pushed to activity stack, new size = 1
-[174704] [DBG] [ACT] Entering activity: WifiSelection
-[174704] [DBG] [WCS] Loaded 0 WiFi credentials from file
-[174704] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[174808] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[174821] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[175839] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[175853] [DBG] [WIFI] Connected BSSID: 02:00:00:00:00:02, channel: 1, RSSI: -45 dBm
-[175853] [DBG] [WIFI] Connected with saved/open credentials, completing immediately
-[175853] [DBG] [ACT] Exiting activity: WifiSelection
-[175853] [DBG] [WIFI] Free heap at onExit start: 1048576 bytes
-[175853] [DBG] [WIFI] Deleting WiFi scan...
-[175853] [DBG] [WIFI] Free heap after scanDelete: 1048576 bytes
-[175853] [DBG] [WIFI] Free heap at onExit end: 1048576 bytes
-[175853] [DBG] [ACT] Popped from activity stack, new size = 0
-[175853] [DBG] [ACT] Handling result for popped activity
-[175853] [DBG] [HTTP] Fetching: https://quest-book.ru/online/api/list/new/?page=1
-[175853] [DBG] [HTTP] wolfSSL GET: https://quest-book.ru/online/api/list/new/?page=1 (heap 1048576, max block 1048576)
-[175853] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[180271] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[180325] [INF] [MEM] Free: 1048576 bytes, Total: 1048576 bytes, Min Free: 1048576 bytes, MaxAlloc: 1048576 bytes
-[180325] [INF] [MEM] PSRAM: Free: 8388608 bytes, Total: 8388608 bytes, Min Free: 8388608 bytes, MaxAlloc: 8388608 bytes
-[181860] [DBG] [ACT] Pushed to activity stack, new size = 1
-[181860] [DBG] [ACT] Entering activity: StorygameDetails
-[181862] [DBG] [GFX] Time = 2 ms from clearScreen to displayBuffer
-[181876] [DBG] [GFX] Time = 2 ms from clearScreen to displayBuffer
-[190325] [INF] [MEM] Free: 1048576 bytes, Total: 1048576 bytes, Min Free: 1048576 bytes, MaxAlloc: 1048576 bytes
-[190325] [INF] [MEM] PSRAM: Free: 8388608 bytes, Total: 8388608 bytes, Min Free: 8388608 bytes, MaxAlloc: 8388608 bytes
-[191748] [DBG] [ACT] Exiting activity: StorygameDetails
-[191748] [DBG] [ACT] Popped from activity stack, new size = 0
-[191748] [DBG] [ACT] Handling result for popped activity
-[191749] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[192338] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[192865] [DBG] [ACT] Exiting activity: QuestBookCatalog
-[192897] [DBG] [MAIN] Silent restart (target=home)
-[192897] [DBG] [GFX] Time = 559 ms from clearScreen to displayBuffer
-[192954] [DBG] [ACT] No more activities on stack, going home
-[192954] [DBG] [ACT] Entering activity: Home
-[192954] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[192968] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[194114] [DBG] [ACT] Exiting activity: Home
-[194114] [DBG] [ACT] Entering activity: SettingsList
-[194115] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[195984] [DBG] [ACT] Pushed to activity stack, new size = 1
-[195984] [DBG] [ACT] Entering activity: Settings
-[SIM] open failed: ./fs_/dictionaries (flags=0x0 errno=2 No such file or directory)
-[195984] [DBG] [DREG] No /dictionaries directory on SD card
-[SIM] open failed: ./fs_/.dictionaries (flags=0x0 errno=2 No such file or directory)
-[195984] [DBG] [DREG] No /.dictionaries directory on SD card
-[195985] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[198347] [DBG] [ACT] Exiting activity: Settings
-[198347] [DBG] [ACT] Popped from activity stack, new size = 0
-[198347] [DBG] [ACT] Handling result for popped activity
-[198347] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[200325] [INF] [MEM] Free: 1048576 bytes, Total: 1048576 bytes, Min Free: 1048576 bytes, MaxAlloc: 1048576 bytes
-[200325] [INF] [MEM] PSRAM: Free: 8388608 bytes, Total: 8388608 bytes, Min Free: 8388608 bytes, MaxAlloc: 8388608 bytes
-[200478] [DBG] [ACT] Pushed to activity stack, new size = 1
-[200478] [DBG] [ACT] Entering activity: Settings
-[SIM] open failed: ./fs_/dictionaries (flags=0x0 errno=2 No such file or directory)
-[200478] [DBG] [DREG] No /dictionaries directory on SD card
-[SIM] open failed: ./fs_/.dictionaries (flags=0x0 errno=2 No such file or directory)
-[200478] [DBG] [DREG] No /.dictionaries directory on SD card
-[200479] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[202715] [DBG] [ACT] Pushed to activity stack, new size = 2
-[202715] [DBG] [ACT] Entering activity: WifiSelection
-[202715] [DBG] [WCS] Loaded 0 WiFi credentials from file
-[202817] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[202831] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[207775] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[207788] [DBG] [WIFI] Connected BSSID: 02:00:00:00:00:02, channel: 1, RSSI: -45 dBm
-[207788] [DBG] [WIFI] Connected with saved/open credentials, completing immediately
-[207788] [DBG] [ACT] Exiting activity: WifiSelection
-[207788] [DBG] [WIFI] Free heap at onExit start: 1048576 bytes
-[207788] [DBG] [WIFI] Deleting WiFi scan...
-[207788] [DBG] [WIFI] Free heap after scanDelete: 1048576 bytes
-[207788] [DBG] [WIFI] Free heap at onExit end: 1048576 bytes
-[207788] [DBG] [ACT] Popped from activity stack, new size = 1
-[207788] [DBG] [ACT] Handling result for popped activity
-[207823] [DBG] [MAIN] Silent restart (target=settings)
-[207823] [DBG] [GFX] Time = 48 ms from clearScreen to displayBuffer
-[207877] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[210332] [INF] [MEM] Free: 1048576 bytes, Total: 1048576 bytes, Min Free: 1048576 bytes, MaxAlloc: 1048576 bytes
-[210332] [INF] [MEM] PSRAM: Free: 8388608 bytes, Total: 8388608 bytes, Min Free: 8388608 bytes, MaxAlloc: 8388608 bytes
-[211183] [DBG] [ACT] Pushed to activity stack, new size = 2
-[211183] [DBG] [ACT] Entering activity: WifiSelection
-[211183] [DBG] [WCS] Loaded 0 WiFi credentials from file
-[211288] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[211302] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[219770] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[219783] [DBG] [WIFI] Connected BSSID: 02:00:00:00:00:02, channel: 1, RSSI: -45 dBm
-[219783] [DBG] [WIFI] Connected with saved/open credentials, completing immediately
-[219783] [DBG] [ACT] Exiting activity: WifiSelection
-[219783] [DBG] [WIFI] Free heap at onExit start: 1048576 bytes
-[219783] [DBG] [WIFI] Deleting WiFi scan...
-[219783] [DBG] [WIFI] Free heap after scanDelete: 1048576 bytes
-[219783] [DBG] [WIFI] Free heap at onExit end: 1048576 bytes
-[219783] [DBG] [ACT] Popped from activity stack, new size = 1
-[219783] [DBG] [ACT] Handling result for popped activity
-[219818] [DBG] [MAIN] Silent restart (target=settings)
-[219818] [DBG] [GFX] Time = 48 ms from clearScreen to displayBuffer
-[219875] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[220332] [INF] [MEM] Free: 1048576 bytes, Total: 1048576 bytes, Min Free: 1048576 bytes, MaxAlloc: 1048576 bytes
-[220332] [INF] [MEM] PSRAM: Free: 8388608 bytes, Total: 8388608 bytes, Min Free: 8388608 bytes, MaxAlloc: 8388608 bytes
-[223244] [DBG] [ACT] Exiting activity: Settings
-[223244] [DBG] [ACT] Popped from activity stack, new size = 0
-[223244] [DBG] [ACT] Handling result for popped activity
-[223244] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[223774] [DBG] [ACT] Exiting activity: SettingsList
-[223774] [DBG] [UI] Using Lyra theme
-[223774] [DBG] [ACT] Entering activity: Home
-[223775] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[223788] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[224766] [DBG] [ACT] Exiting activity: Home
-[224766] [DBG] [ACT] Entering activity: QuestBookCatalog
-[224766] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[225591] [DBG] [ACT] Pushed to activity stack, new size = 1
-[225591] [DBG] [ACT] Entering activity: WifiSelection
-[225591] [DBG] [WCS] Loaded 0 WiFi credentials from file
-[225591] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[225696] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[225710] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[226767] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[226781] [DBG] [WIFI] Connected BSSID: 02:00:00:00:00:02, channel: 1, RSSI: -45 dBm
-[226781] [DBG] [WIFI] Connected with saved/open credentials, completing immediately
-[226781] [DBG] [ACT] Exiting activity: WifiSelection
-[226781] [DBG] [WIFI] Free heap at onExit start: 1048576 bytes
-[226781] [DBG] [WIFI] Deleting WiFi scan...
-[226781] [DBG] [WIFI] Free heap after scanDelete: 1048576 bytes
-[226781] [DBG] [WIFI] Free heap at onExit end: 1048576 bytes
-[226781] [DBG] [ACT] Popped from activity stack, new size = 0
-[226781] [DBG] [ACT] Handling result for popped activity
-[226781] [DBG] [HTTP] Fetching: https://quest-book.ru/online/api/list/new/?page=1
-[226781] [DBG] [HTTP] wolfSSL GET: https://quest-book.ru/online/api/list/new/?page=1 (heap 1048576, max block 1048576)
-[226781] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
-[252323] [DBG] [LOOP] New max loop duration: 25543 ms (activity: 25543 ms)
-[252324] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-[252377] [INF] [MEM] Free: 1048576 bytes, Total: 1048576 bytes, Min Free: 1048576 bytes, MaxAlloc: 1048576 bytes
-[252378] [INF] [MEM] PSRAM: Free: 8388608 bytes, Total: 8388608 bytes, Min Free: 8388608 bytes, MaxAlloc: 8388608 bytes
-[262394] [INF] [MEM] Free: 1048576 bytes, Total: 1048576 bytes, Min Free: 1048576 bytes, MaxAlloc: 1048576 bytes
-[262394] [INF] [MEM] PSRAM: Free: 8388608 bytes, Total: 8388608 bytes, Min Free: 8388608 bytes, MaxAlloc: 8388608 bytes
-[272432] [INF] [MEM] Free: 1048576 bytes, Total: 1048576 bytes, Min Free: 1048576 bytes, MaxAlloc: 1048576 bytes
-[272432] [INF] [MEM] PSRAM: Free: 8388608 bytes, Total: 8388608 bytes, Min Free: 8388608 bytes, MaxAlloc: 8388608 bytes
-[275177] [DBG] [ACT] Pushed to activity stack, new size = 1
-[275177] [DBG] [ACT] Entering activity: StorygameDetails
-[275179] [DBG] [GFX] Time = 2 ms from clearScreen to displayBuffer
-[275193] [DBG] [GFX] Time = 2 ms from clearScreen to displayBuffer
-[282458] [INF] [MEM] Free: 1048576 bytes, Total: 1048576 bytes, Min Free: 1048576 bytes, MaxAlloc: 1048576 bytes
-[282458] [INF] [MEM] PSRAM: Free: 8388608 bytes, Total: 8388608 bytes, Min Free: 8388608 bytes, MaxAlloc: 8388608 bytes
-[292470] [INF] [MEM] Free: 1048576 bytes, Total: 1048576 bytes, Min Free: 1048576 bytes, MaxAlloc: 1048576 bytes
-[292470] [INF] [MEM] PSRAM: Free: 8388608 bytes, Total: 8388608 bytes, Min Free: 8388608 bytes, MaxAlloc: 8388608 bytes
-[302491] [INF] [MEM] Free: 1048576 bytes, Total: 1048576 bytes, Min Free: 1048576 bytes, MaxAlloc: 1048576 bytes
-[302491] [INF] [MEM] PSRAM: Free: 8388608 bytes, Total: 8388608 bytes, Min Free: 8388608 bytes, MaxAlloc: 8388608 bytes
-[312511] [INF] [MEM] Free: 1048576 bytes, Total: 1048576 bytes, Min Free: 1048576 bytes, MaxAlloc: 1048576 bytes
-[312511] [INF] [MEM] PSRAM: Free: 8388608 bytes, Total: 8388608 bytes, Min Free: 8388608 bytes, MaxAlloc: 8388608 bytes
-[314445] [DBG] [ACT] Exiting activity: StorygameDetails
-[314445] [DBG] [ACT] Popped from activity stack, new size = 0
-[314445] [DBG] [ACT] Handling result for popped activity
-[314446] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
-======================== [SUCCESS] Took 326.82 seconds ========================
+[204] [DBG] [SDREG] Fonts directory not found: /fonts
+[204] [DBG] [SDREG] Discovery complete: 0 families
+[204] [DBG] [SDFS] SD font system ready (0 families discovered)
+[204] [DBG] [MAIN] Fonts setup
+[204] [DBG] [ACT] Entering activity: Boot
+[204] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
+[226] [DBG] [ACT] Exiting activity: Boot
+[226] [DBG] [ACT] Entering activity: Home
+[226] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
+[240] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
+[1406] [DBG] [ACT] Exiting activity: Home
+[1406] [DBG] [ACT] Entering activity: QuestBookCatalog
+[1407] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
+[2222] [DBG] [ACT] Pushed to activity stack, new size = 1
+[2222] [DBG] [ACT] Entering activity: WifiSelection
+[2222] [DBG] [WCS] Loaded 0 WiFi credentials from file
+[2222] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
+[2323] [DBG] [LOOP] New max loop duration: 102 ms (activity: 102 ms)
+[2323] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
+[2337] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
+[3264] [DBG] [LOOP] New max loop duration: 105 ms (activity: 105 ms)
+[3265] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
+[3277] [DBG] [WIFI] Connected BSSID: 02:00:00:00:00:02, channel: 1, RSSI: -45 dBm
+[3277] [DBG] [WIFI] Connected with saved/open credentials, completing immediately
+[3277] [DBG] [ACT] Exiting activity: WifiSelection
+[3277] [DBG] [WIFI] Free heap at onExit start: 1048576 bytes
+[3277] [DBG] [WIFI] Deleting WiFi scan...
+[3278] [DBG] [WIFI] Free heap after scanDelete: 1048576 bytes
+[3278] [DBG] [WIFI] Free heap at onExit end: 1048576 bytes
+[3278] [DBG] [ACT] Popped from activity stack, new size = 0
+[3278] [DBG] [ACT] Handling result for popped activity
+[3278] [DBG] [HTTP] Fetching: https://quest-book.ru/online/api/list/new/?page=1
+[3278] [DBG] [HTTP] wolfSSL GET: https://quest-book.ru/online/api/list/new/?page=1 (heap 1048576, max block 1048576)
+[3278] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
+[4585] [DBG] [LOOP] New max loop duration: 1308 ms (activity: 1308 ms)
+[4585] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
+[5454] [DBG] [ACT] Pushed to activity stack, new size = 1
+[5454] [DBG] [ACT] Entering activity: StorygameDetails
+[5456] [DBG] [GFX] Time = 2 ms from clearScreen to displayBuffer
+[5468] [DBG] [HTTP] Downloading: https://quest-book.ru/online/cover/game19568/?w=128&h=192 -> /.crosspoint/qbcover/5b68e2d938adf27a6c866e3fcf5360c4_v1_128x192.bmp
+[5468] [DBG] [HTTP] wolfSSL GET: https://quest-book.ru/online/cover/game19568/?w=128&h=192 (heap 1048576, max block 1048576)
+[16151] [ERR] [HTTP] wolfSSL request failed: status 404: https://quest-book.ru/online/cover/game19568/?w=128&h=192
+[16151] [ERR] [QBOOK] Cover not served (HTTP 404)
+[16151] [INF] [QBOOK] Cover not served for game19568
+[16151] [DBG] [LOOP] New max loop duration: 10683 ms (activity: 10683 ms)
+[16206] [INF] [MEM] Free: 1048576 bytes, Total: 1048576 bytes, Min Free: 1048576 bytes, MaxAlloc: 1048576 bytes
+[16206] [INF] [MEM] PSRAM: Free: 8388608 bytes, Total: 8388608 bytes, Min Free: 8388608 bytes, MaxAlloc: 8388608 bytes
+[26209] [INF] [MEM] Free: 1048576 bytes, Total: 1048576 bytes, Min Free: 1048576 bytes, MaxAlloc: 1048576 bytes
+[26209] [INF] [MEM] PSRAM: Free: 8388608 bytes, Total: 8388608 bytes, Min Free: 8388608 bytes, MaxAlloc: 8388608 bytes
+[36221] [INF] [MEM] Free: 1048576 bytes, Total: 1048576 bytes, Min Free: 1048576 bytes, MaxAlloc: 1048576 bytes
+[36221] [INF] [MEM] PSRAM: Free: 8388608 bytes, Total: 8388608 bytes, Min Free: 8388608 bytes, MaxAlloc: 8388608 bytes
+[46244] [INF] [MEM] Free: 1048576 bytes, Total: 1048576 bytes, Min Free: 1048576 bytes, MaxAlloc: 1048576 bytes
+[46244] [INF] [MEM] PSRAM: Free: 8388608 bytes, Total: 8388608 bytes, Min Free: 8388608 bytes, MaxAlloc: 8388608 bytes
+[56264] [INF] [MEM] Free: 1048576 bytes, Total: 1048576 bytes, Min Free: 1048576 bytes, MaxAlloc: 1048576 bytes
+[56264] [INF] [MEM] PSRAM: Free: 8388608 bytes, Total: 8388608 bytes, Min Free: 8388608 bytes, MaxAlloc: 8388608 bytes
+[66274] [INF] [MEM] Free: 1048576 bytes, Total: 1048576 bytes, Min Free: 1048576 bytes, MaxAlloc: 1048576 bytes
+[66274] [INF] [MEM] PSRAM: Free: 8388608 bytes, Total: 8388608 bytes, Min Free: 8388608 bytes, MaxAlloc: 8388608 bytes
+[76311] [INF] [MEM] Free: 1048576 bytes, Total: 1048576 bytes, Min Free: 1048576 bytes, MaxAlloc: 1048576 bytes
+[76311] [INF] [MEM] PSRAM: Free: 8388608 bytes, Total: 8388608 bytes, Min Free: 8388608 bytes, MaxAlloc: 8388608 bytes
+[86337] [INF] [MEM] Free: 1048576 bytes, Total: 1048576 bytes, Min Free: 1048576 bytes, MaxAlloc: 1048576 bytes
+[86337] [INF] [MEM] PSRAM: Free: 8388608 bytes, Total: 8388608 bytes, Min Free: 8388608 bytes, MaxAlloc: 8388608 bytes
+[96343] [INF] [MEM] Free: 1048576 bytes, Total: 1048576 bytes, Min Free: 1048576 bytes, MaxAlloc: 1048576 bytes
+[96343] [INF] [MEM] PSRAM: Free: 8388608 bytes, Total: 8388608 bytes, Min Free: 8388608 bytes, MaxAlloc: 8388608 bytes
+[106361] [INF] [MEM] Free: 1048576 bytes, Total: 1048576 bytes, Min Free: 1048576 bytes, MaxAlloc: 1048576 bytes
+[106361] [INF] [MEM] PSRAM: Free: 8388608 bytes, Total: 8388608 bytes, Min Free: 8388608 bytes, MaxAlloc: 8388608 bytes
+[116379] [INF] [MEM] Free: 1048576 bytes, Total: 1048576 bytes, Min Free: 1048576 bytes, MaxAlloc: 1048576 bytes
+[116379] [INF] [MEM] PSRAM: Free: 8388608 bytes, Total: 8388608 bytes, Min Free: 8388608 bytes, MaxAlloc: 8388608 bytes
+[121190] [DBG] [ACT] Exiting activity: StorygameDetails
+[121190] [DBG] [ACT] Popped from activity stack, new size = 0
+[121190] [DBG] [ACT] Handling result for popped activity
+[121191] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
+[122811] [DBG] [ACT] Pushed to activity stack, new size = 1
+[122811] [DBG] [ACT] Entering activity: StorygameDetails
+[122813] [DBG] [GFX] Time = 2 ms from clearScreen to displayBuffer
+[122828] [DBG] [HTTP] Downloading: https://quest-book.ru/online/cover/game19568/?w=128&h=192 -> /.crosspoint/qbcover/5b68e2d938adf27a6c866e3fcf5360c4_v1_128x192.bmp
+[122829] [DBG] [HTTP] wolfSSL GET: https://quest-book.ru/online/cover/game19568/?w=128&h=192 (heap 1048576, max block 1048576)
+[125133] [ERR] [HTTP] wolfSSL request failed: status 404: https://quest-book.ru/online/cover/game19568/?w=128&h=192
+[125133] [ERR] [QBOOK] Cover not served (HTTP 404)
+[125133] [INF] [QBOOK] Cover not served for game19568
+[125146] [DBG] [ACT] Exiting activity: StorygameDetails
+[125146] [DBG] [ACT] Popped from activity stack, new size = 0
+[125146] [DBG] [ACT] Handling result for popped activity
+[125147] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
+[125675] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
+[126382] [INF] [MEM] Free: 1048576 bytes, Total: 1048576 bytes, Min Free: 1048576 bytes, MaxAlloc: 1048576 bytes
+[126382] [INF] [MEM] PSRAM: Free: 8388608 bytes, Total: 8388608 bytes, Min Free: 8388608 bytes, MaxAlloc: 8388608 bytes
+[126758] [DBG] [HTTP] Fetching: https://quest-book.ru/online/api/list/new/?page=1
+[126758] [DBG] [HTTP] wolfSSL GET: https://quest-book.ru/online/api/list/new/?page=1 (heap 1048576, max block 1048576)
+[126758] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
+[126760] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
+[126942] [DBG] [GFX] Time = 1 ms from clearScreen to displayBuffer
+[129745] [DBG] [GFX] Time = 0 ms from clearScreen to displayBuffer
+======================== [SUCCESS] Took 143.33 seconds ========================
 
 Environment       Status    Duration
 ----------------  --------  ------------
-simulator_x4_pro  SUCCESS   00:05:26.824
-========================= 1 succeeded in 00:05:26.824 =========================
+simulator_x4_pro  SUCCESS   00:02:23.330
+========================= 1 succeeded in 00:02:23.330 =========================

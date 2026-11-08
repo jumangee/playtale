@@ -377,7 +377,7 @@ Two facts matter operationally:
 2. **`mitrilController()` never needs to run.** It is fixed platform code — byte-identical in
    structure across all 35 games — implementing DOM manipulation, animation and server calls. Its
    only game-relevant exports are `checkCondition`, the task interpreter, `getItemChangesList`, the
-   charsheet builder and the BBCode table [C: `docs/storygames/game_tpl.xml`].
+   charsheet builder and the BBCode table [C: `docs/storygames/examples/game_tpl.xml`].
 
 `rawSetup` is ASCII-only (Cyrillic is `\u04XX`-escaped), which makes it cheap to parse with a
 byte-oriented JSON reader [M].
@@ -465,11 +465,14 @@ Two properties of the source format make this cheap, and both were verified rath
                 Read by the game page; written by Download, which is still planned (§6.3)
 ```
 
-The tree above is the **permanent** game layout. Catalogue actions also use the same files in
-one shared temporary workspace, `/<library>/storygames/___temp/` (without an `<index_name>`
-subdirectory). That workspace is opened by Play but is never registered as a library item. Its
-contents belong only to the currently played temporary game; cleanup/replacement timing is specified
-in §6.3.
+The tree above is the **permanent** game layout. Catalogue actions also use the same game-content files
+in one shared temporary workspace, `/<library>/storygames/___temp/` (without an `<index_name>`
+subdirectory); `cover.bmp` is not one of them, because only Download writes it. That workspace is
+opened by Play but is never registered as a library item. Its contents belong only to the currently
+played temporary game; cleanup/replacement timing is specified in §6.3.
+
+`/<library>` is the library root the firmware indexes today, which is the SD card's root — every
+`/<library>/…` path in this document resolves relative to it.
 
 `meta.json` is the one deliberate exception to the "XML everywhere" rule, and it is JSON for a
 concrete reason: these fields originate in the catalogue's own JSON API (§2.1) and are read exactly
@@ -1071,8 +1074,9 @@ already has; only the third needs a session.
 key, not as an address to fetch: the URL carries the upload's own random suffix, so a re-uploaded
 cover is a new key with no separate invalidation step. The field is an identifier rather than display
 text, so a URL that exceeds its cap is dropped whole instead of truncated — a cut URL would hash onto
-another game's key. A failed conversion (404) is not cached, so a game with no cover is retried on a
-later visit rather than showing a broken image forever.
+another game's key. Without a key there is no cache entry and no fetch either, so such a game shows the
+icon until the catalogue changes. A failed conversion (404) is not cached, so a game with no cover is
+retried on a later visit rather than showing a broken image forever.
 
 #### Download and Play actions
 
@@ -1100,7 +1104,7 @@ the loader and library integration are built; it must not affect games stored in
 
 Covers are fetched per game page, from the converted endpoint above. The cover file is at most ~3 KB
 of 1-bit BMP, so it neither competes with the retained catalogue page nor needs a decoder; an
-unavailable cover leaves the slot's icon and never blocks or fails the page.
+unavailable cover leaves the slot's icon, never delays the first frame and never fails the page.
 
 ### 6.4 Resource constraint that shapes the navigation
 
@@ -1211,7 +1215,8 @@ excluded from v1. The mitigation is to implement exactly the twelve BBCode const
 7. **Tags and search** — once questions 3 and 4 are answered.
 
 Steps 3–5 are where host-side tests pay off: the corpus is downloadable, the format is declarative,
-and the reference implementation in `docs/storygames/` can generate expected results for comparison.
+and the reference implementation in `docs/storygames/examples/` can generate expected results for
+comparison.
 That makes the runtime testable without hardware, which is unusual for this project.
 
 ---
@@ -1260,8 +1265,9 @@ Recorded because they changed the plan:
 
 ## Appendix C — The converter
 
-`playtale.php` in this directory is the converter. It is PHP 5.3 compatible, takes a game XML and
-writes the `/playtale/` document described in §4.3 and §4.6. The response root is `<storygame v="1">`.
+`playtale.php` in `docs/storygames/examples/` is the converter. It is PHP 5.3 compatible, takes a game
+XML and writes the `/playtale/` document described in §4.3 and §4.6. The response root is
+`<storygame v="1">`.
 
 ```
 php playtale.php <input.xml> [output.xml] [options]

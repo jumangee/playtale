@@ -1,6 +1,7 @@
 # File Formats
 
-These formats describe the SD-card cache files under `/.crosspoint/epub_<hash>/`.
+These formats describe the SD-card files this firmware writes under
+`/.crosspoint/`, from the per-book EPUB caches to the storygame cover cache.
 КвестБук Читалка (PlayTale) keeps the upstream `/.crosspoint/` directory name
 (not renamed yet), because existing cards already store their caches there.
 All POD fields are written in the ESP32 little-endian representation used by
@@ -774,8 +775,8 @@ One file per catalogue cover, holding exactly the bytes the service served: a
 white, set bit white), 62-byte header plus `(width + 31) / 32 * 4` bytes per row.
 The service preserves the source aspect ratio and never upscales, so a file is at
 most 128-wide and 192-tall — 3 134 bytes when full size — but can be shorter. The
-cache is small by construction and has no eviction pass; Settings → Clear reading
-cache reclaims the whole directory.
+cache is small by construction and has no eviction pass; Settings → Clear
+Reading Cache reclaims the whole directory.
 
 `<md5>` is the lowercase hex MD5 of the catalogue entry's `cover` URL, not of
 `index_name`: that URL carries the upload's own random suffix, so a re-uploaded
@@ -783,12 +784,14 @@ cover is a new key and needs no separate invalidation step. The `_v<version>`
 and `_<width>x<height>` parts are the format version
 (`questbook_cover::CACHE_VERSION`) and the slot the pixels were rendered for.
 Bumping the version, moving the slot, or changing the pixel pipeline makes every
-existing file unreachable, which is the whole invalidation rule.
+existing file unreachable, which is the whole invalidation rule; a pipeline change
+only takes effect through such a bump.
 
 A file is accepted only when it is the answer this page asked for: 1 bpp, no
 larger than the slot, and exactly as long as its own header and row count
 declare. The pixel-data offset is read from the file rather than assumed, so a
-longer palette cannot let a truncated file pass.
+longer palette cannot let a truncated file pass. The service writes top-down
+rows; a bottom-up file would be drawn too, but nothing produces one.
 
 A downloaded game will also carry a cover at `/storygames/<index_name>/cover.bmp`
 (the library root is the SD root); it is read in preference to this cache and is
@@ -796,7 +799,9 @@ not versioned, because the library tree is not a cache. Nothing writes that file
 yet — Download is still planned.
 
 `HttpDownloader` stages the body as `<name>.part` and renames it only after a
-complete transfer. A file that fails the check above is deleted, so a broken or
-truncated answer is never drawn and never survives as a cache entry. An
+complete transfer. A cache file that fails the check above is deleted, so a
+broken or truncated answer is never drawn and never survives as a cache entry. A
+file beside a downloaded game is checked the same way but not deleted — it
+belongs to the library tree — and the page falls back to this cache instead. An
 unparseable file found in the cache is deleted and fetched again. A 404 from the
 service is not cached, so a game with no cover is retried on a later visit.

@@ -45,11 +45,11 @@ twelve games per page, each row showing the game's name and author. Selecting a 
 cover, which is fetched from the service's own conversion endpoint and cached on the SD card. For
 the reader's view of these screens see [USER_GUIDE.md](USER_GUIDE.md#311-квестбук).
 
-No game is downloaded yet: the game page is reference information until the on-SD layout is decided,
-so this step validates the service contract and the memory plan without the runtime. Only the cover
-travels to the device, into a cache.
+No game is downloaded yet: the game page is reference information while the download and the import
+into the layout agreed for it are built, so this step validates the service contract and the memory plan
+without the runtime. Only the cover travels to the device, into a cache.
 
-**Still planned:** the game's own download, and the on-SD layout it lands in.
+**Still planned:** the game's own download and import into the layout it will live in, and Play.
 
 **Why a built-in section rather than a plugin catalogue.** The SD-plugin path below could list the
 same games with no new firmware, and it is the cheaper route for a generic catalogue. It was not taken
