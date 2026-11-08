@@ -1,0 +1,241 @@
+Processing default (platform: https://github.com/pioarduino/platform-espressif32/releases/download/55.03.311/platform-espressif32.zip; board: esp32-c3-devkitm-1; framework: arduino)
+--------------------------------------------------------------------------------
+Tool Manager: Installing https://github.com/pioarduino/registry/releases/download/0.0.1/scons-4.8.1.zip
+Unpacking 0% 10% 20%
+Tool Manager: tool-scons@4.40801.0 has been installed!
+Tool Manager: Installing https://github.com/pioarduino/scons/releases/download/4.11.1/scons-local-4.11.1.tar.gz
+Unpacking 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%
+Tool Manager: tool-scons@4.41101.0 has been installed!
+Tool Manager: Installing https://github.com/pioarduino/scons/releases/download/4.11.1/scons-local-4.11.1.tar.gz
+Unpacking 0% 10% 20% 30% 40% 50% 60% 70% 80% 90% 100%
+Tool Manager: tool-scons@4.41101.0 has been installed!
+Verbose mode can be enabled via `-v, --verbose` option
+Patched wolfSSL settings: .pio\libdeps\default\Arduino-wolfSSL\src\user_settings.h
+Generated: src\components\icons\checkbox_onSvg.generated.h
+  Original: 252 bytes
+  Minified: 252 bytes (100.0%)
+  Compressed: 171 bytes (67.9%)
+Generated: src\images\logoSvg.generated.h
+  Original: 654 bytes
+  Minified: 654 bytes (100.0%)
+  Compressed: 382 bytes (58.4%)
+Generated: src\network\html\FilesPageHtml.generated.h
+  Original: 146959 bytes
+  Minified: 104126 bytes (70.9%)
+  Compressed: 25458 bytes (17.3%)
+Generated: src\network\html\FontsPageHtml.generated.h
+  Original: 8398 bytes
+  Minified: 9046 bytes (107.7%)
+  Compressed: 3296 bytes (39.2%)
+Generated: src\network\html\HomePageHtml.generated.h
+  Original: 2195 bytes
+  Minified: 5362 bytes (244.3%)
+  Compressed: 1932 bytes (88.0%)
+Generated: src\network\html\PluginsPageHtml.generated.h
+  Original: 1277 bytes
+  Minified: 4742 bytes (371.3%)
+  Compressed: 1812 bytes (141.9%)
+Generated: src\network\html\RunnerPageHtml.generated.h
+  Original: 1223 bytes
+  Minified: 731 bytes (59.8%)
+  Compressed: 477 bytes (39.0%)
+Generated: src\network\html\SettingsPageHtml.generated.h
+  Original: 21779 bytes
+  Minified: 19617 bytes (90.1%)
+  Compressed: 5021 bytes (23.1%)
+Generated: src\network\html\assets\crosspoint_iconSvg.generated.h
+  Original: 586 bytes
+  Minified: 586 bytes (100.0%)
+  Compressed: 344 bytes (58.7%)
+Generated: src\network\html\assets\iconsSvg.generated.h
+  Original: 1167 bytes
+  Minified: 1167 bytes (100.0%)
+  Compressed: 471 bytes (40.4%)
+Generated: src\network\html\assets\webCss.generated.h
+  Original: 21184 bytes
+  Minified: 17166 bytes (81.0%)
+  Compressed: 4238 bytes (20.0%)
+Generated: src\network\html\js\epub_optimizerJs.generated.h
+  Original: 68679 bytes
+  Minified: 44771 bytes (65.2%)
+  Compressed: 11319 bytes (16.5%)
+Generated: src\network\html\js\jszip_minJs.generated.h
+  Original: 97630 bytes
+  Minified: 97630 bytes (100.0%)
+  Compressed: 28379 bytes (29.1%)
+Generated: src\network\html\js\plugin_hostJs.generated.h
+  Original: 10845 bytes
+  Minified: 5971 bytes (55.1%)
+  Compressed: 2204 bytes (20.3%)
+Language              Code  BCP47        Own  Fallback  Unused  Data (B)
+--------------------  ----  -----------  ---  --------  ------  --------
+English               EN    en           663  0         17      11286   
+العربية               AR    ar           449  214       8       13537   
+Azərbaycanca          AZ    az           640  23        17      14468   
+Беларуская            BE    be           440  223       8       15273   
+Български             BG    bg           423  240       8       15313   
+Bosanski              BS    bs           440  223       8       9049    
+Català                CA    ca           656  7         17      14533   
+Valencià              CAV   ca-valencia  656  7         17      14509   
+Čeština               CS    cs           440  223       8       9476    
+Dansk                 DA    da           329  334       7       5682    
+Deutsch               DE    de           631  32        17      12501   
+Español               ES    es           656  7         17      13871   
+فارسی                 FA    fa           452  211       9       14520   
+Suomi                 FI    fi           301  362       5       5816    
+Français              FR    fr           497  166       12      9781    
+עברית                 HE    he           656  7         17      17365   
+Magyar                HU    hu           440  223       8       9952    
+Bahasa Indonesia      ID    id           440  223       8       8446    
+Italiano              IT    it           656  7         17      13138   
+Қазақша               KK    kk           440  223       8       15428   
+Lietuvių              LT    lt           440  223       8       7882    
+Norsk bokmål          NB    nb           440  223       8       8045    
+Nederlands            NL    nl           329  334       7       5754    
+Orangutan             OOK   ook          333  330       4       2627    
+Polski                PL    pl           550  113       12      11424   
+Português (Brasil)    PT    pt-BR        522  141       12      10159   
+Português (Portugal)  P2    pt-PT        522  141       12      10922   
+Română                RO    ro           329  334       7       6491    
+Русский               RU    ru           642  21        17      21245   
+Slovenčina            SK    sk           440  223       8       9609    
+Slovenščina           SI    sl           440  223       8       8992    
+Svenska               SV    sv           639  24        0       12670   
+Türkçe                TR    tr           441  222       8       9014    
+Українська            UK    uk           442  221       8       15652   
+Tiếng Việt            VI    vi           656  7         17      15762   
+
+  Total: 663  |  Used in code: 646  |  Never used: 17
+  Flash: 400,192 B strings (deduped)  +  46,410 B offset tables  =  446,602 B
+
+  Stripping 17 unused string(s) from output.
+
+Code generation complete!
+  Languages: 35
+  String keys: 646
+CrossPoint build version: 0.1.0-dev-develop-224a7a66
+CONFIGURATION: https://docs.platformio.org/page/boards/espressif32/esp32-c3-devkitm-1.html
+PLATFORM: Espressif 32 (55.3.311) > Espressif ESP32-C3-DevKitM-1
+HARDWARE: ESP32C3 160MHz, 320KB RAM, 16MB Flash
+DEBUG: Current (cmsis-dap) External (cmsis-dap, esp-bridge, esp-builtin, esp-prog, esp-prog-2, iot-bus-jtag, jlink, minimodule, olimex-arm-usb-ocd, olimex-arm-usb-ocd-h, olimex-arm-usb-tiny-h, olimex-jtag-tiny, tumpa)
+PACKAGES: 
+ - contrib-piohome @ 3.4.4 
+ - framework-arduinoespressif32 @ 3.3.11 
+ - framework-arduinoespressif32-libs @ 5.5.5+sha.b774170ff46 
+ - framework-espidf @ 3.50505.0 (5.5.5) 
+ - tool-cmake @ 4.0.3 
+ - tool-cppcheck @ 2.20.1 
+ - tool-esp-rom-elfs @ 2024.10.11 
+ - tool-esptoolpy @ 5.3.0 
+ - tool-ninja @ 1.13.1 
+ - tool-riscv32-esp-elf-gdb @ 17.1.0+20260402 
+ - toolchain-riscv32-esp @ 14.2.0+20260121
+*** Compile Arduino IDF libs for default ***
+*** "custom_component" is used to deselect managed idf components ***
+[ComponentManager] Created backup of build file
+[ComponentManager] Component not found: espressif/esp_insights
+[ComponentManager] Component not found: espressif/esp_rainmaker
+[ComponentManager] Component not found: espressif/esp_diagnostics
+[ComponentManager] Component not found: espressif/esp_diag_data_store
+[ComponentManager] Component not found: espressif/esp_schedule
+[ComponentManager] Component not found: espressif/esp_rcp_update
+[ComponentManager] Component not found: espressif/esp_secure_cert_mgr
+[ComponentManager] Component not found: espressif/cbor
+[ComponentManager] Component not found: espressif/esp-zboss-lib
+[ComponentManager] Component not found: espressif/esp-zigbee-lib
+[ComponentManager] BT/BLE protection enabled
+[ComponentManager] Protected BT library: bt
+[ComponentManager] Processed 1 ignored libraries
+[ComponentManager] Session completed with 14 changes
+*** Add "custom_sdkconfig" settings to IDF sdkconfig.defaults ***
+Info: Unified frequency mode (>= 80MHz): 80MHz for both Flash and PSRAM
+Replace: CONFIG_ESPTOOLPY_FLASHMODE_QIO=y with: # CONFIG_ESPTOOLPY_FLASHMODE_QIO is not set
+Replace: # CONFIG_ESPTOOLPY_FLASHMODE_QOUT is not set with: # CONFIG_ESPTOOLPY_FLASHMODE_QOUT is not set
+Replace: # CONFIG_ESPTOOLPY_FLASHMODE_DIO is not set with: CONFIG_ESPTOOLPY_FLASHMODE_DIO=y
+Replace: # CONFIG_ESPTOOLPY_FLASHMODE_DOUT is not set with: # CONFIG_ESPTOOLPY_FLASHMODE_DOUT is not set
+Replace: CONFIG_ESPTOOLPY_FLASHFREQ_80M=y with: CONFIG_ESPTOOLPY_FLASHFREQ_80M=y
+Replace: # CONFIG_ESPTOOLPY_FLASHFREQ_40M is not set with: # CONFIG_ESPTOOLPY_FLASHFREQ_40M is not set
+Replace: # CONFIG_ESPTOOLPY_FLASHFREQ_26M is not set with: # CONFIG_ESPTOOLPY_FLASHFREQ_26M is not set
+Replace: # CONFIG_ESPTOOLPY_FLASHFREQ_20M is not set with: # CONFIG_ESPTOOLPY_FLASHFREQ_20M is not set
+Replace: CONFIG_ESPTOOLPY_FLASHFREQ="80m" with: CONFIG_ESPTOOLPY_FLASHFREQ="80m"
+Replace: CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y with: # CONFIG_ESPTOOLPY_FLASHSIZE_4MB is not set
+Replace: # CONFIG_ESPTOOLPY_FLASHSIZE_8MB is not set with: # CONFIG_ESPTOOLPY_FLASHSIZE_8MB is not set
+Replace: # CONFIG_ESPTOOLPY_FLASHSIZE_16MB is not set with: CONFIG_ESPTOOLPY_FLASHSIZE_16MB=y
+Replace: # CONFIG_ESPTOOLPY_FLASHSIZE_32MB is not set with: # CONFIG_ESPTOOLPY_FLASHSIZE_32MB is not set
+Replace: # CONFIG_ESPTOOLPY_FLASHSIZE_64MB is not set with: # CONFIG_ESPTOOLPY_FLASHSIZE_64MB is not set
+Replace: # CONFIG_ESPTOOLPY_FLASHSIZE_128MB is not set with: # CONFIG_ESPTOOLPY_FLASHSIZE_128MB is not set
+Replace: CONFIG_ESPTOOLPY_FLASHSIZE="4MB" with: CONFIG_ESPTOOLPY_FLASHSIZE="16MB"
+Replace: # CONFIG_ARDUINO_SELECTIVE_COMPILATION is not set with: CONFIG_ARDUINO_SELECTIVE_COMPILATION=y
+Replace: CONFIG_BT_ENABLED=y with: CONFIG_BT_ENABLED=y
+Replace: CONFIG_BT_NIMBLE_HOST_TASK_STACK_SIZE=5120 with: CONFIG_BT_NIMBLE_HOST_TASK_STACK_SIZE=4096
+Replace: CONFIG_BT_NIMBLE_ROLE_PERIPHERAL=y with: CONFIG_BT_NIMBLE_ROLE_PERIPHERAL=n
+Replace: CONFIG_BT_NIMBLE_ROLE_BROADCASTER=y with: CONFIG_BT_NIMBLE_ROLE_BROADCASTER=n
+Replace: CONFIG_BT_NIMBLE_MAX_BONDS=3 with: CONFIG_BT_NIMBLE_MAX_BONDS=4
+Replace: CONFIG_BT_NIMBLE_MAX_CONNECTIONS=3 with: CONFIG_BT_NIMBLE_MAX_CONNECTIONS=1
+Replace: CONFIG_BT_NIMBLE_ATT_PREFERRED_MTU=256 with: CONFIG_BT_NIMBLE_ATT_PREFERRED_MTU=23
+Replace: CONFIG_BT_NIMBLE_MSYS_1_BLOCK_COUNT=12 with: CONFIG_BT_NIMBLE_MSYS_1_BLOCK_COUNT=12
+Replace: CONFIG_BT_NIMBLE_MSYS_2_BLOCK_COUNT=24 with: CONFIG_BT_NIMBLE_MSYS_2_BLOCK_COUNT=12
+Replace: CONFIG_BT_NIMBLE_TRANSPORT_ACL_FROM_LL_COUNT=24 with: CONFIG_BT_NIMBLE_TRANSPORT_ACL_FROM_LL_COUNT=8
+Replace: CONFIG_BT_CTRL_BLE_MAX_ACT=6 with: CONFIG_BT_CTRL_BLE_MAX_ACT=4
+Replace: # CONFIG_BT_CTRL_RUN_IN_FLASH_ONLY is not set with: CONFIG_BT_CTRL_RUN_IN_FLASH_ONLY=y
+Replace: # CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_80 is not set with: # CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_80 is not set
+Replace: CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_160=y with: CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_160=y
+Replace: CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ=160 with: CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ=160
+Replace: CONFIG_ESP_IPC_TASK_STACK_SIZE=2048 with: CONFIG_ESP_IPC_TASK_STACK_SIZE=1024
+Replace: CONFIG_ESP_TIMER_TASK_STACK_SIZE=8192 with: CONFIG_ESP_TIMER_TASK_STACK_SIZE=4096
+Replace: # CONFIG_ESP_WIFI_IRAM_OPT is not set with: CONFIG_ESP_WIFI_IRAM_OPT=n
+Replace: # CONFIG_ESP_WIFI_RX_IRAM_OPT is not set with: CONFIG_ESP_WIFI_RX_IRAM_OPT=n
+Replace: CONFIG_ESP_WIFI_GCMP_SUPPORT=y with: CONFIG_ESP_WIFI_GCMP_SUPPORT=n
+Replace: CONFIG_FREERTOS_TIMER_TASK_STACK_DEPTH=4096 with: CONFIG_FREERTOS_TIMER_TASK_STACK_DEPTH=2560
+Replace: CONFIG_LIBC_OPTIMIZED_MISALIGNED_ACCESS=y with: CONFIG_LIBC_OPTIMIZED_MISALIGNED_ACCESS=n
+Replace: CONFIG_FMB_TCP_CONNECTION_TOUT_SEC=2 with: CONFIG_FMB_TCP_CONNECTION_TOUT_SEC=20
+Replace: CONFIG_FMB_MASTER_TIMEOUT_MS_RESPOND=5000 with: CONFIG_FMB_MASTER_TIMEOUT_MS_RESPOND=3000
+Replace: CONFIG_FMB_MASTER_MAX_API_BLOCKING_TIME_MS=6000 with: CONFIG_FMB_MASTER_MAX_API_BLOCKING_TIME_MS=10000
+Replace: CONFIG_FMB_QUEUE_LENGTH=50 with: CONFIG_FMB_QUEUE_LENGTH=20
+Replace: CONFIG_ESP_RMAKER_WORK_QUEUE_TASK_STACK=5120 with: CONFIG_ESP_RMAKER_WORK_QUEUE_TASK_STACK=4096
+Replace: # CONFIG_ESP32C3_DEFAULT_CPU_FREQ_80 is not set with: # CONFIG_ESP32C3_DEFAULT_CPU_FREQ_80 is not set
+Replace: CONFIG_ESP32C3_DEFAULT_CPU_FREQ_160=y with: CONFIG_ESP32C3_DEFAULT_CPU_FREQ_160=y
+Add: # CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_240 is not set
+Add: # CONFIG_ESP32C3_DEFAULT_CPU_FREQ_240 is not set
+Add: # CONFIG_ESPTOOLPY_FLASHFREQ_120M is not set
+Add: # CONFIG_SPIRAM is not set
+Add: CONFIG_ARDUINO_SELECTIVE_ArduinoOTA=n
+Add: CONFIG_ARDUINO_SELECTIVE_BLE=n
+Add: CONFIG_ARDUINO_SELECTIVE_BluetoothSerial=n
+Add: CONFIG_ARDUINO_SELECTIVE_EEPROM=n
+Add: CONFIG_ARDUINO_SELECTIVE_ESP_Video=n
+Add: CONFIG_ARDUINO_SELECTIVE_Ethernet=n
+Add: CONFIG_ARDUINO_SELECTIVE_FFat=n
+Add: CONFIG_ARDUINO_SELECTIVE_HTTPUpdate=n
+Add: CONFIG_ARDUINO_SELECTIVE_LittleFS=n
+Add: CONFIG_ARDUINO_SELECTIVE_Matter=n
+Add: CONFIG_ARDUINO_SELECTIVE_NetBIOS=n
+Add: CONFIG_ARDUINO_SELECTIVE_OpenThread=n
+Add: CONFIG_ARDUINO_SELECTIVE_PPP=n
+Add: CONFIG_ARDUINO_SELECTIVE_SD=n
+Add: CONFIG_ARDUINO_SELECTIVE_SD_MMC=n
+Add: CONFIG_ARDUINO_SELECTIVE_SimpleBLE=n
+Add: CONFIG_ARDUINO_SELECTIVE_SPIFFS=n
+Add: CONFIG_ARDUINO_SELECTIVE_Ticker=n
+Add: CONFIG_ARDUINO_SELECTIVE_WiFiProv=n
+Add: CONFIG_ARDUINO_SELECTIVE_Zigbee=n
+Add: CONFIG_ARDUINO_SELECTIVE_RainMaker=n
+Add: CONFIG_ARDUINO_SELECTIVE_Insights=n
+Add: CONFIG_ARDUINO_SELECTIVE_ESP_SR=n
+Using Python 3.11.7 environment at: C:\Users\Jumangee\.platformio\penv\.espidf-5.5.5
+Reading CMake configuration...
+[ESP-IDF] Ignoring components based on lib_ignore: bt
+Generating assembly for certificate bundle...
+LDF: Library Dependency Finder -> https://bit.ly/configure-pio-ldf
+LDF Modes: Finder ~ chain, Compatibility ~ soft
+Found 107 compatible libraries
+Scanning dependencies...
+No dependencies
+Building in release mode
+*** [.pio\build\default\firmware.elf] ModuleNotFoundError : No module named 'SCons.Tool.FortranCommon'
+========================= [FAILED] Took 225.52 seconds =========================
+
+Environment    Status    Duration
+-------------  --------  ------------
+default        FAILED    00:03:45.523
+==================== 1 failed, 0 succeeded in 00:03:45.523 ====================
