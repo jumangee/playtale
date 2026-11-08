@@ -141,7 +141,7 @@ Notes:
 
 Two singletons are central:
 
-- `src/CrossPointSettings.h` (`SETTINGS`): user preferences and behavior flags (the source file names are not renamed yet; display names are resolved through `STR_QUESTBOOK_READER`)
+- `src/CrossPointSettings.h` (`SETTINGS`): user preferences and behavior flags (the source file names are not renamed yet; branding strings such as `STR_QUESTBOOK_READER` and `STR_QUESTBOOK` live in the translation files)
 - `src/CrossPointState.h` (`APP_STATE`): runtime/session state such as current book and sleep context
 
 Typical persisted areas on SD:

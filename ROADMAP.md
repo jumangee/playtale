@@ -33,12 +33,12 @@ Phase 0 is closed.
 
 **Planned work:**
 
-* A **КвестБук** entry in the device UI as the reader's route to quest-book.ru.
+* A **Quest-Book.ru** entry in the device UI as the reader's route to quest-book.ru.
 * Browsing the КвестБук catalogue and downloading a storygame to the SD card.
 * A storygame file format placed under the library root, so downloaded games appear in the existing
   library and file browser.
 
-**Shipped so far.** The **КвестБук** entry leads the home menu (behind «Продолжить чтение» in themes
+**Shipped so far.** The **Quest-Book.ru** entry leads the home menu (behind «Продолжить чтение» in themes
 that put it there) and opens `QuestBookCatalogActivity`: the service's `new` and `editorial` lists,
 twelve games per page, each row showing the game's name and author. Selecting a row opens
 `StorygameDetailsActivity` — name, author, tags, rating, like counts, the game's description and its
