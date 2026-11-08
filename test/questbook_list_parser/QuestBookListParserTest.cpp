@@ -266,11 +266,20 @@ TEST(QuestBookListParser, ParsesTheCapturedLivePage) {
   EXPECT_EQ(parser.rows()[0].indexName, "game19568");
   EXPECT_EQ(parser.rows()[0].author, "Дмитрий Дударь");
   EXPECT_EQ(parser.rows()[0].stars, 3);
+  // `cover` is kept: it is the key of the on-device cover cache, and the
+  // response's escaped slashes must arrive as plain ones or the key would
+  // change with the escaping.
+  EXPECT_EQ(parser.rows()[0].cover,
+            "http://quest-book.ru/online/upload/5702_876ead0aa20579d7e83c661eb26114b9.jpg");
+  EXPECT_EQ(parser.rows()[2].cover,
+            "https://quest-book.ru/online/upload/6945_eead9b4ddd182c0306d4e09f36bb93bb.jpg");
   EXPECT_FALSE(parser.rows()[0].tags.empty());
   for (const auto& row : parser.rows()) {
     EXPECT_FALSE(row.title.empty());
     EXPECT_FALSE(row.gameId.empty());
     EXPECT_FALSE(row.indexName.empty());
+    EXPECT_FALSE(row.cover.empty());
+    EXPECT_LE(row.cover.size(), QuestBookListParser::COVER_MAX);
     EXPECT_LE(row.description.size(), QuestBookListParser::DESCRIPTION_MAX);
   }
 }

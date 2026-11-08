@@ -766,3 +766,37 @@ Book moves rename the store and its `.deleted` journal (plus recovery sidecars)
 together. The stored source path is informational and is refreshed on the next
 save; the current file path selects the store. Local book deletion cleans up all
 of these sidecars but preserves the independent `My Clippings.txt` export.
+
+## Storygame cover cache (`/.crosspoint/qbcover/<md5>_v1_128x192.bmp`)
+
+One file per catalogue cover, holding exactly the bytes the service served: a
+1-bit top-down BMP with the standard two-entry palette (index 0 black, index 1
+white, set bit white), 62-byte header plus `(width + 31) / 32 * 4` bytes per row.
+The service preserves the source aspect ratio and never upscales, so a file is at
+most 128-wide and 192-tall — 3 134 bytes when full size — but can be shorter. The
+cache is small by construction and has no eviction pass; Settings → Clear reading
+cache reclaims the whole directory.
+
+`<md5>` is the lowercase hex MD5 of the catalogue entry's `cover` URL, not of
+`index_name`: that URL carries the upload's own random suffix, so a re-uploaded
+cover is a new key and needs no separate invalidation step. The `_v<version>`
+and `_<width>x<height>` parts are the format version
+(`questbook_cover::CACHE_VERSION`) and the slot the pixels were rendered for.
+Bumping the version, moving the slot, or changing the pixel pipeline makes every
+existing file unreachable, which is the whole invalidation rule.
+
+A file is accepted only when it is the answer this page asked for: 1 bpp, no
+larger than the slot, and exactly as long as its own header and row count
+declare. The pixel-data offset is read from the file rather than assumed, so a
+longer palette cannot let a truncated file pass.
+
+A downloaded game will also carry a cover at `/storygames/<index_name>/cover.bmp`
+(the library root is the SD root); it is read in preference to this cache and is
+not versioned, because the library tree is not a cache. Nothing writes that file
+yet — Download is still planned.
+
+`HttpDownloader` stages the body as `<name>.part` and renames it only after a
+complete transfer. A file that fails the check above is deleted, so a broken or
+truncated answer is never drawn and never survives as a cache entry. An
+unparseable file found in the cache is deleted and fetched again. A 404 from the
+service is not cached, so a game with no cover is retried on a later visit.

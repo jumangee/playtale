@@ -188,6 +188,14 @@ void QuestBookListParser::onValue(const char* value, const size_t len) {
       assignBounded(current.tags, value, len, TAGS_MAX);
     } else if (keyIs("desc", 4)) {
       assignBounded(current.description, value, len, DESCRIPTION_MAX);
+    } else if (keyIs("cover", 5)) {
+      // An identifier, not display text: a value that does not fit is dropped
+      // whole, because a truncated URL would collide with another game's key.
+      if (len <= COVER_MAX) {
+        assignBounded(current.cover, value, len, COVER_MAX);
+      } else {
+        current.cover.clear();
+      }
     } else if (keyIs("stars", 5)) {
       current.stars = countFrom(value, len, 5);
     } else if (keyIs("likes", 5)) {

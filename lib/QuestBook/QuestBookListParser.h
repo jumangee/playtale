@@ -13,9 +13,9 @@
 //   {"result":"ok","data":{"items":[{...}],"is_more":true}}
 //
 // Only the fields the device shows are retained; promotion metadata
-// (`gameachis`, `awards`), `cover` and the timestamps are skipped. The response
-// streams through StreamingJsonParser, so nothing holds the document: a page of
-// 12 games costs one row per game plus the SAX token buffer.
+// (`gameachis`, `awards`) and the timestamps are skipped. The response streams
+// through StreamingJsonParser, so nothing holds the document: a page of 12 games
+// costs one row per game plus the SAX token buffer.
 class QuestBookListParser {
  public:
   QuestBookListParser();
@@ -32,6 +32,10 @@ class QuestBookListParser {
     std::string author;     // author_name
     std::string tags;       // tags, comma separated
     std::string description;  // desc, capped at 140 characters by the service
+    // cover: the original upload's absolute URL. The device never fetches it —
+    // it is the key of the on-device cover cache, so a re-uploaded cover (a new
+    // URL) is a new cache entry.
+    std::string cover;
     int stars = 0;            // 0..5; 0 when the game has no rating yet
     int likes = 0;
     int dislikes = 0;
@@ -51,6 +55,11 @@ class QuestBookListParser {
   static constexpr size_t AUTHOR_MAX = 64;
   static constexpr size_t TAGS_MAX = 128;
   static constexpr size_t DESCRIPTION_MAX = 288;
+  // The longest captured cover URL is 78 bytes. Unlike the text fields this one
+  // is an identifier: a truncated value would hash to another game's cache key,
+  // so a longer URL is dropped instead of cut, and that game simply has no
+  // cover.
+  static constexpr size_t COVER_MAX = 96;
   static constexpr size_t INDEX_NAME_MAX = 32;
   static constexpr size_t GAME_ID_MAX = 16;
 

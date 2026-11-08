@@ -41,11 +41,13 @@ Phase 0 is closed.
 **Shipped so far.** The **КвестБук** entry leads the home menu (behind «Продолжить чтение» in themes
 that put it there) and opens `QuestBookCatalogActivity`: the service's `new` and `editorial` lists,
 twelve games per page, each row showing the game's name and author. Selecting a row opens
-`StorygameDetailsActivity` — name, author, tags, rating, like counts and the game's description. For
+`StorygameDetailsActivity` — name, author, tags, rating, like counts, the game's description and its
+cover, which is fetched from the service's own conversion endpoint and cached on the SD card. For
 the reader's view of these screens see [USER_GUIDE.md](USER_GUIDE.md#311-квестбук).
 
-Nothing is downloaded yet: the game page is reference information until the on-SD layout is decided,
-so this step validates the service contract and the memory plan without the runtime.
+No game is downloaded yet: the game page is reference information until the on-SD layout is decided,
+so this step validates the service contract and the memory plan without the runtime. Only the cover
+travels to the device, into a cache.
 
 **Still planned:** the game's own download, and the on-SD layout it lands in.
 

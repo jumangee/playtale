@@ -3,13 +3,23 @@
 #include <Epub.h>
 #include <FsHelpers.h>
 #include <Logging.h>
+#include <QuestBookCover.h>
 #include <Xtc.h>
+
+#include <cstring>
 
 #include "ClippingStore.h"
 
 bool isBookCacheDirectoryName(const char* name) {
   if (!name) {
     return false;
+  }
+
+  // The storygame cover cache is one directory for every game rather than one
+  // per book, and its key changes with each re-uploaded cover, so Settings ->
+  // Clear cache must reclaim it too.
+  if (strcmp(name, questbook_cover::CACHE_DIR_NAME) == 0) {
+    return true;
   }
 
   constexpr char EPUB_PREFIX[] = "epub_";

@@ -11,7 +11,7 @@ target_include_directories(QuestBookListParserTest PRIVATE
 
 # The captured live response is the parser's contract fixture.
 target_compile_definitions(QuestBookListParserTest PRIVATE
-  QUESTBOOK_FIXTURE_PATH="${REPO_ROOT}/docs/storygames/storygames-list-new-example.json"
+  QUESTBOOK_FIXTURE_PATH="${REPO_ROOT}/docs/storygames/examples/storygames-list-new-example.json"
 )
 
 target_link_libraries(QuestBookListParserTest PRIVATE

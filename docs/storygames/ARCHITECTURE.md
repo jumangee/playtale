@@ -224,7 +224,8 @@ Field notes [M]:
   entries end in an ellipsis, but that is how the author wrote them, not response truncation.
   **No per-game detail request is needed** for the fields the device displays.
 - `cover` is always an absolute URL on `quest-book.ru`. Over 60 listed games: extensions `jpg` 44,
-  `png` 11, `jpeg` 4, **`gif` 1**; schemes split `http` 29 / `https` 31.
+  `png` 11, `jpeg` 4, **`gif` 1**; schemes split `http` 29 / `https` 31. The device keeps the value but
+  never downloads it: it is the key of the on-device cover cache (§6.3).
 - `tags` is one comma-separated string, 1–7 tags per game (mean 3.9). Tag names may contain spaces.
 - `gameachis` and `awards` are promotion/achievement metadata the device does not need to show.
 
@@ -460,9 +461,11 @@ Two properties of the source format make this cheap, and both were verified rath
   game.dat      paragraph payloads, back to back
   meta.json     catalogue fields needed for offline display (title, author, tags, description)
   state.bin     player state: vars, current paragraph, steps, lastarticle
+  cover.bmp     the game page's cover: a 1-bit BMP of at most 128x192 (~3 KB when full size).
+                Read by the game page; written by Download, which is still planned (§6.3)
 ```
 
-The tree above is the **permanent** game layout. Catalogue actions also use the same five files in
+The tree above is the **permanent** game layout. Catalogue actions also use the same files in
 one shared temporary workspace, `/<library>/storygames/___temp/` (without an `<index_name>`
 subdirectory). That workspace is opened by Play but is never registered as a library item. Its
 contents belong only to the currently played temporary game; cleanup/replacement timing is specified
@@ -474,9 +477,10 @@ once, when the library is built — never on the play path — so re-encoding th
 flat object of short strings, far below the size where the 2 KB reader limit matters. Store only the
 fields needed to identify and describe an offline game: title (`fullname`), author (`author_name`),
 tags, and description (`desc`), plus identifiers needed for catalogue/service integration
-(`game_id`, `index_name`) where useful. Covers and popularity/rating counters (`likes`, `dislikes`,
-`stars`) are not part of the on-device game metadata contract. Everything the runtime reads per step
-is fixed-layout binary plus one payload slice.
+(`game_id`, `index_name`) where useful. Popularity/rating counters (`likes`, `dislikes`, `stars`)
+are not part of the on-device game metadata contract. The cover is not a metadata field either: it
+is a separate 1-bit BMP beside the game, so a library rebuild never has to parse an image. Everything
+the runtime reads per step is fixed-layout binary plus one payload slice.
 
 ### 4.3 The import document
 
@@ -524,7 +528,9 @@ Three requirements on this document:
 - **`meta` must contain the catalogue fields needed for offline identification and description**:
   `fullname`, `author_name`, `tags`, `desc`, and the identifiers `game_id`/`index_name`. It does not
   need to preserve `cover`, `likes`, `dislikes` or `stars`; those fields are not required by the
-  on-device game experience.
+  on-device game experience. The cover is not carried by the import document either: the game page
+  fetches it from its own endpoint into its cover cache, and a downloaded game's own copy beside the
+  game is written by Download (§6.3).
 
 The original `.../data/` XML endpoint stays as it is. The converted endpoint is additive, so a
 converter regression cannot break existing clients.
@@ -976,15 +982,15 @@ nothing today.
 > **Partly shipped.** §6.1's catalogue and game-page rows describe code that now exists:
 > `src/activities/browser/QuestBookCatalogActivity.*` and `StorygameDetailsActivity.*`, with the home
 > menu entry that opens them. The shipped catalogue offers the `new` and `editorial` lists only, shows
-> no covers, and downloads nothing; tags, search, and the reader remain unbuilt. Where this section
-> describes those parts it is still a plan.
+> no covers in its rows, and downloads nothing; tags, search, and the reader remain unbuilt. The game
+> page itself does show a cover. Where this section describes those other parts it is still a plan.
 
 ### 6.1 Screens
 
 | Screen | Base | Responsibility |
 | --- | --- | --- |
 | КвестБук catalogue | `CatalogActivity` | list of games with paging; **shipped** for `new` + `editorial`, no tags/search entry yet |
-| Game page | own activity, `freeink::ui::publicationPage` | name, author, tags, description, likes/dislikes, stars; **shipped** without a cover and without Download/Play |
+| Game page | own activity, `freeink::ui::publicationPage` | name, author, tags, description, likes/dislikes, stars, and the cover; **shipped** without Download/Play |
 | Tag list | `UiListActivity` | the tag catalogue from §2.2; selecting one lists its games |
 | Tag results | catalogue list with a filter | [O] blocked on §2.3 |
 | Search | `CatalogActivity::launchSearch()` | [O] blocked on §2.4 |
@@ -1015,9 +1021,8 @@ gap. The page is separate anyway, for two reasons:
   viewer.
 
 The cost is a second screen with the same shape: if upstream changes `publicationPage`'s contract,
-both must be revisited. No cover is fetched, because cover caching is still open (§8 #5). Download
-and Play are planned actions; their storage behavior is defined below. The hero gives the title the
-space a cover would take.
+both must be revisited. Download and Play are planned actions; their storage behavior is defined
+below.
 
 | Required | Where it goes |
 | --- | --- |
@@ -1026,6 +1031,48 @@ space a cover would take.
 | `tags` | `props.book.series` (the hero's extra text line) |
 | `likes` / `dislikes` / `stars` | `props.metadata`, as `Rating 4/5 · Likes: 6 · Dislikes: 1` |
 | `desc` | `props.description` |
+| `cover` | the cache key for the hero slot's image |
+
+#### The cover
+
+The page reserves a hero slot of at most 128×192 and fills it with a cover, or with the storygame icon
+when there is none (`lib/QuestBook/QuestBookCover.h`, `StorygameDetailsActivity::paintCover`). The slot
+is reserved whether or not an image resolves, so the page has exactly one layout and the text reaches
+the panel before any transfer starts.
+
+The service converts the catalogue's `cover` URL itself, so the device never downloads the original
+upload and never runs an image decoder for a cover:
+
+```
+GET https://quest-book.ru/online/cover/<index_name>/?w=128&h=192
+Content-Type: image/bmp
+Body         a 1-bit BMP for a slot of at most 128x192: 62-byte header + 1 bpp rows,
+             3 134 bytes when the source is 2:3 and nothing smaller is needed
+404          no cover for this game
+```
+
+The endpoint preserves the source aspect ratio and never upscales, so a wide or square upload arrives
+shorter than 192 rows; the page centres whatever it gets in the slot.
+
+Resolution order, one attempt per visit:
+
+1. `/<library>/storygames/<index_name>/cover.bmp` — the copy beside a downloaded game. Nothing writes
+   this file today; Download will. It is read first so a downloaded game keeps its cover offline and
+   across an emptied cache.
+2. `/.crosspoint/qbcover/<md5(cover)>_v1_128x192.bmp` — the screen-slot cache.
+3. The endpoint above; the downloader stages the body and the file is kept only after it passes the
+   cover library's check — 1 bpp, within the slot, and exactly as long as its own header and row count
+   declare. The same check guards both local tiers, so a truncated file is never drawn.
+
+The first two tiers are resolved without a radio, so a page opened offline still shows a cover it
+already has; only the third needs a session.
+
+`cover` is therefore retained by the catalogue parser (`QuestBookListParser::Row::cover`) as the cache
+key, not as an address to fetch: the URL carries the upload's own random suffix, so a re-uploaded
+cover is a new key with no separate invalidation step. The field is an identifier rather than display
+text, so a URL that exceeds its cap is dropped whole instead of truncated — a cut URL would hash onto
+another game's key. A failed conversion (404) is not cached, so a game with no cover is retried on a
+later visit rather than showing a broken image forever.
 
 #### Download and Play actions
 
@@ -1051,25 +1098,34 @@ the next Play operation and/or when leaving the reader) is an implementation det
 the loader and library integration are built; it must not affect games stored in permanent
 `<index_name>` directories.
 
-Covers are not fetched at all yet: §8 #5 is unresolved, so the page draws no cover and gives the
-title the space instead.
+Covers are fetched per game page, from the converted endpoint above. The cover file is at most ~3 KB
+of 1-bit BMP, so it neither competes with the retained catalogue page nor needs a decoder; an
+unavailable cover leaves the slot's icon and never blocks or fails the page.
 
 ### 6.4 Resource constraint that shapes the navigation
 
-On the ESP32-C3 a TLS transfer needs ≥ 40 KB free heap and ≥ 20 KB largest block, and decoding a
-cover adds ~20 KB (JPEG) or ~44 KB (PNG) on demand [C: `src/network/HttpDownloader.h:34-35`,
+On the ESP32-C3 a TLS transfer needs ≥ 40 KB free heap and ≥ 20 KB largest block, and decoding an
+original cover would add ~20 KB (JPEG) or ~44 KB (PNG) on demand [C: `src/network/HttpDownloader.h:34-35`,
 `lib/Epub/Epub/converters/`]. A child activity retains its parent [C: `.agents/rules/ui-activities.md`],
-so the catalogue's parsed page and a cover decode can overlap.
+so the catalogue's parsed page and a cover transfer overlap.
 
-OPDS solves exactly this by releasing its entries before fetching a cover and re-fetching the
+OPDS solves the decode overlap by releasing its entries before fetching a cover and re-fetching the
 catalogue when the detail page closes [C: `src/activities/browser/OpdsBookBrowserActivity.cpp:866-869`].
 The shipped КвестБук flow keeps the page instead of re-fetching, and pays for that with a budget it can
 state: a page is at most sixteen rows of capped strings (title 160 B, author 64 B, tags 128 B,
-description 288 B, plus ids), against the ~40 KB a fresh TLS session needs. That figure is arithmetic
-from the parser's caps, not a measurement — 16 × ~688 B of fields is ~11 KB before `std::string` and
-allocator overhead, so expect ~13–16 KB, still small against the session and unverified on a device.
-The game page will offer two distinct actions, described below. Neither action fetches a catalogue cover, so no cover decode overlaps the retained page. The release
-of those rows takes the render lock, because a queued repaint may still be reading their strings.
+description 288 B, cover 96 B, plus ids), against the ~40 KB a fresh TLS session needs. That figure is
+arithmetic from the parser's caps, not a measurement — 16 × ~784 B of fields is ~13 KB before
+`std::string` and allocator overhead, so expect ~15–18 KB, still small against the session and
+unverified on a device.
+
+The cover itself costs no decoder: the fetched body is a 1-bit BMP read row by row by
+`GfxRenderer::drawBitmap1Bit`, and the transfer is a 3 KB body over the Wi-Fi association the
+catalogue already established — the HTTP client opens its own connection per call, so what is shared
+is the association, not a session. That transfer is the one remaining peak: it runs on the main task
+after the first frame is on the panel, so the page's text is visible before the session allocates, and
+it is attempted once per visit. It also blocks that task, so input is unresponsive for the duration of
+a transfer; the catalogue's own fetches have the same property. The release of those rows takes the
+render lock, because a queued repaint may still be reading their strings.
 
 ### 6.5 Stars have no glyph
 
@@ -1108,7 +1164,7 @@ Against `SCOPE.md`:
   third-party connector is added.
 - Replacing the scripting-engine assumption with a task interpreter **reduces** flash and RAM
   pressure, which serves the project's stated priorities [C: `SCOPE.md:53-64`].
-- Catalogue cover caching is a separate, still-open UI concern (§8 #5); it is not part of the
+- Catalogue cover caching is a separate UI concern, now settled (§8 #5); it is not part of the
   paragraph-image payload, which is omitted from the v1 storygame format.
 
 The one genuine scope risk is feature creep in the runtime: the character sheet, spoilers and BBCode
@@ -1126,7 +1182,7 @@ excluded from v1. The mitigation is to implement exactly the twelve BBCode const
 | 2 | Who owns and maintains the server converter, and how its format version is tracked against the platform framework (§4.1) | Everything downstream |
 | 3 | JSON API for listing games by tag (§2.3) | Tag screen results beyond one page |
 | 4 | JSON API for substring search (§2.4) | The search screen |
-| 5 | Catalogue cover handling: keep the current no-cover experience, re-download per view, or add a cache keyed by `game_id`? This is separate from paragraph images, which are omitted from v1 (§4.6). | Catalogue UI, storage and offline behaviour |
+| 5 | ~~Catalogue cover handling: keep the current no-cover experience, re-download per view, or add a cache keyed by `game_id`? This is separate from paragraph images, which are omitted from v1 (§4.6).~~ **Decided:** the service converts the cover to a 1-bit BMP of at most 128×192 (`/online/cover/<index_name>/?w=&h=`), the device caches it under `/.crosspoint/qbcover/` keyed by `md5(cover)`, and Download will keep a copy beside the game (§6.3). Separate from paragraph images, which are omitted from v1 (§4.6). | — |
 | 6 | TLS posture for a first-party service: keep `setInsecure()`, add a CA bundle, or pin | Security review |
 | 7 | Expression evaluator: vendor `tinyexpr` with adaptations, or write the small evaluator (§5.3) | Runtime |
 | 8 | Compression: `uzlib` + 32 KB ring, a server switch to raw deflate, or neither (§4.11) | Download flow, memory |
@@ -1189,8 +1245,9 @@ Recorded because they changed the plan:
 - **Corpus**: 35 distinct games from `/online/api/list/{new,best,editorial}/`, downloaded during this
   study. 7 614 articles, 11 007 local condition/effect scripts, 2 107 preload scripts, 24 357
   string fields.
-- **Format analysis**: `docs/storygames/gamedata-example1.xml`, `gamedata-example2.xml`, and the
-  reference implementations under `docs/storygames/` (`jsiq-engine.js`, `dom.js`, `game_tpl.xml`).
+- **Format analysis**: `docs/storygames/examples/gamedata-example1.xml`, `gamedata-example2.xml`, and
+  the reference implementations under `docs/storygames/examples/` (`jsiq-engine.js`, `dom.js`,
+  `game_tpl.xml`).
 - **Live contract**: HTTP responses recorded in §2, including pagination boundaries, tag catalogue
   contents, cover extension census, download content types, gzip behaviour and `Range` handling.
 - All byte counts are byte-accurate on the raw UTF-8 buffers. Character counts would understate
