@@ -77,7 +77,11 @@ bool markLibraryIndexDirty();
 bool isLibraryIndexDirty();
 
 // Whether `path` (a full path or a bare name) passes the walk's name filter: a
-// book extension, and no hidden or system folder or file name.
+// book extension, and no hidden or system folder or file name. A storygame is a
+// directory rather than a file, so it does not pass this filter; the walk lists
+// `/storygames/<index_name>` as one item itself, and the record-is-the-directory
+// contract is stated in lib/QuestBook/StorygameStore.h
+// (docs/storygames/ARCHITECTURE.md §4.9).
 bool isLibraryBookFile(std::string_view path);
 
 }  // namespace library

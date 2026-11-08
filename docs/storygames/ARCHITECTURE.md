@@ -1,11 +1,13 @@
 # КвестБук integration and storygame runtime — architecture draft
 
 > **Status: draft for review.** Most of this document describes a design that is **not implemented**.
-> It is a plan, not a record of current behaviour. The one shipped part is the catalogue and its game
-> page (§6), which now exist as `QuestBookCatalogActivity` and `StorygameDetailsActivity`; that section
-> says what those screens do today and what is still a plan. Once further parts ship, they must move to
-> the documents that describe current behaviour, and this text must be reduced to whatever is still
-> unbuilt. See the "Documents follow code" rule in `AGENTS.md`.
+> It is a plan, not a record of current behaviour. Three parts ship: the catalogue, the game page and
+> that page's download, which exist as `QuestBookCatalogActivity` and `StorygameDetailsActivity`, and
+> the importer they feed (`lib/QuestBook/StorygameImporter.*`). The byte layout those files are written
+> in now lives in [file-formats.md](../file-formats.md), because it is current behaviour rather than a
+> plan. This section says what those screens do today and what is still unbuilt; once further parts
+> ship, they must move to the documents that describe current behaviour, and this text must be reduced
+> to whatever is still unbuilt. See the "Documents follow code" rule in `AGENTS.md`.
 
 This document covers two connected pieces of planned work:
 
@@ -462,7 +464,7 @@ Two properties of the source format make this cheap, and both were verified rath
   meta.json     catalogue fields needed for offline display (title, author, tags, description)
   state.bin     player state: vars, current paragraph, steps, lastarticle
   cover.bmp     the game page's cover: a 1-bit BMP of at most 128x192 (~3 KB when full size).
-                Read by the game page; written by Download, which is still planned (§6.3)
+                Read by the game page; written by its Add to Library action after a successful import (§6.3)
 ```
 
 The tree above is the **permanent** game layout. Catalogue actions also use the same game-content files
@@ -539,6 +541,13 @@ The original `.../data/` XML endpoint stays as it is. The converted endpoint is 
 converter regression cannot break existing clients.
 
 ### 4.4 `game.hdr`
+
+> **Shipped.** The byte layout the importer writes is documented in
+> [file-formats.md](../file-formats.md), because it is current behaviour. It follows the table below
+> with three differences, which that document states concretely: **no `Platform` field** (the runtime
+> reimplements the handlers, so nothing carried a mitril flag), the **names are not one blob** (each
+> record carries an absolute offset and a length into a streamed region), and the record strides are
+> fixed at 16/16/32 bytes so every stride divides the 512-byte sector.
 
 Everything needed before the first paragraph renders. Modeled on the existing `CLX1` header rather
 than invented: magic + format version + explicit section offsets and sizes, all sections 512-aligned
@@ -790,16 +799,18 @@ the play path allocation-free.
 
 ### 4.9 Library integration
 
-Games must be discoverable in the Library and countable as "what is already loaded". That is what the
-existing index is for, and it should be reused — but the reuse has a boundary worth stating, because
-a naive reading of "put it in LibraryIndex" does not work:
+**Shipped.** A downloaded game appears in the Library beside the books, one row standing for the whole
+game. Its row is titled and authored from the game's own `meta.json` when metadata reading is enabled —
+the same setting that governs books, so with **Использовать метаданные книг** off the row shows the
+folder name instead. That is what the existing index is for, and it is reused — but the reuse has a
+boundary worth stating, because a naive reading of "put it in LibraryIndex" does not work:
 
 - **The game goes into `CLX1` as one record**, exactly like a book. That buys, with no new code:
-  library listing, recents, arrival ordering, duplicate detection, and the path-hash identity
+  library listing, arrival ordering, duplicate detection, and the path-hash identity
   [C: `lib/LibraryIndex/LibraryIndexFile.h:30-37`, `:66-93`].
 - **Paragraph records cannot go into `CLX1`.** Its records are 128 bytes shaped for books (a 96-byte
   fold and a 12-byte author key), and `CLIX_MAX_RECORDS` is 4 096
-  [C: `lib/LibraryIndex/LibraryFormat.h:39-44`, `:94-107`]. A single 878-paragraph game would consume
+  [C: `lib/LibraryIndex/LibraryFormat.h:49-54`, `:104-116`]. A single 878-paragraph game would consume
   21 % of the whole card's capacity, and the record shape carries nothing a paragraph needs.
 
 So the paragraph index is a **sibling format that follows the same conventions** — magic, explicit
@@ -807,26 +818,71 @@ format version, section offsets, 512 alignment, fixed stride, and a pure layout 
 `HalStorage`/Arduino dependency so it is host-testable [C: `lib/LibraryIndex/LibraryFormat.h:5-8`].
 It does not share the file.
 
-Registering the game as a library content kind is the documented path for a new format: predicates in
-`lib/FsHelpers/FsHelpers.cpp`, the library filter in `LibraryBuilder` (`isLibraryBookFile`), the
-reader dispatch in `ReaderActivity::create`, and the cache/progress helpers
-[C: `.agents/rules/architecture-hal.md:94-101`].
+**The record is the game's directory.** `CLX1` stores a folder plus a name and rebuilds
+`"<folder>/<name>"`, so the walk lists `/storygames/<index_name>` as one item: the folder is
+`/storygames` and the name is the game's `index_name`. The choice matters three ways, and it is why
+the "one canonical file" alternative was not taken:
 
-**Open design point.** `CLX1` indexes *files*, and a game is a directory of several. Either one
-canonical file represents the game in the index (for example `game.hdr`), or the builder learns a
-directory-as-item rule. The first is smaller and keeps the builder's assumptions intact; it needs a
-decision before the builder is touched (§8).
+- **The duplicate filter stays honest.** It keys on `(hash(name), size)`
+  [C: `lib/LibraryIndex/LibraryBuilder.cpp:489-506`]. The window is per directory, so the durable reason
+  for the directory-as-record is not the collision itself: it is that the record's name must be the
+  game's own name, so the row title, `readPath()` and the dedup key are all right with no special case.
+  A canonical `game.hdr` would have made every game share the name `game.hdr`.
+- **The title fallback survives.** The builder's fallback is the file name without its extension; for
+  `game.hdr` that is `game`, and for a directory name such as `Firefighter_2.1` `stemOf()` would cut
+  the version off at the dot. The walk passes the directory name and `stageRecord()` skips the stem
+  rule for a game.
+- **Removing the row removes the game.** The Library's delete path hands the record's path to
+  `removeBookFile()`; for a game it calls `questbook_game::removeGameAtPath()` instead, which deletes
+  the tree rather than one file of it.
+
+The walk recognises a game with `questbook_game::isGameAtPath()` and never descends into it: the
+files are not books, and a half-imported game (no `meta.json`) is therefore not listed at all — the
+row would open a game that cannot play. `game.hdr` supplies the record's size and modification time,
+so a re-import invalidates the reused metadata instead of keeping a stale title.
+
+**Title and author come from `meta.json`**, which is the game's own copy of the catalogue fields
+[C: `lib/QuestBook/StorygameStore.h`, `readMetaFile()`]. The library walk is compiled on the host,
+where ArduinoJson is not part of the build. The SDK's `StreamingJsonParser` would work there, but it
+carries a fixed 2 KB token buffer and a SAX callback table, which the walk's memory budget argues
+against for a file of six short strings, so `lib/QuestBook/StorygameMeta.h` reads it directly: no fixed
+buffer, strings only as large as the values, and anything that is not the flat object the importer
+writes is refused. A corrupt file falls back to the folder name and never hides the game.
+
+**Opening a row opens the game page, not a reader.** `ReaderActivity::create()` would hand anything
+that is not `.xtc` to the EPUB reader, so `ActivityManager::goToReader()` dispatches a game directory
+to `StorygameDetailsActivity::forLibrary()`, which builds the page from `meta.json` [C:
+`src/activities/ActivityManager.cpp`]. That page is also where the game is downloaded or removed, so
+the library row and the catalogue row reach the same screen. The page carries a name of its own in
+that case (`StorygameDetailsLibrary`), because `ActivityManager::goHome()` dispatches on the activity
+name and Home must return to the Library rather than to the КвестБук row.
+
+**What is still planned:** games never enter the recent-books store, because only the reader activities
+add entries there. They are therefore absent from the pinned "recently opened" rows at the top of the
+Recent tab and from the home screen's continue-reading slot, even though the Recent tab lists them with
+the rest of the index. The Library has no separate games grouping — a game sits in the general lists like
+any book, and its row carries the storygame glyph instead of the generic file icon.
 
 ### 4.10 What the device does at import
 
+> **Shipped.** The sequence below follows `lib/QuestBook/StorygameImporter.cpp`. The authoritative account
+> of what is written, and of the checks that accept a document, is
+> [file-formats.md](../file-formats.md).
+
 1. Open `/playtale/`, stream it with a bounded buffer, and write `game.hdr`, `game.idx` and
    `game.dat` in one forward pass (offsets are known as payloads are written, so no second pass).
-2. Write `meta.json` from the `meta` section.
-3. Validate structural completeness using the declared counts in `<counts g="…" i="…" p="…" f="…" />`
-   and check that `idx` end offsets agree with the written `dat` length. These are the complete
-   integrity checks required by v1: a mismatch deletes the partial game rather than offering it.
-   The importer does not calculate or verify a content hash/checksum. Arbitrary content corruption
-   that leaves record counts and offsets consistent is outside the v1 integrity-checking scope.
+   `game.hdr` is written out of order on purpose: the tables and the name stream first, and the core
+   is written back over the reserved first sector last, so a reader never sees a header that
+   describes sections which are not there yet.
+2. Close those three files, then write `meta.json`. It merges the document's `<meta>` with the
+   catalogue row the page already holds, because the captured documents omit `author_name`. Writing
+   it last is the commit marker: a game counts as downloaded only when all four files exist.
+3. Accept the document only if the tables declared in `<counts g="…" i="…" p="…" f="…" />` were
+   filled exactly, the ordinals arrived in order, the root is `<storygame v="1">` and the served
+   `<meta><index_name>` names the game that was asked for. Any failure deletes the whole directory.
+   The importer does not calculate or verify a content hash/checksum, and it does not re-read
+   `game.dat` to cross-check the index: `dataBytes` is the length it wrote. Arbitrary content
+   corruption that leaves record counts and offsets consistent is outside the v1 scope.
 
 The device does not parse the source game XML, extract `rawSetup`, discover the start paragraph,
 validate references, or decode base64. All of that is the server's, done once per game instead of
@@ -984,16 +1040,18 @@ nothing today.
 
 > **Partly shipped.** §6.1's catalogue and game-page rows describe code that now exists:
 > `src/activities/browser/QuestBookCatalogActivity.*` and `StorygameDetailsActivity.*`, with the home
-> menu entry that opens them. The shipped catalogue offers the `new` and `editorial` lists only, shows
-> no covers in its rows, and downloads nothing; tags, search, and the reader remain unbuilt. The game
-> page itself does show a cover. Where this section describes those other parts it is still a plan.
+> menu entry that opens them. The shipped catalogue offers the `new` and `editorial` lists only and shows
+> no covers in its rows; tags and search remain unbuilt. The game page shows a cover and **downloads**:
+> its second action imports the game into `/storygames/<index_name>/` and removes that directory again
+> on request (§6.3). A downloaded game is also one row of the Library (§4.9). Play and the reader are
+> still plans.
 
 ### 6.1 Screens
 
 | Screen | Base | Responsibility |
 | --- | --- | --- |
 | КвестБук catalogue | `CatalogActivity` | list of games with paging; **shipped** for `new` + `editorial`, no tags/search entry yet |
-| Game page | own activity, `freeink::ui::publicationPage` | name, author, tags, description, likes/dislikes, stars, and the cover; **shipped** without Download/Play |
+| Game page | own activity, `freeink::ui::publicationPage` | name, author, tags, description, likes/dislikes, stars, the cover, and **Play / Add to Library / Remove from Library**; **shipped**, Play still a placeholder |
 | Tag list | `UiListActivity` | the tag catalogue from §2.2; selecting one lists its games |
 | Tag results | catalogue list with a filter | [O] blocked on §2.3 |
 | Search | `CatalogActivity::launchSearch()` | [O] blocked on §2.4 |
@@ -1024,8 +1082,8 @@ gap. The page is separate anyway, for two reasons:
   viewer.
 
 The cost is a second screen with the same shape: if upstream changes `publicationPage`'s contract,
-both must be revisited. Download and Play are planned actions; their storage behavior is defined
-below.
+both must be revisited. The page carries two action buttons; the storage behavior of the second one,
+which downloads and removes, is defined below.
 
 | Required | Where it goes |
 | --- | --- |
@@ -1059,9 +1117,9 @@ shorter than 192 rows; the page centres whatever it gets in the slot.
 
 Resolution order, one attempt per visit:
 
-1. `/<library>/storygames/<index_name>/cover.bmp` — the copy beside a downloaded game. Nothing writes
-   this file today; Download will. It is read first so a downloaded game keeps its cover offline and
-   across an emptied cache.
+1. `/<library>/storygames/<index_name>/cover.bmp` — the copy beside a downloaded game, written by the
+   page's Add action right after a successful import. It is read first so a downloaded game keeps its
+   cover offline and across an emptied cache.
 2. `/.crosspoint/qbcover/<md5(cover)>_v1_128x192.bmp` — the screen-slot cache.
 3. The endpoint above; the downloader stages the body and the file is kept only after it passes the
    cover library's check — 1 bpp, within the slot, and exactly as long as its own header and row count
@@ -1080,14 +1138,23 @@ retried on a later visit rather than showing a broken image forever.
 
 #### Download and Play actions
 
+> **Download shipped, Play not.** The page's second action is **Add to Library**, which is the
+> Download described below: it fetches the converted document and imports it into
+> `/<library>/storygames/<index_name>/`, then the same button becomes **Remove from Library**, which
+> asks for confirmation and deletes that directory. **Play** is still a placeholder that only logs.
+> The importer's exact behaviour (streaming, the counts check, the rejection rules) and the byte layout
+> it writes are current behaviour, documented in [file-formats.md](../file-formats.md); the rest of this
+> subsection remains the plan for Play.
+
 The game page exposes two distinct actions. Both fetch the converted `/playtale/` document using
 `index_name` (§2.5, §4.3), then import it into the on-device file layout (§4.2). They differ in the
 destination and in whether the game becomes a permanent library item:
 
 - **Download** stores the game persistently at
-  `/<library>/storygames/<index_name>/`. The game becomes a regular library item and remains
-  available for later offline play. Downloading a game that is already present updates/replaces its
-  files in that directory; it must not create a second library item.
+  `/<library>/storygames/<index_name>/`. The game remains available for later offline play. Downloading
+  a game that is already present replaces its files in that directory — in the shipped page, Add is
+  offered only while the game is absent, so replacing means Remove and then Add. Shipped as *Add to
+  Library*, and the game then appears in the Library as one row (§4.9).
 - **Play** downloads and imports the game into the reserved temporary workspace
   `/<library>/storygames/___temp/`, then opens the reader from that workspace. From the player's
   perspective this behaves as if the game had been opened directly from the catalogue without a
@@ -1145,7 +1212,11 @@ rating at all.
 
 - Every new user-visible string goes to `lib/I18n/translations/english.yaml` and requires running the
   generator [C: `docs/i18n.md:123-156`]. Seven keys were added for this section
-  (`STR_QUESTBOOK`, the two list names, rating, likes, dislikes, and the description heading).
+  (`STR_QUESTBOOK`, the two list names, rating, likes, dislikes, and the description heading), and six
+  more for the page's actions: Play, Add to Library, Remove from Library, the removal question, and the
+  two failure lines. That is the whole cost of a feature that speaks to the reader: each of them has to be
+  translated for every locale, and until it is, that locale falls back to English
+  [C: `scripts/gen_i18n.py:224-237`].
 - A new entry on the home screen is an enum value plus hand-maintained index arithmetic in
   `HomeActivity::menuItemToIndex`, `indexToMenuItem` and `getMenuItemCount`, which are easy to
   desynchronise [C: `src/activities/ActivityManager.h:21`,
@@ -1182,7 +1253,7 @@ excluded from v1. The mitigation is to implement exactly the twelve BBCode const
 
 | # | Question | Blocks |
 | --- | --- | --- |
-| 1 | How a multi-file game appears in `CLX1`: one canonical file, or a directory-as-item rule (§4.9) | Library integration |
+| 1 | ~~How a multi-file game appears in `CLX1`: one canonical file, or a directory-as-item rule (§4.9)~~ **Decided and shipped:** the directory is the item (§4.9) | — |
 | 2 | Who owns and maintains the server converter, and how its format version is tracked against the platform framework (§4.1) | Everything downstream |
 | 3 | JSON API for listing games by tag (§2.3) | Tag screen results beyond one page |
 | 4 | JSON API for substring search (§2.4) | The search screen |
@@ -1200,15 +1271,15 @@ excluded from v1. The mitigation is to implement exactly the twelve BBCode const
 ## 9. Suggested sequencing
 
 1. **Catalogue only** — `QuestBookCatalogActivity` and the game page. Useful on its own, no runtime,
-   no server dependency. Validates the catalogue contract and the memory plan. **Partly shipped:**
-   the catalogue (two list kinds, paging) and the game page exist; Download/Play actions are not
-   implemented yet.
-2. **Settle the remaining format questions** — how a game appears in `CLX1` (question 1) and who owns
-   the converter (question 2). Both are cheap to decide now and expensive to change later.
+   no server dependency. Validates the catalogue contract and the memory plan. **Shipped:** the
+   catalogue (two list kinds, paging), the game page and its download/import (§6.3).
+2. **Settle the remaining format question** — who owns the converter (question 2), now that how a game
+   appears in `CLX1` is decided and shipped (§4.9). It is cheap to decide now and expensive to change
+   later.
 3. **Server converter** — implement §4.4–§4.8 on quest-book.ru and publish the XML document at
    `/playtale/`, alongside the existing `/data/` XML.
 4. **Device loader** — stream the document into `game.hdr`/`game.idx`/`game.dat`, verify, register the
-   game in the library. Small, and testable against the corpus without a device.
+   game in the library. **Shipped** (`lib/QuestBook/StorygameImporter.*`, §4.9).
 5. **Minimal runtime** — text, choices, conditions, tasks, saves. Enough to play a simple game.
 6. **Rendering extras** — BBCode, spoilers and character sheet. Paragraph images are deferred to a
    later enhancement and are not part of the initial converted format or runtime.

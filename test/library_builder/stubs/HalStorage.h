@@ -238,6 +238,18 @@ class HalStorage {
   bool openFileForWrite(const char* module, const std::string& path, HalFile& file) {
     return openFileForWrite(module, path.c_str(), file);
   }
+  // Mirrors HalStorage::readFileToString(): the whole file into a string, refusing
+  // an empty or oversized file. The real implementation also probes the largest
+  // free block first; the fake heap never fragments, so there is nothing to probe.
+  bool readFileToString(const char*, const std::string& path, const size_t cap, std::string& out) {
+    out.clear();
+    const auto found = fake::files.find(path);
+    if (found == fake::files.end() || found->second->directory) return false;
+    const size_t size = found->second->bytes.size();
+    if (size == 0 || size > cap) return false;
+    out.assign(found->second->bytes.begin(), found->second->bytes.end());
+    return true;
+  }
   bool remove(const char* path) { return fake::files.erase(path) != 0; }
   bool rename(const char* from, const char* to) {
     if (fake::fail(fake::failRename) || !exists(from) || exists(to)) return false;

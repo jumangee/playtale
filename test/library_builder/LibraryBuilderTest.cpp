@@ -97,6 +97,91 @@ TEST_F(LibraryBuilderTest, SkipsSystemFolderContents) {
   EXPECT_EQ(fake::directoryEntriesByPath["/System Volume Information/notes.txt"], 0u);
 }
 
+// A downloaded game is one row of the library, named and authored by its own
+// meta.json, and its files are never listed individually
+// (docs/storygames/ARCHITECTURE.md §4.9).
+TEST_F(LibraryBuilderTest, ListsADownloadedGameAsOneItemWithItsOwnTitle) {
+  const std::string gameDir = "/storygames/Firefighter_2.1";
+  fake::add(gameDir + "/game.hdr", "QBG1 core and tables");
+  fake::add(gameDir + "/game.idx", "index records");
+  fake::add(gameDir + "/game.dat", "paragraph payloads");
+  fake::add(gameDir + "/meta.json",
+            R"({"game_id":"17","index_name":"Firefighter_2.1","fullname":"Пожарный",)"
+            R"("author_name":"И. Автор","tags":"романтика","desc":"Описание"})");
+  initial();
+
+  LibraryIndexFile index;
+  ASSERT_TRUE(index.open(INDEX));
+  ASSERT_EQ(index.header().bookCount, 3u);  // two books and one game
+  bool sawGame = false;
+  for (uint16_t ordinal = 0; ordinal < index.header().bookCount; ordinal++) {
+    ClixRecord record{};
+    std::string path;
+    std::string title;
+    std::string author;
+    ASSERT_TRUE(index.readRecord(ordinal, record));
+    ASSERT_TRUE(index.readPath(record, path));
+    // The game's own directory is the item: a row per file would put four
+    // unopenable rows on the shelf.
+    EXPECT_NE(path, gameDir + "/game.hdr");
+    EXPECT_NE(path, gameDir + "/meta.json");
+    if (path != gameDir) continue;
+    ASSERT_TRUE(index.readTitle(record, title));
+    ASSERT_TRUE(index.readAuthor(record, author));
+    EXPECT_EQ(title, "Пожарный");
+    EXPECT_EQ(author, "И. Автор");
+    sawGame = true;
+  }
+  EXPECT_TRUE(sawGame);
+}
+
+// The importer writes meta.json last, so a game interrupted by a power cut has
+// files but is not a game. Listing it would offer a row that cannot open.
+TEST_F(LibraryBuilderTest, DoesNotListAnIncompleteGame) {
+  const std::string gameDir = "/storygames/Half";
+  fake::add(gameDir + "/game.hdr", "QBG1 core and tables");
+  fake::add(gameDir + "/game.idx", "index records");
+  fake::add(gameDir + "/game.dat", "paragraph payloads");
+  initial();
+
+  LibraryIndexFile index;
+  ASSERT_TRUE(index.open(INDEX));
+  EXPECT_EQ(index.header().bookCount, 2u);
+  for (uint16_t ordinal = 0; ordinal < index.header().bookCount; ordinal++) {
+    ClixRecord record{};
+    std::string path;
+    ASSERT_TRUE(index.readRecord(ordinal, record));
+    ASSERT_TRUE(index.readPath(record, path));
+    EXPECT_NE(path, gameDir);
+    EXPECT_NE(path, gameDir + "/game.hdr");
+  }
+}
+
+// A file dropped into the user-visible /storygames folder is a book, not a game:
+// it must be listed under its stem and must not be treated as a game whose
+// metadata lives in a meta.json beside it. The walk knows the entry is a file.
+TEST_F(LibraryBuilderTest, ABookInsideTheStorygameFolderIsStillABook) {
+  fake::add("/storygames/stray.epub");
+  initial();
+
+  LibraryIndexFile index;
+  ASSERT_TRUE(index.open(INDEX));
+  ASSERT_EQ(index.header().bookCount, 3u);
+  bool sawStray = false;
+  for (uint16_t ordinal = 0; ordinal < index.header().bookCount; ordinal++) {
+    ClixRecord record{};
+    std::string path;
+    ASSERT_TRUE(index.readRecord(ordinal, record));
+    ASSERT_TRUE(index.readPath(record, path));
+    if (path != "/storygames/stray.epub") continue;
+    std::string title;
+    ASSERT_TRUE(index.readTitle(record, title));
+    EXPECT_EQ(title, "stray");
+    sawStray = true;
+  }
+  EXPECT_TRUE(sawStray);
+}
+
 TEST_F(LibraryBuilderTest, XtcTitleAndAuthorComeFromTheFile) {
   fake::add("/Comics/one.xtc");
   fake::add("/Comics/two.xtch");

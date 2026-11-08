@@ -9,10 +9,12 @@
 #include <LibraryText.h>
 #include <Logging.h>
 #include <Memory.h>
+#include <StorygameStore.h>
 #include <Utf8.h>
 
 #include <algorithm>
 #include <cstdio>
+#include <string_view>
 
 #include "CrossPointSettings.h"
 #include "MappedInputManager.h"
@@ -418,7 +420,13 @@ void LibraryListActivity::promptDeleteBookByPath(const std::string& path, const 
       RenderLock lock(*this);
       if (!result.isCancelled) {
         LOG_DBG("LIB", "deleting %s", path.c_str());
-        if (!removeBookFile(path)) LOG_ERR("LIB", "cannot delete %s", path.c_str());
+        // A storygame's row stands for its whole directory, so the row's removal
+        // removes the game. The complete-game check matters: a book file inside
+        // /storygames/ must still go through removeBookFile(), which also clears its
+        // cache and progress.
+        const bool removed = questbook_game::isGameAtPath(path) ? questbook_game::removeGameAtPath(path)
+                                                               : removeBookFile(path);
+        if (!removed) LOG_ERR("LIB", "cannot delete %s", path.c_str());
         if (RECENT_BOOKS.removeByPath(path)) RECENT_BOOKS.saveToFile();
         GUI.drawPopup(renderer, tr(STR_LIBRARY_REBUILDING));
         rebuildIndex();
@@ -896,8 +904,20 @@ void LibraryListActivity::buildRows(UiScreen& screen) {
     }
 
     item.label = title.c_str();
-    // Group headings stay bare; every book row gets its file-type icon.
-    if (!groupsCollapsed && !rowFile.empty()) item.icon = listIconFor(UITheme::getFileIcon(rowFile), 32);
+    // Group headings stay bare; every row gets an icon. Index rows carry the stored
+    // basename, but a pinned Recent row carries the book's full path, so the last
+    // segment is what both have in common. The index's own admission rule then tells
+    // a game from a book: every book row reached the index through
+    // isLibraryBookFile(), so its name carries a book extension, while a game row's
+    // name is the index_name and carries none. An index_name that itself ends in
+    // .epub would draw a book icon — cosmetic, and the only such case.
+    if (!groupsCollapsed && !rowFile.empty()) {
+      const size_t slash = rowFile.find_last_of('/');
+      const std::string_view leaf =
+          slash == std::string::npos ? std::string_view(rowFile) : std::string_view(rowFile).substr(slash + 1);
+      const UIIcon icon = library::isLibraryBookFile(leaf) ? UITheme::getFileIcon(rowFile) : UIIcon::Storygame;
+      item.icon = listIconFor(icon, 32);
+    }
     item.actionValue = static_cast<int16_t>(entry);
     winItems.push_back(item);
     rows++;

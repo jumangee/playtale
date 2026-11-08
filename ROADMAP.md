@@ -36,7 +36,8 @@ Phase 0 is closed.
 * A **Quest-Book.ru** entry in the device UI as the reader's route to quest-book.ru.
 * Browsing the КвестБук catalogue and downloading a storygame to the SD card.
 * A storygame file format placed under the library root, so downloaded games appear in the existing
-  library and file browser.
+  library and file browser. **Shipped:** a downloaded game is one row of the Library and its directory is
+  browsable from the file browser.
 
 **Shipped so far.** The **Quest-Book.ru** entry leads the home menu (behind «Продолжить чтение» in themes
 that put it there) and opens `QuestBookCatalogActivity`: the service's `new` and `editorial` lists,
@@ -45,11 +46,26 @@ twelve games per page, each row showing the game's name and author. Selecting a 
 cover, which is fetched from the service's own conversion endpoint and cached on the SD card. For
 the reader's view of these screens see [USER_GUIDE.md](USER_GUIDE.md#311-квестбук).
 
-No game is downloaded yet: the game page is reference information while the download and the import
-into the layout agreed for it are built, so this step validates the service contract and the memory plan
-without the runtime. Only the cover travels to the device, into a cache.
+That page also downloads. Its second action reads the SD card: a game that is not there offers
+**Add to Library**, which fetches the converted document (`/online/<index_name>/playtale/`), imports it
+into `/storygames/<index_name>/` — `game.hdr`, `game.idx`, `game.dat`, `meta.json` and the game's own
+`cover.bmp` — and then offers **Remove from Library**, which asks first and deletes that directory. The
+format is described in [docs/file-formats.md](docs/file-formats.md). Play is still a placeholder: the
+button exists and logs, and no reader opens yet.
 
-**Still planned:** the game's own download and import into the layout it will live in, and Play.
+The page imports without holding the document: the response streams into the importer, which writes
+each paragraph payload straight to `game.dat`. Every in-session failure deletes the game's directory;
+a power cut can leave files behind, but `meta.json` is written last and a game counts as downloaded
+only when all four files are there, so such a leftover is never offered and the next download replaces
+it.
+
+A downloaded game is also a row of the **Library**: the index lists `/storygames/<index_name>` as one
+item, under the title and author from the game's own `meta.json`, and selecting that row opens the same
+game page. Adding or removing a game marks the index stale, and deleting the row in the Library deletes
+the whole game. Games never enter the recent-books store, so they are not among the «недавно открытые» rows
+at the top of the Recent tab or in the home screen's continue-reading slot.
+
+**Still planned:** Play (the runtime and the reader), and a separate games grouping in the Library.
 
 **Why a built-in section rather than a plugin catalogue.** The SD-plugin path below could list the
 same games with no new firmware, and it is the cheaper route for a generic catalogue. It was not taken
@@ -78,7 +94,8 @@ contract without removing any of the firmware work.
 * Parse the storygame's XML: the game modules, the transition map, and the game parameters.
 * Execute the storygame's rules and drive the plot from the reader's choices.
 * Persist progress and game parameters, so a game resumes where it stopped.
-* Register the storygame format with the library so games and books appear together.
+* Put games into the recent-books store (so they appear among «недавно открытые» and in continue-reading)
+  and give games their own grouping in the Library, once there is a play state to remember.
 
 **What already exists and should be reused rather than rebuilt:**
 

@@ -7,6 +7,7 @@
 #include <HalDisplay.h>
 #include <HalPowerManager.h>
 #include <Memory.h>
+#include <StorygameStore.h>
 #include <VectorFontSupport.h>
 
 #include <algorithm>
@@ -19,6 +20,7 @@
 #include "boot_sleep/SleepActivity.h"
 #include "browser/OpdsBookBrowserActivity.h"
 #include "browser/QuestBookCatalogActivity.h"
+#include "browser/StorygameDetailsActivity.h"
 #include "components/HeaderBackTapTarget.h"
 #include "home/CrashActivity.h"
 #include "home/FileBrowserActivity.h"
@@ -350,6 +352,20 @@ void ActivityManager::goToReader(std::string path, const bool allowFastInitialRe
     return;
   }
 
+  // A downloaded game opens on its own page, which is also where it is removed;
+  // the runtime that would play it is a later step (docs/storygames/ARCHITECTURE.md
+  // §4.9, §6.3). isGameAtPath() is the shared predicate, and it is what keeps a book
+  // file that happens to sit in /storygames/ opening as a book.
+  if (questbook_game::isGameAtPath(path)) {
+    auto activity = StorygameDetailsActivity::forLibrary(renderer, mappedInput, path);
+    if (activity) {
+      replaceActivity(std::move(activity));
+    } else {
+      LOG_ERR("ACT", "OOM: storygame page for %s", path.c_str());
+    }
+    return;
+  }
+
   auto activity = ReaderActivity::create(renderer, mappedInput, std::move(path), allowFastInitialRefresh);
   if (activity) {
     replaceActivity(std::move(activity));
@@ -372,8 +388,12 @@ void ActivityManager::goHome(HomeMenuItem initialMenuItem, bool cleanInitialRefr
   if (initialMenuItem == HomeMenuItem::NONE && currentActivity) {
     const auto& activityName = currentActivity->name;
     // The storygame page is the catalogue's child: Home must return to the
-    // КвестБук row, not to the book it would otherwise select.
-    if (activityName == "QuestBookCatalog" || activityName == "StorygameDetails") {
+    // КвестБук row, not to the book it would otherwise select. A game opened from
+    // the library is the library's child instead, which is why the page carries a
+    // name of its own for that origin.
+    if (activityName == "StorygameDetailsLibrary") {
+      initialMenuItem = HomeMenuItem::LIBRARY;
+    } else if (activityName == "QuestBookCatalog" || activityName == "StorygameDetails") {
       initialMenuItem = HomeMenuItem::QUESTBOOK;
     } else if (activityName == "FileBrowser") {
       initialMenuItem = HomeMenuItem::FILE_BROWSER;

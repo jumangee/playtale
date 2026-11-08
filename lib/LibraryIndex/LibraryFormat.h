@@ -28,7 +28,17 @@ namespace library {
 inline constexpr char CLIX_MAGIC[4] = {'C', 'L', 'X', '1'};
 // Bumping this is the whole migration: an index from an older version fails
 // validation and is rebuilt. No previous development format is accepted.
-inline constexpr uint8_t CLIX_FORMAT_VERSION = 2;
+//
+// 3: a downloaded storygame is listed as one item (its directory). The record
+// layout did not change, but an index built by version 2 has no game rows and
+// nothing marks it stale, so the bump is what makes an existing card list its
+// games on the first Library visit after the update.
+//
+// The cost of the bump is the full rebuild, not just a walk: the previous index is
+// rejected outright, so no metadata is reused and every EPUB/XTC is re-parsed for
+// its title and author, and arrival order (firstSeen) is rebuilt from disk order.
+// That is the accepted price of the rule above, and it happens once per device.
+inline constexpr uint8_t CLIX_FORMAT_VERSION = 3;
 
 // Bump when the fold or a permutation's sort key changes.
 // Forces fold and ranks to be rebuilt while firstSeen values are preserved, so

@@ -1,11 +1,13 @@
 # File Formats
 
-These formats describe the SD-card files this firmware writes under
-`/.crosspoint/`, from the per-book EPUB caches to the storygame cover cache.
-КвестБук Читалка (PlayTale) keeps the upstream `/.crosspoint/` directory name
-(not renamed yet), because existing cards already store their caches there.
-All POD fields are written in the ESP32 little-endian representation used by
-`Serialization.h`; strings are length-prefixed UTF-8.
+These formats describe the SD-card files this firmware writes: everything under
+`/.crosspoint/`, from the per-book EPUB caches to the storygame cover cache, and
+the `/storygames/` library tree at the card root. КвестБук Читалка (PlayTale)
+keeps the upstream `/.crosspoint/` directory name (not renamed yet), because
+existing cards already store their caches there. All POD fields are written in
+the ESP32 little-endian representation used by `Serialization.h`. String framing
+is per format: length-prefixed in the caches, offset+length inside `game.hdr`,
+and JSON in `meta.json`.
 
 ## `book.bin`
 
@@ -653,8 +655,23 @@ Written by `lib/LibraryIndex/LibraryBuilder.cpp`, read by `LibraryIndexFile`. On
 file describing every book on the card, so the shelf can sort and search
 thousands of titles without opening any of them.
 
-Format version 2. An index written by another version fails validation on open
-and is rebuilt; that is the entire migration mechanism.
+A downloaded storygame is one record of this index too: the walk lists
+`/storygames/<index_name>` as a single item, because the folder is `/storygames`
+and the record's name is the game's `index_name`
+(docs/storygames/ARCHITECTURE.md §4.9). Its title and author come from the game's
+own `meta.json` — when metadata reading is enabled, as it is for books; otherwise
+the row shows the folder name. The files inside the game directory are never
+indexed: they are not books, and a game missing `meta.json` is not listed at all.
+Nothing in the file layout below is game-specific — a game is an ordinary record
+whose `readPath()` reconstructs a directory instead of a file.
+
+Format version 3. An index written by another version fails validation on open
+and is rebuilt; that is the entire migration mechanism. Version 3 is the bump that
+makes a card carrying games from an older build list them: the record layout is
+unchanged, but an index built before games were listed has no game rows and nothing
+marks it stale. The price is a full rebuild rather than an incremental one — the old
+index is rejected, so no book metadata is reused and every EPUB and XTC is re-parsed
+once, and arrival order is rebuilt from disk order.
 
 ### Layout
 
@@ -768,6 +785,136 @@ together. The stored source path is informational and is refreshed on the next
 save; the current file path selects the store. Local book deletion cleans up all
 of these sidecars but preserves the independent `My Clippings.txt` export.
 
+## Storygame tree (`/storygames/<index_name>/`)
+
+Written by `lib/QuestBook/StorygameImporter.cpp` when the game page's **Add to
+Library** action imports the service's converted document
+(`GET https://quest-book.ru/online/<index_name>/playtale/`). That button is the
+"Download" of `docs/storygames/ARCHITECTURE.md` §6.3; the page names it after
+what the reader gets. The page
+(`src/activities/browser/StorygameDetailsActivity.cpp`) reads the cover and asks
+`questbook_game::isDownloaded()` what to offer. The same rule decides whether the
+Library lists the game, which it does as one row standing for this whole
+directory (§4.9). The layout and the record shapes are declared once, in
+`lib/QuestBook/StorygameFormat.h`.
+
+```
+/<library>/storygames/<index_name>/
+  game.hdr    header: identity, counts, start paragraph, parameter tables
+  game.idx    16-byte record per paragraph, addressed by ordinal
+  game.dat    paragraph payloads back to back, one `<p>` element each
+  meta.json   catalogue fields for offline display
+  cover.bmp   this game's cover, copied after Add to Library (optional)
+```
+
+The library root is the SD root today, so the tree is the literal path above.
+`<index_name>` is the service's own path segment and is refused unless it is a
+safe segment (letters, digits, `_`, `-`, single dots; at most 32 bytes), the
+same rule the cover cache uses.
+
+**`meta.json` is the commit marker.** The import creates the directory and the
+three content files before any byte of the document arrives, writes `meta.json`
+last, and deletes the whole directory on any in-session failure. A power cut can
+therefore leave a directory holding `game.hdr`, `game.idx` and `game.dat` with no
+`meta.json`; `isDownloaded()` requires all four files, so such a leftover reads
+as "not downloaded", the page offers Add to Library again, and the next import
+replaces it. `cover.bmp` is deliberately not part of that test: a game whose
+cover never arrived is still a playable game. Anything that lists games must ask
+`isDownloaded()`, never test the directory.
+
+### `game.hdr`
+
+Every section starts on a 512-byte boundary, and every table stride divides 512
+(16, 16 and 32 bytes), so a table record is sector-aligned by construction and
+never straddles a sector. The first sector holds only the core (`HeaderCore`,
+120 bytes), which is written last, after the tables; the bytes after it in that
+sector are zero.
+
+| Section | Offset | Contents |
+|---|---|---|
+| Core | 0 | `HeaderCore` |
+| Names and function task payloads | `512` | UTF-8 names, unframed (a record carries offset and length), and each function's task list, in declaration order |
+| Group table | `groupTableOffset` | `groupCount` × 16-byte `GroupRecord` |
+| Parameter table | `paramTableOffset` | `itemCount` × 16-byte `ParamRecord` |
+| Function table | `funcTableOffset` | `functionCount` × 32-byte `FunctionRecord` |
+
+`HeaderCore`: `magic[4]` = `"QBG1"`, `u16 formatVersion` = 1, `u16 coreBytes`,
+`u32 flags` (0 in version 1), `char bookGuid[40]` (the source `<book guid>`,
+NUL padded), then `u32 groupCount`, `u32 itemCount`, `u32 paragraphCount`,
+`u32 functionCount`, `u32 startParagraph`, `i32 triggersParagraph` (−1 when the
+game has none), `u32 groupTableOffset`, `u32 paramTableOffset`,
+`u32 funcTableOffset`, `u32 indexBytes`, `u32 dataBytes`, and zeroed reserved
+words to 120 bytes. `formatVersion` is what a reader switches on; the magic only
+identifies the file as this container. It versions the container, not the
+document it came from: the document's own `<storygame v="1">` is checked against
+`DOCUMENT_VERSION` at import time and is never stored.
+
+`GroupRecord`: `u32 nameOffset`, `u16 nameLength`, `u16 firstParam`,
+`u16 itemCount`, `u8 type` (`'k'` flags or `'r'` counters), `u8 flags` (bit 0:
+visible on the character sheet), `i16 limit` (−1 = no limit), `u16 ordinal`.
+
+`ParamRecord`: `u32 nameOffset`, `u16 nameLength`, `u16 group`, `u8 type`,
+`u8 reserved`, `i16 limit` (−1 = no limit), `i32 start`. A parameter's ordinal is
+simply its record index in this table; `group` names the `GroupRecord.ordinal`
+that owns it.
+
+`FunctionRecord`: `u32 nameOffset`, `u16 nameLength`, `u16 ordinal`,
+`u32 payloadOffset`, `u32 payloadLength`, `u32 reserved[4]`. The payload is the
+function's task list — the same XML a paragraph carries, not a wrapper element.
+
+Offsets in these records are absolute offsets into `game.hdr`, so a table may
+point anywhere in the file. Names carry no terminator; the record's length is
+the string, cut to 512 bytes on a UTF-8 boundary.
+
+A document is accepted only when:
+
+- the root is `<storygame v="1">` — the route is a catch-all that answers an
+  unknown game with unrelated content (§2.5), and a `v` this build does not know
+  is refused rather than half-understood;
+- the import saw `<header>`, `<data>`, `<counts>` and `<start>`;
+- the tables declared in `<counts g i p f>` are filled exactly — no more, no
+  fewer — and paragraph ordinals arrive in order from 0;
+- the served `<meta><index_name>` names the game that was asked for;
+- the whole response is at most 8 MiB (the largest game is 2.46 MB);
+- the declared tables fit this device: at most 64 groups, 512 parameters and 64
+  functions — about 11 KB of heap, taken once.
+
+`meta.json` fields are cut at 512 bytes each, and the catalogue fallback is
+already capped by `QuestBookListParser`, so a long description survives only as
+far as the catalogue cap.
+
+### `game.idx`
+
+One 16-byte `IndexRecord` per paragraph at `16 × ordinal`, 32 records to a
+sector: `u32 offset` into `game.dat`, `u32 length`, `u16 flags` (the paragraph's
+`<p f>` bits, so a list view need not read the payload), `u16 reserved`,
+`u32 reserved2`. The length is known before the payload is read, which is what
+lets the runtime size its buffer: measured payloads run from 1 185 bytes at the
+median to 72 279 bytes at the maximum.
+
+### `game.dat`
+
+One paragraph payload per index record, back to back in ordinal order. A payload
+is the service's `<p n f>` element, attributes and all, with its children — `s`
+script slots, `t` text blocks, `a` choices — re-serialized from expat: attributes
+keep their normalized values (escaped for `&`, `<`, `>` and `"`), element content
+is escaped for `&`, `<` and `>`, and an element with no content collapses to
+`/>`. Newlines inside element content are preserved, because the platform's
+BBCode lowering turns them into line breaks.
+
+Keeping the `<p>` wrapper is what makes a payload a well-formed XML document
+with exactly one root — which is what expat needs to parse a slice on its own —
+and it carries `n` and `f` a second time, so the runtime can cross-check a
+payload against the index record that addresses it.
+
+### `meta.json`
+
+A flat object of strings: `game_id`, `index_name`, `fullname`, `author_name`,
+`tags`, `desc`. The document's own `<meta>` wins where it carries a field; the
+catalogue row the page already holds fills the rest, because the captured
+documents omit `author_name`. Nothing on the play path reads this file: it is
+for the library and for display offline.
+
 ## Storygame cover cache (`/.crosspoint/qbcover/<md5>_v1_128x192.bmp`)
 
 One file per catalogue cover, holding exactly the bytes the service served: a
@@ -793,10 +940,11 @@ declare. The pixel-data offset is read from the file rather than assumed, so a
 longer palette cannot let a truncated file pass. The service writes top-down
 rows; a bottom-up file would be drawn too, but nothing produces one.
 
-A downloaded game will also carry a cover at `/storygames/<index_name>/cover.bmp`
-(the library root is the SD root); it is read in preference to this cache and is
-not versioned, because the library tree is not a cache. Nothing writes that file
-yet — Download is still planned.
+A downloaded game also carries a cover at `/storygames/<index_name>/cover.bmp`
+(the library root is the SD root). The game page copies the cover it resolved
+there after a successful import, and reads it in preference to this cache; it is
+not versioned, because the library tree is not a cache. A game downloaded while
+no cover could be fetched simply has no such file, and keeps its icon offline.
 
 `HttpDownloader` stages the body as `<name>.part` and renames it only after a
 complete transfer. A cache file that fails the check above is deleted, so a

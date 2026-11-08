@@ -43,10 +43,13 @@ class ConfirmationTranslationsTest(unittest.TestCase):
             ("src/activities/home/FileBrowserActivity.cpp", "STR_DELETE_ITEM_CONFIRM"),
             ("src/activities/library/LibraryListActivity.cpp", "STR_DELETE_ITEM_CONFIRM"),
             ("src/activities/util/BmpViewerActivity.cpp", "STR_SET_SLEEP_COVER_CONFIRM"),
+            ("src/activities/browser/StorygameDetailsActivity.cpp", "STR_QUESTBOOK_REMOVE_CONFIRM"),
         ):
             with self.subTest(filename=filename):
                 text = (ROOT / filename).read_text()
-                normalized = " ".join(text.split())
+                # Collapse the line wrapping a long call site may have, so the
+                # check is about the arguments and not about their formatting.
+                normalized = " ".join(text.split()).replace("( ", "(")
                 self.assertIn(
                     f"makeUniqueNoThrow<ConfirmationActivity>(renderer, mappedInput, tr({key}),",
                     normalized,

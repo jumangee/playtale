@@ -8,6 +8,7 @@
 #include <HiddenItems.h>
 #include <Logging.h>
 #include <Memory.h>
+#include <StorygameStore.h>
 #include <Utf8.h>
 #include <Xtc.h>
 
@@ -289,15 +290,26 @@ int findPrior(WalkState& st, const uint64_t pathHash) {
 
 // parentBasename and depth are gone with the folder-as-author rule they served:
 // nothing about a book's surroundings names its author any more.
+//
+// `storygameDir` is the game's index_name when this item is a downloaded game,
+// empty otherwise. The walk passes it because the walk is what knows: it is the
+// only place that saw a directory and confirmed it holds a complete game. Deriving
+// it from `fullPath` here instead would mis-read a book file that happens to sit in
+// /storygames/ as a game — its extension would land in the title, and it would be
+// sent to the game page instead of the reader.
 [[gnu::noinline]] bool stageRecord(WalkState& st, const std::string& name, const uint32_t fileSize,
                                    const uint16_t folderId, const std::string& fullPath,
-                                   const uint32_t modificationTime) {
+                                   const uint32_t modificationTime, const std::string& storygameDir) {
   StagedEntry& entry = *st.stagedEntry;
   memset(&entry, 0, sizeof(entry));
+  // A storygame's library item is its directory, so `name` is the game's
+  // index_name ("Firefighter_2.1") rather than a file name: stemOf() would cut
+  // the version off at the dot. The title itself comes from meta.json below.
+  const bool isStorygame = !storygameDir.empty();
   // The filename is a fallback for the title and nothing else: no parsing, and
   // never an author. Per review on #2885 -- no other reader parses filenames,
   // and a name pulled out of one by pattern is a guess wearing a fact's clothes.
-  std::string title = stemOf(name);
+  std::string title = isStorygame ? name : stemOf(name);
   std::string author;
   bool titleFromBook = false;
   bool authorFromBook = false;
@@ -306,7 +318,7 @@ int findPrior(WalkState& st, const uint64_t pathHash) {
   const int priorIndex = findPrior(st, entry.pathHash);
 
   const bool isXtc = FsHelpers::hasXtcExtension(name);
-  const bool extractionExpected = st.readMetadata && (FsHelpers::hasEpubExtension(name) || isXtc);
+  const bool extractionExpected = st.readMetadata && (FsHelpers::hasEpubExtension(name) || isXtc || isStorygame);
   const uint8_t expectedStatus = extractionExpected ? CLIX_METADATA_EXTRACTED : CLIX_METADATA_NOT_ATTEMPTED;
   bool reuseMetadata = false;
   ClixRecord priorRecord{};
@@ -336,7 +348,7 @@ int findPrior(WalkState& st, const uint64_t pathHash) {
     if (hasBookTitle) {
       titleFromBook = true;
     } else {
-      title = stemOf(name);
+      title = isStorygame ? name : stemOf(name);
     }
     st.stats->metadataReused++;
   }
@@ -348,7 +360,17 @@ int findPrior(WalkState& st, const uint64_t pathHash) {
     st.stats->parsed++;
     std::string bookTitle;
     bool loaded = false;
-    if (isXtc) {
+    if (isStorygame) {
+      // meta.json is the game's own copy of the catalogue fields, and
+      // isDownloadedAt() already required it: a failure here is a corrupt file,
+      // not a missing one, so the row falls back to the folder name.
+      questbook_game::Meta meta;
+      loaded = questbook_game::readMetaFile(questbook_game::path(storygameDir, questbook_game::META_FILE_NAME), meta);
+      if (loaded) {
+        bookTitle = std::move(meta.title);
+        author = std::move(meta.author);
+      }
+    } else if (isXtc) {
       // XTC/XTCH carry title and author in their own header block; load() reads that and the
       // page table header, and writes no cache.
       Xtc xtc(fullPath, CACHE_DIR);
@@ -438,6 +460,70 @@ struct DedupFrame {
   ~DedupFrame() { state.activeDedupCount = base; }
 };
 
+// One library item: the guards, the duplicate filter, the folder row it needs and
+// the staged record. `folder` is the directory holding the item; `dedupBase` is
+// where this directory's duplicate window starts; `storygameDir` is the game's
+// index_name for a downloaded game and empty for a book. Returns false when the
+// walk must stop — a stage failure or a full index. Shared by books and games so
+// the guards cannot drift between them.
+[[gnu::noinline]] bool stageItem(WalkState& st, const std::string& name, const uint32_t size,
+                                 const std::string& folder, const uint32_t modificationTime, const uint16_t dedupBase,
+                                 const std::string& storygameDir, bool& folderEmitted, uint16_t& myFolderId) {
+  // A zero-length book is a dangling directory entry: the name enumerates but
+  // the contents do not exist. Counted rather than silently dropped.
+  if (size == 0) {
+    st.unreadableSkipped++;
+    return true;
+  }
+  // The index stores the name and the folder path behind one length byte
+  // each, and readPath() reconstructs "<folder>/<name>" from those bytes. An
+  // entry that does not fit is skipped and counted, never clamped: a clamped
+  // name still renders on the shelf but reconstructs to a path that cannot
+  // open, and a byte-level cut is not even valid UTF-8. The limit is real —
+  // FAT allows 255 UTF-16 units, so a long Cyrillic or CJK filename can run
+  // to ~765 UTF-8 bytes.
+  if (name.size() > STAGE_NAME_BYTES || folder.size() > FOLDER_PATH_BYTES) {
+    st.unreadableSkipped++;
+    return true;
+  }
+  const uint64_t key = (static_cast<uint64_t>(fnv1a32(name.data(), name.size())) << 32) | size;
+  if (st.dedupKeys != nullptr) {
+    uint64_t* const end = st.dedupKeys + st.activeDedupCount;
+    uint64_t* const slot = std::lower_bound(st.dedupKeys + dedupBase, end, key);
+    if (slot != end && *slot == key) {
+      st.duplicatesDropped++;
+      return true;
+    }
+    if (st.activeDedupCount < LIBRARY_MAX_DEDUP_KEYS) {
+      memmove(slot + 1, slot, static_cast<size_t>(end - slot) * sizeof(*slot));
+      *slot = key;
+      st.activeDedupCount++;
+    } else if (!st.dedupDegraded) {
+      LOG_INF("LIBIDX", "duplicate detection capped at %u entries in %s", static_cast<unsigned>(LIBRARY_MAX_DEDUP_KEYS),
+              folder.c_str());
+      st.dedupDegraded = true;
+    }
+  }
+  if (!folderEmitted) {
+    // Folders are emitted lazily, so only directories that actually hold a
+    // book get an id and the ids stay dense.
+    myFolderId = st.folderId;
+    // In range: entries whose folder path exceeds FOLDER_PATH_BYTES were
+    // skipped above, so no book reaches this line with an overlong path.
+    const uint8_t pathLen = static_cast<uint8_t>(folder.size());
+    if (st.folders.write(&pathLen, 1) != 1 ||
+        st.folders.write(reinterpret_cast<const uint8_t*>(folder.data()), pathLen) != pathLen) {
+      LOG_ERR("LIBIDX", "folder stage write failed: %s", folder.c_str());
+      st.failed = true;
+      return false;
+    }
+    st.folderBytes += 1u + pathLen;
+    st.folderId++;
+    folderEmitted = true;
+  }
+  return stageRecord(st, name, size, myFolderId, joinLibraryPath(folder, name), modificationTime, storygameDir);
+}
+
 void walk(WalkState& st, const std::string& path, const int depth) {
   if (st.failed || depth > LIBRARY_MAX_DEPTH || st.books >= CLIX_MAX_RECORDS) return;
 
@@ -487,9 +573,31 @@ void walk(WalkState& st, const std::string& path, const int depth) {
     const std::string name(st.nameBuf);
 
     if (isDir) {
+      const std::string gameDir = joinLibraryPath(path, name);
+      // A downloaded game is one library item, not a folder of files: it is listed
+      // under its own name and never descended into (§4.9). isGameAtPath() is the
+      // same predicate the reader dispatch and the delete paths use, and it is what
+      // leaves a half-imported game unlisted. Size and time come from game.hdr, so a
+      // re-import invalidates the reused metadata. The directory handle stays open
+      // here, as it does for a book read for its metadata.
+      if (questbook_game::isGameAtPath(gameDir)) {
+        uint32_t hdrSize = 0;
+        uint32_t hdrTime = 0;
+        HalFile hdr;
+        if (Storage.openFileForRead("LIBIDX", questbook_game::path(name, questbook_game::HDR_FILE_NAME), hdr)) {
+          hdrSize = static_cast<uint32_t>(hdr.fileSize());
+          hdrTime = hdr.modificationTime();
+          hdr.close();
+        }
+        // The name is passed down as the game marker: this branch is the only one
+        // that has proven the entry is a complete game directory.
+        if (!stageItem(st, name, hdrSize, path, hdrTime, dedupBase, name, folderEmitted, myFolderId)) break;
+        continue;
+      }
+
       const size_t resumePosition = dir.position();
       dir.close();
-      walk(st, joinLibraryPath(path, name), depth + 1);
+      walk(st, gameDir, depth + 1);
       if (st.failed || st.books >= CLIX_MAX_RECORDS) return;
 
       dir = Storage.open(path.c_str());
@@ -503,59 +611,7 @@ void walk(WalkState& st, const std::string& path, const int depth) {
     }
     if (!isLibraryBookFile(name)) continue;
 
-    // A zero-length book is a dangling directory entry: the name enumerates but
-    // the contents do not exist. Counted rather than silently dropped.
-    if (size == 0) {
-      st.unreadableSkipped++;
-      continue;
-    }
-    // The index stores the name and the folder path behind one length byte
-    // each, and readPath() reconstructs "<folder>/<name>" from those bytes. An
-    // entry that does not fit is skipped and counted, never clamped: a clamped
-    // name still renders on the shelf but reconstructs to a path that cannot
-    // open, and a byte-level cut is not even valid UTF-8. The limit is real —
-    // FAT allows 255 UTF-16 units, so a long Cyrillic or CJK filename can run
-    // to ~765 UTF-8 bytes.
-    if (name.size() > STAGE_NAME_BYTES || path.size() > FOLDER_PATH_BYTES) {
-      st.unreadableSkipped++;
-      continue;
-    }
-    const uint64_t key = (static_cast<uint64_t>(fnv1a32(name.data(), name.size())) << 32) | size;
-    if (st.dedupKeys != nullptr) {
-      uint64_t* const end = st.dedupKeys + st.activeDedupCount;
-      uint64_t* const slot = std::lower_bound(st.dedupKeys + dedupBase, end, key);
-      if (slot != end && *slot == key) {
-        st.duplicatesDropped++;
-        continue;
-      }
-      if (st.activeDedupCount < LIBRARY_MAX_DEDUP_KEYS) {
-        memmove(slot + 1, slot, static_cast<size_t>(end - slot) * sizeof(*slot));
-        *slot = key;
-        st.activeDedupCount++;
-      } else if (!st.dedupDegraded) {
-        LOG_INF("LIBIDX", "duplicate detection capped at %u entries in %s",
-                static_cast<unsigned>(LIBRARY_MAX_DEDUP_KEYS), path.c_str());
-        st.dedupDegraded = true;
-      }
-    }
-    if (!folderEmitted) {
-      // Folders are emitted lazily, so only directories that actually hold a
-      // book get an id and the ids stay dense.
-      myFolderId = st.folderId;
-      // In range: entries whose folder path exceeds FOLDER_PATH_BYTES were
-      // skipped above, so no book reaches this line with an overlong path.
-      const uint8_t pathLen = static_cast<uint8_t>(path.size());
-      if (st.folders.write(&pathLen, 1) != 1 ||
-          st.folders.write(reinterpret_cast<const uint8_t*>(path.data()), pathLen) != pathLen) {
-        LOG_ERR("LIBIDX", "folder stage write failed: %s", path.c_str());
-        st.failed = true;
-        break;
-      }
-      st.folderBytes += 1u + pathLen;
-      st.folderId++;
-      folderEmitted = true;
-    }
-    if (!stageRecord(st, name, size, myFolderId, joinLibraryPath(path, name), modificationTime)) break;
+    if (!stageItem(st, name, size, path, modificationTime, dedupBase, std::string(), folderEmitted, myFolderId)) break;
   }
   dir.close();
 }
