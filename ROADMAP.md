@@ -50,8 +50,11 @@ That page also downloads. Its second action reads the SD card: a game that is no
 **Add to Library**, which fetches the converted document (`/online/<index_name>/playtale/`), imports it
 into `/storygames/<index_name>/` — `game.hdr`, `game.idx`, `game.dat`, `meta.json` and the game's own
 `cover.bmp` — and then offers **Remove from Library**, which asks first and deletes that directory. The
-format is described in [docs/file-formats.md](docs/file-formats.md). Play is still a placeholder: the
-button exists and logs, and no reader opens yet.
+format is described in [docs/file-formats.md](docs/file-formats.md). **Play** opens the storygame reader:
+`lib/QuestBook/StorygameEngine` runs the game's tasks over its parameter array and follows the
+paragraph transition map, and `StorygameReaderActivity` renders one paragraph's formatted text and
+choices as a swipe-scrollable column, with the character sheet on a left swipe. A game that is not on
+the card yet is imported first (the same transfer as Add), then read.
 
 The page imports without holding the document: the response streams into the importer, which writes
 each paragraph payload straight to `game.dat`. Every in-session failure deletes the game's directory;
@@ -65,7 +68,8 @@ game page. Adding or removing a game marks the index stale, and deleting the row
 the whole game. Games never enter the recent-books store, so they are not among the «недавно открытые» rows
 at the top of the Recent tab or in the home screen's continue-reading slot.
 
-**Still planned:** Play (the runtime and the reader), and a separate games grouping in the Library.
+**Still planned:** persisting progress and game parameters, recent-books integration, and a separate
+games grouping in the Library.
 
 **Why a built-in section rather than a plugin catalogue.** The SD-plugin path below could list the
 same games with no new firmware, and it is the cheaper route for a generic catalogue. It was not taken
@@ -88,11 +92,18 @@ contract without removing any of the firmware work.
 ## Phase 2 — Storygame runtime
 
 **Goal:** Play a downloaded storygame on the device.
+**Status:** 🚧 in progress.
 
-**Planned work:**
+**Shipped so far.** The runtime is a native reimplementation of the game's declarative platform
+framework, not a JS interpreter: `lib/QuestBook/StorygameGame` loads `game.hdr`/`game.idgame.dat`;
+`StorygameEngine` evaluates the `k`/`r`/`s` conditions and runs the ~18 task classes over an integer
+parameter array; `StorygamePayload` parses each paragraph payload with the vendored expat; and
+`StorygameReaderActivity` draws one paragraph's BBCode-lowered text and choices as one scrollable
+column, with the character sheet on a left swipe. Play is wired into `StorygameDetailsActivity` and
+launches that reader (downloading the game first when it is not on the card).
 
-* Parse the storygame's XML: the game modules, the transition map, and the game parameters.
-* Execute the storygame's rules and drive the plot from the reader's choices.
+**Still planned:**
+
 * Persist progress and game parameters, so a game resumes where it stopped.
 * Put games into the recent-books store (so they appear among «недавно открытые» and in continue-reading)
   and give games their own grouping in the Library, once there is a play state to remember.
@@ -100,21 +111,18 @@ contract without removing any of the firmware work.
 **What already exists and should be reused rather than rebuilt:**
 
 * **XML: expat 2.7.3 is already vendored and used** by the EPUB parsers
-  (`lib/expat/`, `lib/XmlParserUtils/XmlParserUtils.h`). No new XML dependency is needed; what is
-  needed is a parser for the storygame schema on top of it.
-* **Chapter/page layout and text rendering** are shared with the EPUB reader.
+  (`lib/expat/`, `lib/XmlParserUtils/XmlParserUtils.h`), now also by `StorygamePayload`.
+* **Chapter/page layout and text rendering** remain shared with the EPUB reader in the long term; the
+  storygame reader currently lays out its own paragraph column.
 
-**Open decision — the scripting engine.** Nothing suitable is vendored today; a JS interpreter would be
-a new dependency. This is the phase's critical path:
+**Open decision — progress persistence.** Play state is not saved yet: a new game always starts from
+the entry paragraph, and `save`/`achi` tasks are no-ops offline. The state format and where to store it
+(per-game under `/storygames/`, the existing `/.crosspoint/` caches, or a КвестБук account in Phase 3)
+is the phase's remaining work. Persistent-format and invalidation rules follow
+[generated-files-cache.md](.agents/rules/generated-files-cache.md) when it lands.
 
-* The engine must fit the ESP32-C3 baseline (roughly 380 KB usable RAM, no PSRAM). On S3 boards PSRAM
-  is available, but C3 support is required.
-* Candidates (for example mJS, Elk, Espruino) must be evaluated for RAM, flash, and worst-case
-  execution before one is chosen.
-* **No engine is selected yet.** This document records the constraint, not a choice.
-
-**Planned prerequisite:** moving built-in hyphenation data to the SD card, to free the flash budget the
-runtime will need (German hyphenation alone is about 200 KB).
+**Planned prerequisite:** moving built-in hyphenation data to the SD card, to free flash budget as the
+runtime grows (German hyphenation alone is about 200 KB).
 
 ---
 

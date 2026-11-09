@@ -1,13 +1,15 @@
 # КвестБук integration and storygame runtime — architecture draft
 
 > **Status: draft for review.** Most of this document describes a design that is **not implemented**.
-> It is a plan, not a record of current behaviour. Three parts ship: the catalogue, the game page and
-> that page's download, which exist as `QuestBookCatalogActivity` and `StorygameDetailsActivity`, and
-> the importer they feed (`lib/QuestBook/StorygameImporter.*`). The byte layout those files are written
-> in now lives in [file-formats.md](../file-formats.md), because it is current behaviour rather than a
-> plan. This section says what those screens do today and what is still unbuilt; once further parts
-> ship, they must move to the documents that describe current behaviour, and this text must be reduced
-> to whatever is still unbuilt. See the "Documents follow code" rule in `AGENTS.md`.
+> It is a plan, not a record of current behaviour. What ships: the catalogue, the game page and its
+> download (`QuestBookCatalogActivity`, `StorygameDetailsActivity`, `lib/QuestBook/StorygameImporter.*`),
+> and the storygame runtime and reader that Play launches (`lib/QuestBook/StorygameEngine.*`,
+> `StorygameGame.*`, `StorygamePayload.*`, `src/activities/reader/StorygameReaderActivity.*`). The byte
+> layout those files are written in now lives in [file-formats.md](../file-formats.md), because it is
+> current behaviour rather than a plan. This section says what those screens do today and what is still
+> unbuilt; once further parts ship, they must move to the documents that describe current behaviour, and
+> this text must be reduced to whatever is still unbuilt. See the "Documents follow code" rule in
+> `AGENTS.md`.
 
 This document covers two connected pieces of planned work:
 
@@ -1034,28 +1036,43 @@ and are out of scope for the first version. The corpus shows `checkpoints` and `
 **unused by every game studied** [M], and `achi` appears once in 11 007 scripts [M], so this costs
 nothing today.
 
+### 5.5 Transitions to a paragraph that is not there
+
+A `goto` or `<a>` may name a paragraph the container does not carry: a game can be converted from
+source with a dangling reference, and a payload can fail to read or parse at runtime. The runtime
+treats both as a **dead link**, not as a fatal error: `Engine::moveTo` loads the target before it
+touches the current paragraph, and on failure it returns without changing state, so the reader keeps
+the paragraph it was on and its remaining choices stay usable. Only the entry paragraph is fatal —
+a game whose `start` paragraph cannot be loaded does not start.
+
+This is a deliberate departure from the reference engine, which would show an empty article. On a
+device with no way back to the catalogue other than leaving the reader, silently staying put is the
+friendlier outcome [C: `lib/QuestBook/StorygameEngine.cpp` `moveTo`/`choose`].
+
 ---
 
 ## 6. Device UI
 
-> **Partly shipped.** §6.1's catalogue and game-page rows describe code that now exists:
-> `src/activities/browser/QuestBookCatalogActivity.*` and `StorygameDetailsActivity.*`, with the home
-> menu entry that opens them. The shipped catalogue offers the `new` and `editorial` lists only and shows
-> no covers in its rows; tags and search remain unbuilt. The game page shows a cover and **downloads**:
+> **Partly shipped.** §6.1's catalogue, game-page and reader rows describe code that now exists:
+> `src/activities/browser/QuestBookCatalogActivity.*`, `StorygameDetailsActivity.*` and
+> `src/activities/reader/StorygameReaderActivity.*`, with the home menu entry that opens the first.
+> The shipped catalogue offers the `new` and `editorial` lists only and shows no covers in its rows;
+> tags and search remain unbuilt. The game page shows a cover, **downloads**, **plays**, and removes:
 > its second action imports the game into `/storygames/<index_name>/` and removes that directory again
-> on request (§6.3). A downloaded game is also one row of the Library (§4.9). Play and the reader are
-> still plans.
+> on request (§6.3), and Play opens the runtime reader — downloading the game with the same import
+> first when it is not on the card. A downloaded game is also one row of the Library (§4.9).
+> Progress persistence and the `___temp` play workspace are still plans (§6.3).
 
 ### 6.1 Screens
 
 | Screen | Base | Responsibility |
 | --- | --- | --- |
 | КвестБук catalogue | `CatalogActivity` | list of games with paging; **shipped** for `new` + `editorial`, no tags/search entry yet |
-| Game page | own activity, `freeink::ui::publicationPage` | name, author, tags, description, likes/dislikes, stars, the cover, and **Play / Add to Library / Remove from Library**; **shipped**, Play still a placeholder |
+| Game page | own activity, `freeink::ui::publicationPage` | name, author, tags, description, likes/dislikes, stars, the cover, and **Play / Add to Library / Remove from Library**; **shipped**, Play opens the runtime reader |
 | Tag list | `UiListActivity` | the tag catalogue from §2.2; selecting one lists its games |
 | Tag results | catalogue list with a filter | [O] blocked on §2.3 |
 | Search | `CatalogActivity::launchSearch()` | [O] blocked on §2.4 |
-| Reader | own activity | the game itself; paragraph text, choices, character sheet, spoilers |
+| Reader | own activity | the game itself: paragraph text formatted from BBCode, choices, spoilers, character sheet; **shipped** |
 
 ### 6.2 Why `CatalogActivity`
 
@@ -1138,36 +1155,38 @@ retried on a later visit rather than showing a broken image forever.
 
 #### Download and Play actions
 
-> **Download shipped, Play not.** The page's second action is **Add to Library**, which is the
-> Download described below: it fetches the converted document and imports it into
-> `/<library>/storygames/<index_name>/`, then the same button becomes **Remove from Library**, which
-> asks for confirmation and deletes that directory. **Play** is still a placeholder that only logs.
-> The importer's exact behaviour (streaming, the counts check, the rejection rules) and the byte layout
-> it writes are current behaviour, documented in [file-formats.md](../file-formats.md); the rest of this
-> subsection remains the plan for Play.
+> **Both shipped.** The page's second action is **Add to Library** (Download described below): it
+> fetches the converted document and imports it into `/<library>/storygames/<index_name>/`, then the
+> same button becomes **Remove from Library**, which asks for confirmation and deletes that directory.
+> **Play** opens the runtime reader directly; when the game is not on the card yet, Play first runs the
+> same import and opens the reader when it succeeds, so for now a catalogue Play also leaves the game as
+> a permanent library item. The reserved `___temp` workspace below is still the plan for a later Play
+> that does not. The importer's exact behaviour (streaming, the counts check, the rejection rules) and
+> the byte layout it writes are current behaviour, documented in
+> [file-formats.md](../file-formats.md).
 
 The game page exposes two distinct actions. Both fetch the converted `/playtale/` document using
-`index_name` (§2.5, §4.3), then import it into the on-device file layout (§4.2). They differ in the
-destination and in whether the game becomes a permanent library item:
+`index_name` (§2.5, §4.3), then import it into the on-device file layout (§4.2). They differ in
+whether they open the reader immediately:
 
-- **Download** stores the game persistently at
+- **Download (Add to Library)** stores the game persistently at
   `/<library>/storygames/<index_name>/`. The game remains available for later offline play. Downloading
   a game that is already present replaces its files in that directory — in the shipped page, Add is
-  offered only while the game is absent, so replacing means Remove and then Add. Shipped as *Add to
-  Library*, and the game then appears in the Library as one row (§4.9).
-- **Play** downloads and imports the game into the reserved temporary workspace
-  `/<library>/storygames/___temp/`, then opens the reader from that workspace. From the player's
-  perspective this behaves as if the game had been opened directly from the catalogue without a
-  download: it does not create a permanent game entry in the library. Technically, however, the game
-  is downloaded in full before it can be played, because the server does not support ranged or
-  resumable downloads (§2.5).
+  offered only while the game is absent, so replacing means Remove and then Add. The game then appears
+  in the Library as one row (§4.9).
+- **Play** opens the reader from the downloaded game. When the game is absent, Play performs the same
+  import and opens the reader on success, so a catalogue Play currently also leaves the permanent
+  library entry. The planned behaviour below — importing into the shared temporary workspace
+  `/<library>/storygames/___temp/` so a catalogue Play does not create a library item — is not
+  implemented yet.
 
-The `___temp` directory is a single shared workspace, not a per-game directory. A Play operation
-must therefore treat its contents as belonging only to the game currently being played and must not
-register that workspace as a library item. The exact cleanup policy (for example, clearing it before
-the next Play operation and/or when leaving the reader) is an implementation detail to settle when
-the loader and library integration are built; it must not affect games stored in permanent
-`<index_name>` directories.
+The `___temp` directory would be a single shared workspace, not a per-game directory. A Play operation
+that uses it must therefore treat its contents as belonging only to the game currently being played and
+must not register that workspace as a library item. The reader itself reads from its opened workspace
+and never from another game's directory (the engine's `ParagraphSource` is bound to one open
+`StorygameGame`). The exact cleanup policy (for example, clearing it before the next Play operation
+and/or when leaving the reader) is an implementation detail to settle when it is built; it must not
+affect games stored in permanent `<index_name>` directories.
 
 Covers are fetched per game page, from the converted endpoint above. The cover file is at most ~3 KB
 of 1-bit BMP, so it neither competes with the retained catalogue page nor needs a decoder; an
@@ -1259,11 +1278,11 @@ excluded from v1. The mitigation is to implement exactly the twelve BBCode const
 | 4 | JSON API for substring search (§2.4) | The search screen |
 | 5 | ~~Catalogue cover handling: keep the current no-cover experience, re-download per view, or add a cache keyed by `game_id`? This is separate from paragraph images, which are omitted from v1 (§4.6).~~ **Decided:** the service converts the cover to a 1-bit BMP of at most 128×192 (`/online/cover/<index_name>/?w=&h=`), the device caches it under `/.crosspoint/qbcover/` keyed by `md5(cover)`, and Download will keep a copy beside the game (§6.3). Separate from paragraph images, which are omitted from v1 (§4.6). | — |
 | 6 | TLS posture for a first-party service: keep `setInsecure()`, add a CA bundle, or pin | Security review |
-| 7 | Expression evaluator: vendor `tinyexpr` with adaptations, or write the small evaluator (§5.3) | Runtime |
+| 7 | ~~Expression evaluator: vendor `tinyexpr` with adaptations, or write the small evaluator (§5.3)~~ **Decided and shipped:** a small handwritten recursive-descent evaluator in `lib/QuestBook/StorygameEngine`; no third-party engine is added | — |
 | 8 | Compression: `uzlib` + 32 KB ring, a server switch to raw deflate, or neither (§4.11) | Download flow, memory |
-| 9 | ~~Game file root under the library (§4.2)~~ **Decided:** permanent games use `/<library>/storygames/<index_name>/`; catalogue Play uses the shared `/<library>/storygames/___temp/` workspace (§6.3) | — |
+| 9 | ~~Game file root under the library (§4.2)~~ **Decided:** permanent games use `/<library>/storygames/<index_name>/`; catalogue Play uses the shared `/<library>/storygames/___temp/` workspace (§6.3) — the `___temp` part is still to build; Play currently imports into the permanent directory | — |
 | 10 | ~~Home-screen placement for the КвестБук entry (§6.6)~~ **Decided:** the first constant entry of the home menu | — |
-| 11 | Whether the storygame screen reuses the reader's paginated layout or needs its own view (§5.2) | Runtime |
+| 11 | ~~Whether the storygame screen reuses the reader's paginated layout or needs its own view (§5.2)~~ **Decided and shipped:** its own activity (`StorygameReaderActivity`), a vertically swipe-scrollable paragraph+choices column, not the paginated book reader | — |
 | 12 | Should `STORYGAME_TECH.md` be translated to English and corrected to match this study? | Documentation |
 
 ---

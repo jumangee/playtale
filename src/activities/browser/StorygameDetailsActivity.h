@@ -78,9 +78,11 @@ class StorygameDetailsActivity final : public Activity, private UiAppHost {
   // --- the two actions -------------------------------------------------------
   static void onPlayEvent(const freeink::ui::ActionEvent&, void* user);
   static void onLibraryEvent(const freeink::ui::ActionEvent&, void* user);
-  // Primary action. The runtime does not exist yet, so this only records the
-  // intent (§9: the reader is a later step).
-  void play() const;
+  // Primary action. Opens the reader on the downloaded game; a game that is not
+  // on the card is imported first and the reader follows when that succeeds.
+  void play();
+  // Replaces this page with the storygame reader (game must be downloaded).
+  void openReader();
   // Second action, chosen by whether the game is on the card.
   void addToLibrary();
   void promptRemoveFromLibrary();
@@ -107,6 +109,9 @@ class StorygameDetailsActivity final : public Activity, private UiAppHost {
   bool downloaded = false;
   // True while the import runs, which also holds the page's second action off.
   bool downloading = false;
+  // Set by play() when the game had to be downloaded first: the reader opens as
+  // soon as that import succeeds instead of returning to this page.
+  bool launchAfterDownload = false;
   // The last failure, shown in the metadata line. Cleared by the next attempt,
   // so the page keeps one layout and the button stays usable for a retry.
   std::string errorText;

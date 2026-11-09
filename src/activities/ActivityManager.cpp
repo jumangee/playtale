@@ -352,10 +352,10 @@ void ActivityManager::goToReader(std::string path, const bool allowFastInitialRe
     return;
   }
 
-  // A downloaded game opens on its own page, which is also where it is removed;
-  // the runtime that would play it is a later step (docs/storygames/ARCHITECTURE.md
-  // §4.9, §6.3). isGameAtPath() is the shared predicate, and it is what keeps a book
-  // file that happens to sit in /storygames/ opening as a book.
+  // A downloaded game opens on its own page, which is also where it is removed
+  // and where Play launches the storygame reader. isGameAtPath() is the shared
+  // predicate (docs/storygames/ARCHITECTURE.md §4.9, §6.3), and it is what keeps
+  // a book file that happens to sit in /storygames/ opening as a book.
   if (questbook_game::isGameAtPath(path)) {
     auto activity = StorygameDetailsActivity::forLibrary(renderer, mappedInput, path);
     if (activity) {

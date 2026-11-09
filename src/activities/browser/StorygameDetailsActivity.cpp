@@ -18,6 +18,7 @@
 #include "QuestBookCover.h"
 #include "StorygameStore.h"
 #include "activities/network/WifiSelectionActivity.h"
+#include "activities/reader/StorygameReaderActivity.h"
 #include "activities/util/ConfirmationActivity.h"
 #include "components/CatalogScreens.h"
 #include "components/UiAppHelpers.h"
@@ -424,14 +425,40 @@ void StorygameDetailsActivity::onLibraryEvent(const fui::ActionEvent&, void* use
   if (self->downloaded) {
     self->promptRemoveFromLibrary();
   } else {
+    // The manual Add action never carries a play-after-download intent, even if
+    // a previous Play-initiated download failed somewhere along the way.
+    self->launchAfterDownload = false;
     self->addToLibrary();
   }
 }
 
-void StorygameDetailsActivity::play() const {
-  // The runtime is §9's next step and does not exist yet, so this only records
-  // the intent: a silent no-op would look like a broken button.
-  LOG_INF("QBOOK", "play requested for %s; the storygame runtime is not implemented yet", game.indexName.c_str());
+void StorygameDetailsActivity::play() {
+  if (downloading) return;
+  if (downloaded) {
+    openReader();
+    return;
+  }
+  // §6.3: playing a game that is not on the card downloads it first; the
+  // transfer is the Add action's own, after which the reader opens.
+  launchAfterDownload = true;
+  addToLibrary();
+}
+
+void StorygameDetailsActivity::openReader() {
+  auto reader = makeUniqueNoThrow<StorygameReaderActivity>(renderer, mappedInput, game.indexName);
+  if (!reader) {
+    LOG_ERR("QBOOK", "OOM: storygame reader");
+    RenderLock lock;
+    errorText = tr(STR_MEMORY_ERROR);
+    requestUpdate();
+    return;
+  }
+  startActivityForResult(std::move(reader), [this](const ActivityResult&) {
+    // Back from the reader returns to this page; the page re-reads the card on
+    // entry, so a game removed elsewhere is not mistaken for a live one.
+    refreshDownloaded();
+    requestUpdate();
+  });
 }
 
 questbook_game::Meta StorygameDetailsActivity::catalogueMeta() const {
@@ -507,6 +534,12 @@ void StorygameDetailsActivity::addToLibrary() {
   // The action's label and icon changed; the interaction table is rebuilt from
   // the next render, so close routing the way the remove path does.
   closeRouting();
+  const bool launchNow = launchAfterDownload;
+  launchAfterDownload = false;
+  if (launchNow && imported) {
+    openReader();
+    return;
+  }
   requestUpdate(true);
 }
 
