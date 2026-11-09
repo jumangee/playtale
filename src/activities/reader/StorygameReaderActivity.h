@@ -112,20 +112,24 @@ class StorygameReaderActivity final : public Activity {
   // True while any of the reader's buttons is still down, used to keep a release
   // from before the sheet opened out of the sheet.
   bool sheetButtonHeld() const;
-  // Applies one scroll step to `column` and clamps it to the column's range.
+  // Applies a content-space scroll delta to `column` and clamps it to its range.
   void scrollColumn(Column& column, int delta);
   // The one clamp rule for a column's scroll offset, against the viewport height
   // it is drawn in. The loop task and the render task both call it, the latter
   // because only render knows the area a font change produced.
   static void clampScroll(Column& column, int viewportHeight);
-  // One page step down the column, in content-space pixels.
-  int scrollStep() const;
+  // One page of `column`, as the content-space delta to add to its scroll,
+  // measured on the laid-out lines rather than on a fraction of the screen:
+  // forward, the page starts again at the last line it showed whole; backward,
+  // at a line top above it. Both directions land on a line boundary.
+  int pageStep(const Column& column, bool forward) const;
   int bodyFontId() const;
   int viewportHeight() const;
-  // Content-space width of a text column. `reserveSheetButton` keeps the floating
-  // button's strip clear of text; it is passed in rather than derived from the
-  // current view so a column's width never depends on which view draws it.
-  int textColumnWidth(bool reserveSheetButton) const;
+  // Content-space width of a text column: the page inset on the left, the same
+  // inset plus the theme's scroll-indicator thickness on the right, where the bar
+  // is drawn. The floating sheet tab is painted over the page and takes none of
+  // this width.
+  int textColumnWidth() const;
   // Width of the gap between two words; shared by layout and rendering so the
   // measured line and the drawn line stay identical.
   int spaceAdvance(uint8_t style) const;
@@ -151,8 +155,8 @@ class StorygameReaderActivity final : public Activity {
   // The floating sheet button is a touch affordance, and it exists only while
   // the character sheet has something to show.
   bool sheetButtonVisible() const;
-  // The same conditions without the view: a column reserves the button's strip
-  // whenever the button would exist in the paragraph view.
+  // The same conditions without the view, for callers that need to know whether
+  // the affordance exists rather than whether it is on screen.
   bool sheetButtonEnabled() const;
   Rect sheetButtonHitRect(const Rect& area) const;
 
@@ -161,8 +165,8 @@ class StorygameReaderActivity final : public Activity {
   questbook_game::ParagraphSource source;
   bool failed = false;
   View view = View::Paragraph;
-  // Cached engine query: the text column width and the floating button both
-  // depend on it, and it only changes when a choice rebuilds the paragraph.
+  // Cached engine query for the tab and the hint label: it only changes when a
+  // choice rebuilds the paragraph.
   bool charsheetAvailable = false;
   // How much of the sheet is on screen: 0 = none, SHEET_REVEAL_STEPS = all.
   // The wipe is driven by advanceSheetReveal() from loop(), one position per

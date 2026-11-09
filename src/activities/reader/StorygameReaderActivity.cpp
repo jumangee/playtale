@@ -18,9 +18,9 @@ namespace fui = freeink::ui;
 namespace {
 
 constexpr int CONTENT_PAD = 8;
-// Reserved at the right edge for the scroll indicator, so the bar never sits on
-// top of a glyph.
-constexpr int SCROLL_STRIP = 4;
+// Drawn bullet plus the gap before its text; also the width the bullet takes
+// from the line it marks.
+constexpr int BULLET_INDENT = 8;
 constexpr int TEXT_GAP = 10;
 constexpr int CHOICE_GAP = 8;
 constexpr int CHOICE_GAP_BEFORE = 16;
@@ -35,7 +35,6 @@ constexpr int CHOICE_PAD_Y = 6;
 constexpr int SHEET_BUTTON_WIDTH = 30;   // from the panel's right edge inwards
 constexpr int SHEET_BUTTON_HEIGHT = 54;
 constexpr int SHEET_BUTTON_TAPER = 12;   // vertical extent of each slanted corner
-constexpr int SHEET_BUTTON_TEXT_GAP = 6;
 constexpr int16_t SHEET_BUTTON_TOUCH_TARGET = 44;
 // The sheet reveal. The wipe is paced by a clock in loop(), not by how long a
 // panel refresh happens to take: on a host build a refresh is free, so a reveal
@@ -102,20 +101,52 @@ bool StorygameReaderActivity::sheetButtonEnabled() const {
   return charsheetAvailable && mappedInput.hasTouch();
 }
 
-int StorygameReaderActivity::textColumnWidth(const bool reserveSheetButton) const {
+int StorygameReaderActivity::textColumnWidth() const {
   const Rect area = UITheme::getInstance().getScreenSafeArea(renderer, /*front*/ true, /*side*/ false);
-  int width = area.width - CONTENT_PAD * 2 - SCROLL_STRIP;
-  // The tab is attached to the panel edge, so text stops short of its left
-  // profile instead of running under it.
-  if (reserveSheetButton) width -= SHEET_BUTTON_WIDTH + SHEET_BUTTON_TEXT_GAP;
-  return width;
+  // The floating sheet tab is painted over the page, so it takes no room from the
+  // text: the right edge keeps the same CONTENT_PAD from the scroll indicator as
+  // the left edge keeps from the page. The indicator's width is reserved even when
+  // no bar is drawn, so a column does not re-wrap when a paragraph grows past one
+  // screen.
+  return area.width - CONTENT_PAD * 2 - UITheme::getInstance().getMetrics().listScrollWidth;
 }
 
-int StorygameReaderActivity::scrollStep() const {
-  // Three quarters of the viewport keeps a line or two of context across a page
-  // step, the way the reader's page turns do.
-  const int step = viewportHeight() * 3 / 4;
-  return step < 40 ? 40 : step;
+int StorygameReaderActivity::pageStep(const Column& column, const bool forward) const {
+  // Recomputed from `column.scroll` on every call: a cached page index or
+  // landing offset would go stale on a relayout, on a font change, and on the
+  // mid-line offsets revealFocusedChoice() produces.
+  const int vh = viewportHeight();
+  size_t top = 0;
+  while (top < column.lines.size() && column.lines[top].y + column.lines[top].height <= column.scroll) ++top;
+  // No lines at all, or every line is above the viewport: nothing to move to.
+  if (top == column.lines.size()) return 0;
+
+  if (forward) {
+    // The last line the page shows whole is where the next page starts, so the
+    // bottom line of one page is the first line of the next.
+    size_t bottom = top;
+    while (bottom + 1 < column.lines.size() &&
+           column.lines[bottom + 1].y + column.lines[bottom + 1].height <= column.scroll + vh) {
+      ++bottom;
+    }
+    const int step = column.lines[bottom].y - column.scroll;
+    // A viewport too short for two whole lines still has to move somewhere.
+    return step > 0 ? step : column.lines[top].height;
+  }
+
+  // Backward mirrors that: the page ends on the last line top above this one, so
+  // the text is read from its first line instead of being cut in half.
+  const int target = column.lines[top].y + column.lines[top].height - vh;
+  if (target <= column.lines.front().y) return -column.scroll;
+  int previous = column.lines.front().y;
+  for (size_t i = 0; i <= top; ++i) {
+    if (column.lines[i].y >= target) {
+      previous = column.lines[i].y;
+      break;
+    }
+  }
+  const int step = previous - column.scroll;
+  return step < 0 ? step : -column.lines[top].height;
 }
 
 void StorygameReaderActivity::onEnter() {
@@ -144,9 +175,9 @@ bool StorygameReaderActivity::loadGame() {
   if (!game.load(dir)) return false;
   source = game.paragraphSource();
   if (!game.engine().startGame(source)) return false;
-  // The text column width depends on whether the sheet button is shown, so this
-  // is read before the first layout and published under the render lock the
-  // render task reads it under.
+  // Read once before the first layout, so the first frame already knows whether
+  // the tab and the hint label apply. Published under the render lock the render
+  // task reads it under.
   const bool sheetNow = game.engine().hasCharsheet();
   {
     RenderLock lock(*this);
@@ -199,6 +230,11 @@ void StorygameReaderActivity::appendWord(const uint8_t style, const std::string&
   }
   writerLine.y = writerY;  // begin the line at the writer's current slot
   writerLine.x = writerX;
+  if (writerLine.spans.empty() && writerBullet) {
+    // The bullet is drawn left of the text, so its indent is part of the width
+    // this line may use; charging it here keeps the wrap and the drawing equal.
+    writerLineWidth = BULLET_INDENT;
+  }
   if (!writerLine.spans.empty()) {
     writerLine.text.push_back(' ');
     writerLineWidth += spaceWidth;
@@ -255,7 +291,7 @@ void StorygameReaderActivity::rebuildParagraphLayout() {
   paragraph.choiceTop.clear();
   paragraph.choiceBottom.clear();
   paragraph.height = 0;
-  paragraph.width = textColumnWidth(sheetButtonEnabled());
+  paragraph.width = textColumnWidth();
 
   const int fontId = bodyFontId();
   const int lh = renderer.getLineHeight(fontId);
@@ -330,10 +366,9 @@ void StorygameReaderActivity::rebuildSheetLayout() {
   sheet.lines.clear();
   sheet.height = 0;
   sheet.scroll = 0;
-  // The paragraph keeps its own column, so it is laid out for the width it has
-  // when the floating button is on screen; the sheet is a full page, with
-  // nothing floating over it.
-  sheet.width = textColumnWidth(/*reserveSheetButton=*/false);
+  // Both columns are laid out to the same width; the sheet simply has no tab
+  // painted over it.
+  sheet.width = textColumnWidth();
 
   const int fontId = bodyFontId();
   const int lh = renderer.getLineHeight(fontId);
@@ -412,9 +447,9 @@ void StorygameReaderActivity::rebuildSheetLayout() {
 int StorygameReaderActivity::choiceIndexAt(const int screenX, const int screenY) {
   RenderLock lock(*this);
   const Rect area = UITheme::getInstance().getScreenSafeArea(renderer, /*front*/ true, /*side*/ false);
-  // Only the button's own box is a target. A tap in the same row but beside the
-  // text — the margin the floating sheet button sits in, for instance — must not
-  // advance the story.
+  // Only the button's own box is a target: a tap beside the text must not advance
+  // the story. The floating sheet tab paints over the right end of that box, so
+  // handleParagraphInput() tests the tab first and keeps those taps off a choice.
   if (screenX < area.x + CONTENT_PAD || screenX >= area.x + CONTENT_PAD + paragraph.width) return -1;
   const int contentY = screenY - area.y + paragraph.scroll;
   for (size_t i = 0; i < paragraph.choiceTop.size(); ++i) {
@@ -549,10 +584,10 @@ bool StorygameReaderActivity::handleParagraphInput() {
     return true;
   }
   if (swipe == MappedInputManager::SwipeDir::Up || swipe == MappedInputManager::SwipeDir::Down) {
-    const int step = scrollStep();
+    const bool forward = swipe == MappedInputManager::SwipeDir::Up;
     {
       RenderLock lock(*this);
-      scrollColumn(paragraph, swipe == MappedInputManager::SwipeDir::Up ? step : -step);
+      scrollColumn(paragraph, pageStep(paragraph, forward));
     }
     requestUpdate();
     return true;
@@ -595,9 +630,8 @@ bool StorygameReaderActivity::handleParagraphInput() {
       }
       revealFocusedChoice();
     } else {
-      const int step = scrollStep();
       RenderLock lock(*this);
-      scrollColumn(paragraph, -step);
+      scrollColumn(paragraph, pageStep(paragraph, /*forward=*/false));
     }
     requestUpdate();
     return true;
@@ -610,9 +644,8 @@ bool StorygameReaderActivity::handleParagraphInput() {
       }
       revealFocusedChoice();
     } else {
-      const int step = scrollStep();
       RenderLock lock(*this);
-      scrollColumn(paragraph, step);
+      scrollColumn(paragraph, pageStep(paragraph, /*forward=*/true));
     }
     requestUpdate();
     return true;
@@ -653,7 +686,7 @@ bool StorygameReaderActivity::handleCharsheetInput() {
 
   {
     RenderLock lock(*this);
-    scrollColumn(sheet, delta * scrollStep());
+    scrollColumn(sheet, pageStep(sheet, /*forward=*/delta > 0));
   }
   requestUpdate();
   return true;
@@ -760,8 +793,9 @@ void StorygameReaderActivity::drawSheetButton(fui::DrawTarget& target, const Rec
   const int bottom = box.y + box.height - 1;
 
   // The tab hangs on the panel edge, so only its left profile is drawn: a slanted
-  // top, a vertical side and a slanted bottom. The interior is filled paper
-  // because the reading-position bar runs underneath and must not show through.
+  // top, a vertical side and a slanted bottom. It takes no width from the text
+  // column, so the paper fill covers the page's right edge under it -- the
+  // reading-position bar and a choice button's outline there -- by design.
   renderer.fillRect(box.x, top + SHEET_BUTTON_TAPER, box.width, box.height - SHEET_BUTTON_TAPER * 2, false);
   for (int i = 1; i < SHEET_BUTTON_TAPER; ++i) {
     const int w = box.width * i / SHEET_BUTTON_TAPER;
@@ -834,7 +868,7 @@ void StorygameReaderActivity::drawColumn(fui::DrawTarget& target, const fui::Sty
     int x = area.x + line.x + xOffset;
     if (line.bullet) {
       renderer.fillRect(x, top + (line.height - 5) / 2, 5, 5, ink);
-      x += 8;
+      x += BULLET_INDENT;
     }
     for (size_t s = 0; s < line.spans.size(); ++s) {
       const Span& span = line.spans[s];
