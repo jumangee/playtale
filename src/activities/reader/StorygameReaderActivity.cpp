@@ -1,11 +1,14 @@
 #include "StorygameReaderActivity.h"
 
 #include <Arduino.h>
+#include <Epub/hyphenation/Hyphenator.h>
 #include <FreeInkUIGfxRenderer.h>
 #include <GfxRenderer.h>
 #include <I18n.h>
 #include <Logging.h>
 #include <Memory.h>
+
+#include <cstring>
 
 #include "CrossPointSettings.h"
 #include "MappedInputManager.h"
@@ -47,6 +50,10 @@ constexpr int16_t SHEET_BUTTON_TOUCH_TARGET = 44;
 // open the sheet in a single frame.
 constexpr int SHEET_REVEAL_STEPS = 2;
 constexpr uint32_t SHEET_REVEAL_STEP_MS = 500;
+
+// Longest word the line writer will hyphenate. Game text words are far shorter;
+// the cap keeps every candidate prefix inside one fixed stack buffer.
+constexpr size_t HYPHEN_TEXT_MAX = 96;
 
 EpdFontFamily::Style toFontStyle(const uint8_t sg) {
   uint8_t style = 0;
@@ -199,6 +206,7 @@ void StorygameReaderActivity::resetWriter(Column& column, const int y, const int
   writerLineWidth = 0;
   writerChoice = -1;
   writerBullet = false;
+  writerHyphenate = false;
 }
 
 void StorygameReaderActivity::flushLine() {
@@ -218,16 +226,8 @@ void StorygameReaderActivity::flushLine() {
 
 void StorygameReaderActivity::breakLine() { flushLine(); }
 
-void StorygameReaderActivity::appendWord(const uint8_t style, const std::string& word) {
-  if (word.empty()) return;
-  wordBuf = word;
-  const EpdFontFamily::Style fontStyle = toFontStyle(style);
-  const int wordWidth = renderer.getTextWidth(bodyFontId(), wordBuf.c_str(), fontStyle);
-  const int spaceWidth = spaceAdvance(style);
-
-  if (!writerLine.spans.empty() && writerLineWidth + spaceWidth + wordWidth > writerWidth) {
-    flushLine();
-  }
+void StorygameReaderActivity::appendPiece(const uint8_t style, const std::string& piece, const int pieceWidth,
+                                          const int spaceWidth) {
   writerLine.y = writerY;  // begin the line at the writer's current slot
   writerLine.x = writerX;
   if (writerLine.spans.empty() && writerBullet) {
@@ -240,10 +240,79 @@ void StorygameReaderActivity::appendWord(const uint8_t style, const std::string&
     writerLineWidth += spaceWidth;
   }
   const uint16_t offset = static_cast<uint16_t>(writerLine.text.size());
-  const uint16_t length = static_cast<uint16_t>(word.size());
+  const uint16_t length = static_cast<uint16_t>(piece.size());
   writerLine.spans.push_back(Span{offset, length, style});
-  writerLine.text.append(word);
-  writerLineWidth += wordWidth;
+  writerLine.text.append(piece);
+  writerLineWidth += pieceWidth;
+}
+
+StorygameReaderActivity::HyphenBreak StorygameReaderActivity::hyphenSplit(const std::string& word, const uint8_t style,
+                                                                          const int spaceWidth) const {
+  // The gap before the word and the hyphen after the prefix are part of what has
+  // to fit on the line, so only what is left after the gap is available.
+  const int room = writerWidth - writerLineWidth - spaceWidth;
+  if (room <= 0 || word.size() >= HYPHEN_TEXT_MAX) return HyphenBreak{};
+
+  const int fontId = bodyFontId();
+  const EpdFontFamily::Style fontStyle = toFontStyle(style);
+  // ParsedText::hyphenateWordAtIndex() chooses the break the same way for the EPUB
+  // reader, but it adds break sources this writer does not have (Hangul, fallback
+  // splits for a first word) and weighs focus styling and justification. Keep the
+  // rule itself in step when either side changes.
+  const auto breaks = Hyphenator::breakOffsets(word, /*includeFallback=*/false);
+  if (breaks.empty()) return HyphenBreak{};
+
+  // Candidates are measured from a stack buffer. This runs once for a line that
+  // ends inside a word, and a heap string per candidate would churn the
+  // allocator for measurements that are discarded except for the widest one.
+  char prefix[HYPHEN_TEXT_MAX + 2];  // prefix + inserted hyphen + NUL
+  HyphenBreak best;
+  int bestWidth = -1;
+  for (const Hyphenator::BreakInfo& info : breaks) {
+    const size_t bytes = info.byteOffset;
+    if (bytes == 0 || bytes >= word.size()) continue;
+    memcpy(prefix, word.data(), bytes);
+    size_t length = bytes;
+    // A word with its own hyphen breaks after that hyphen, which the prefix
+    // already carries; a pattern break needs the hyphen drawn.
+    if (info.requiresInsertedHyphen) prefix[length++] = '-';
+    prefix[length] = '\0';
+    const int width = renderer.getTextWidth(fontId, prefix, fontStyle);
+    if (width > room || width <= bestWidth) continue;
+    bestWidth = width;
+    best.bytes = bytes;
+    best.width = width;
+    best.insertHyphen = info.requiresInsertedHyphen;
+  }
+  return best;
+}
+
+void StorygameReaderActivity::appendWord(const uint8_t style, const std::string& word) {
+  if (word.empty()) return;
+  const int spaceWidth = spaceAdvance(style);
+  const EpdFontFamily::Style fontStyle = toFontStyle(style);
+
+  // The part of the word still to place. Hyphenating at a line end leaves the
+  // rest of the word here, so one word reaches the column as two pieces.
+  wordBuf = word;
+  for (;;) {
+    const int wordWidth = renderer.getTextWidth(bodyFontId(), wordBuf.c_str(), fontStyle);
+    const bool overflow = !writerLine.spans.empty() && writerLineWidth + spaceWidth + wordWidth > writerWidth;
+    const bool canHyphenate = overflow && writerHyphenate;
+    const HyphenBreak split = canHyphenate ? hyphenSplit(wordBuf, style, spaceWidth) : HyphenBreak{};
+    if (split.bytes == 0) {
+      // The word whole: on this line when it fits, on the next one when it does
+      // not. A word wider than the column still overflows it, as it always has.
+      if (overflow) flushLine();
+      appendPiece(style, wordBuf, wordWidth, spaceWidth);
+      return;
+    }
+    std::string piece(wordBuf, 0, split.bytes);
+    if (split.insertHyphen) piece.push_back('-');
+    appendPiece(style, piece, split.width, spaceWidth);
+    flushLine();
+    wordBuf.erase(0, split.bytes);
+  }
 }
 
 void StorygameReaderActivity::appendStyledText(const std::string& text, const uint8_t style) {
@@ -298,8 +367,19 @@ void StorygameReaderActivity::rebuildParagraphLayout() {
   const int textX = CONTENT_PAD;
   const int width = paragraph.width;
 
+  // The game format carries no language and quest-book.ru publishes Russian text,
+  // so hyphenation runs on Russian patterns. A word those patterns do not cover
+  // gets no break, so text in another script keeps wrapping at spaces. The engine
+  // owns the choice as process-wide state, so it is set for this layout only and
+  // cleared afterwards instead of being left for the next screen to inherit.
+  const bool hyphenate = SETTINGS.hyphenationEnabled != 0;
+  if (hyphenate) Hyphenator::setPreferredLanguage("ru");
+
   int y = CONTENT_PAD;
   resetWriter(paragraph, y, textX, width, lh);
+  // The paragraph's own prose is the only text this writer hyphenates: a hyphen
+  // in a choice's label reads as a typo, and the sheet lays out key-value rows.
+  writerHyphenate = hyphenate;
 
   const auto& texts = game.engine().texts();
   for (const qg::VisibleText& block : texts) {
@@ -320,6 +400,7 @@ void StorygameReaderActivity::rebuildParagraphLayout() {
     breakLine();
     writerY += TEXT_GAP;
     resetWriter(paragraph, writerY, textX, width, lh);
+    writerHyphenate = hyphenate;
   }
 
   const auto& choices = game.engine().choices();
@@ -358,6 +439,11 @@ void StorygameReaderActivity::rebuildParagraphLayout() {
 
   paragraph.height = writerY + CONTENT_PAD;
   writer = nullptr;
+  writerHyphenate = false;
+  // Back to the engine's boot state, so a screen that lays text out without a
+  // language of its own (the text-settings preview, a dictionary page) is not
+  // handed the rules this layout needed.
+  if (hyphenate) Hyphenator::setPreferredLanguage("");
 }
 
 void StorygameReaderActivity::rebuildSheetLayout() {

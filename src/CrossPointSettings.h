@@ -329,7 +329,12 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
   uint8_t sleepTimeoutMinutes = 10;
   // E-ink refresh frequency (default 15 pages)
   uint8_t refreshFrequency = REFRESH_15;
-  uint8_t hyphenationEnabled = 0;
+  // Hyphenation ships enabled: justified lines stretch fewer spaces with it, and
+  // the storygame reader fills its column better. A saved value always wins; only
+  // a settings file older than this key takes the new default, which rebuilds the
+  // saved layouts once. There is deliberately no migration for a saved 0, because
+  // it cannot be told apart from a reader who turned hyphenation off.
+  uint8_t hyphenationEnabled = 1;
 
   // Reader screen margin settings
   static constexpr uint8_t SCREEN_MARGIN_MIN = 5;

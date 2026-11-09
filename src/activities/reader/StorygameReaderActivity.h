@@ -2,6 +2,7 @@
 
 #include <FreeInkUICore.h>
 
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -25,10 +26,12 @@ struct Rect;
 //
 // Lines own exactly one copy of their text (`text` holds the whole line, `spans`
 // are styled slices into it), so a long paragraph costs its own length once, not
-// once per word. The paragraph and the character sheet are two Columns of the
-// same type drawn by the same code: keeping them apart lets the sheet wipe in
-// over the paragraph still visible behind it, and returning to the paragraph
-// keeps the reading position instead of rebuilding it.
+// once per word. A hyphen the layout inserted at a line end is part of the line
+// text too, so the measured line and the drawn line stay identical. The paragraph
+// and the character sheet are two Columns of the same type drawn by the same code:
+// keeping them apart lets the sheet wipe in over the paragraph still visible
+// behind it, and returning to the paragraph keeps the reading position instead of
+// rebuilding it.
 //
 // That costs two resident columns, not one: while the sheet is open the
 // paragraph is still on screen behind the wipe, so it cannot be released. The
@@ -71,6 +74,16 @@ class StorygameReaderActivity final : public Activity {
     std::string text;     // the whole line, spans index into it
     std::vector<Span> spans;
   };
+  // One accepted hyphenation break for a word that does not fit the pending
+  // line: the bytes of the word that stay on this line and the width they take,
+  // hyphen included.
+  struct HyphenBreak {
+    size_t bytes = 0;
+    int width = 0;
+    // A visible '-' is appended only when the break is a pattern break. A word
+    // with its own hyphen breaks after that hyphen, which the prefix keeps.
+    bool insertHyphen = false;
+  };
   // One scrollable column of laid-out lines.
   struct Column {
     std::vector<Line> lines;
@@ -96,6 +109,13 @@ class StorygameReaderActivity final : public Activity {
   void appendRun(const questbook_game::SgRun& run);
   void appendStyledText(const std::string& text, uint8_t style);
   void appendWord(uint8_t style, const std::string& word);
+  // Appends one already-measured piece of a word to the pending line. A word is
+  // appended in one piece unless it is hyphenated at the end of a line.
+  void appendPiece(uint8_t style, const std::string& piece, int pieceWidth, int spaceWidth);
+  // The widest hyphenation break of `word` whose prefix still fits the pending
+  // line with its hyphen, or a `bytes == 0` break when none does. Pure reads of
+  // the pending line and the font; the caller does the splitting.
+  HyphenBreak hyphenSplit(const std::string& word, uint8_t style, int spaceWidth) const;
   void flushLine();
   void breakLine();
 
@@ -183,7 +203,8 @@ class StorygameReaderActivity final : public Activity {
   // A StyleSet is ~340 bytes, so it lives here rather than on the render stack.
   freeink::ui::StyleSet choiceButtonStyles;
 
-  // Writer state owned here so layout runs without heap churn.
+  // Writer state owned here so a line is built in one place. Hyphenation adds one
+  // lookup and one short prefix string per line-ending word, not per word.
   Column* writer = nullptr;
   int writerY = 0;
   int writerX = 0;
@@ -193,6 +214,10 @@ class StorygameReaderActivity final : public Activity {
   int writerLineWidth = 0;
   int16_t writerChoice = -1;
   bool writerBullet = false;
+  // Set by the layout that knows what it is writing: the paragraph's prose is
+  // hyphenated, a choice's label and the character sheet's rows are not. Reset
+  // by resetWriter(), so only the paragraph body turns it on.
+  bool writerHyphenate = false;
   std::string wordBuf;
 
   int focusChoice = 0;  // index into the engine's visible choices
