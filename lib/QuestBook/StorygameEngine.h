@@ -69,6 +69,10 @@ class Engine {
     std::vector<CharsheetItem> items;
   };
   void charsheet(std::vector<CharsheetGroup>& out) const;
+  // True when charsheet() would produce at least one visible group. Answers the
+  // "is there anything to show?" question without building the groups, so a
+  // caller that only needs to hide a control pays no allocation.
+  bool hasCharsheet() const;
 
   // The loaded header tables, for name-resolution by the caller.
   const Header& header() const { return header_; }
@@ -79,6 +83,10 @@ class Engine {
 
  private:
   static StyledText lowerBbCodeImpl(const char* text, size_t length, int depth);
+
+  // The visibility filter charsheet() and hasCharsheet() share: a group reaches
+  // the sheet only when it is visible and holds a non-zero parameter.
+  bool groupIsListed(const GroupRecord& group) const;
 
   // --- state ----------------------------------------------------------------
   // Loads `target` and makes it current. A missing or unreadable paragraph is a

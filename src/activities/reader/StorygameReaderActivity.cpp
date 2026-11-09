@@ -1,5 +1,7 @@
 #include "StorygameReaderActivity.h"
 
+#include <Arduino.h>
+#include <FreeInkUIGfxRenderer.h>
 #include <GfxRenderer.h>
 #include <I18n.h>
 #include <Logging.h>
@@ -7,18 +9,45 @@
 
 #include "CrossPointSettings.h"
 #include "MappedInputManager.h"
+#include "components/UiAppHelpers.h"
 #include "components/UITheme.h"
 
 namespace qg = questbook_game;
+namespace fui = freeink::ui;
 
 namespace {
 
 constexpr int CONTENT_PAD = 8;
+// Reserved at the right edge for the scroll indicator, so the bar never sits on
+// top of a glyph.
 constexpr int SCROLL_STRIP = 4;
 constexpr int TEXT_GAP = 10;
-constexpr int CHOICE_GAP = 4;
-constexpr int CHOICE_GAP_BEFORE = 12;
-constexpr int CHOICE_INDENT = 16;
+constexpr int CHOICE_GAP = 8;
+constexpr int CHOICE_GAP_BEFORE = 16;
+// Inner padding of a choice button: the label is inset so the border does not
+// touch the text.
+constexpr int CHOICE_PAD_X = 10;
+constexpr int CHOICE_PAD_Y = 6;
+// The floating character-sheet tab on the right edge: a page tab flush with the
+// panel edge, so only its left profile is drawn -- a slanted top, a vertical
+// side and a slanted bottom. The visual is small on purpose; the touch target is
+// grown to the SDK's minimum (fui::ThemeTokens::minTouchSize) around it.
+constexpr int SHEET_BUTTON_WIDTH = 30;   // from the panel's right edge inwards
+constexpr int SHEET_BUTTON_HEIGHT = 54;
+constexpr int SHEET_BUTTON_TAPER = 12;   // vertical extent of each slanted corner
+constexpr int SHEET_BUTTON_TEXT_GAP = 6;
+constexpr int16_t SHEET_BUTTON_TOUCH_TARGET = 44;
+// The sheet reveal. The wipe is paced by a clock in loop(), not by how long a
+// panel refresh happens to take: on a host build a refresh is free, so a reveal
+// that waited only for frames ran through every position in a few milliseconds
+// and looked instantaneous. A position is taken only once the previous frame has
+// been painted, so each step below is a frame the reader actually sees, and each
+// one costs the longer of SHEET_REVEAL_STEP_MS and one panel refresh. Two
+// positions -- half the page, then the page -- are enough to read as a sheet
+// sliding over the paragraph without making the reader wait. Set this to 1 to
+// open the sheet in a single frame.
+constexpr int SHEET_REVEAL_STEPS = 2;
+constexpr uint32_t SHEET_REVEAL_STEP_MS = 500;
 
 EpdFontFamily::Style toFontStyle(const uint8_t sg) {
   uint8_t style = 0;
@@ -27,6 +56,10 @@ EpdFontFamily::Style toFontStyle(const uint8_t sg) {
   if (sg & qg::SG_UNDERLINE) style |= static_cast<uint8_t>(EpdFontFamily::UNDERLINE);
   if (sg & qg::SG_SUP) style |= static_cast<uint8_t>(EpdFontFamily::SUP);
   return static_cast<EpdFontFamily::Style>(style);
+}
+
+bool contains(const Rect& rect, const int x, const int y) {
+  return x >= rect.x && y >= rect.y && x < rect.x + rect.width && y < rect.y + rect.height;
 }
 
 }  // namespace
@@ -59,11 +92,49 @@ int StorygameReaderActivity::viewportHeight() const {
   return area.height;
 }
 
+bool StorygameReaderActivity::sheetButtonVisible() const {
+  return view == View::Paragraph && sheetButtonEnabled();
+}
+
+bool StorygameReaderActivity::sheetButtonEnabled() const {
+  // The button duplicates the swipe, so it only exists where a swipe can happen
+  // and where the sheet has something to show.
+  return charsheetAvailable && mappedInput.hasTouch();
+}
+
+int StorygameReaderActivity::textColumnWidth(const bool reserveSheetButton) const {
+  const Rect area = UITheme::getInstance().getScreenSafeArea(renderer, /*front*/ true, /*side*/ false);
+  int width = area.width - CONTENT_PAD * 2 - SCROLL_STRIP;
+  // The tab is attached to the panel edge, so text stops short of its left
+  // profile instead of running under it.
+  if (reserveSheetButton) width -= SHEET_BUTTON_WIDTH + SHEET_BUTTON_TEXT_GAP;
+  return width;
+}
+
+int StorygameReaderActivity::scrollStep() const {
+  // Three quarters of the viewport keeps a line or two of context across a page
+  // step, the way the reader's page turns do.
+  const int step = viewportHeight() * 3 / 4;
+  return step < 40 ? 40 : step;
+}
+
 void StorygameReaderActivity::onEnter() {
   Activity::onEnter();
+  {
+    RenderLock lock(*this);
+    view = View::Paragraph;
+    revealStep = 0;
+    revealNextStepAt = 0;
+    sheetInputArmed = true;
+    paragraph.scroll = 0;
+    sheet.lines.clear();
+    sheet.height = 0;
+    sheet.scroll = 0;
+    focusChoice = 0;
+    choiceButtonStyles =
+        outlinedActionButtonStyles(static_cast<uint8_t>(UITheme::getInstance().getMetrics().controlRadius));
+  }
   failed = !loadGame();
-  scroll = 0;
-  focusChoice = 0;
   requestUpdate();
 }
 
@@ -73,31 +144,40 @@ bool StorygameReaderActivity::loadGame() {
   if (!game.load(dir)) return false;
   source = game.paragraphSource();
   if (!game.engine().startGame(source)) return false;
-  rebuildLayout();
+  // The text column width depends on whether the sheet button is shown, so this
+  // is read before the first layout and published under the render lock the
+  // render task reads it under.
+  const bool sheetNow = game.engine().hasCharsheet();
+  {
+    RenderLock lock(*this);
+    charsheetAvailable = sheetNow;
+  }
+  rebuildParagraphLayout();
   return !game.engine().failed();
 }
 
 // --- line writer -------------------------------------------------------------
 
-void StorygameReaderActivity::resetWriter(const int y, const int x, const int width, const int lh) {
+void StorygameReaderActivity::resetWriter(Column& column, const int y, const int x, const int width, const int lh) {
+  writer = &column;
   writerY = y;
   writerX = x;
   writerWidth = width;
   writerLh = lh;
   writerLine = Line{};
   writerLineWidth = 0;
-  writerChoice = false;
+  writerChoice = -1;
   writerBullet = false;
 }
 
 void StorygameReaderActivity::flushLine() {
-  if (!writerLine.text.empty() || writerLine.heading || writerLine.bullet) {
+  if (writer && (!writerLine.text.empty() || writerLine.heading || writerLine.bullet)) {
     writerLine.y = writerY;
     writerLine.x = writerX;
     writerLine.height = writerLh;
-    writerLine.choice = writerChoice;
+    writerLine.choiceIndex = writerChoice;
     writerLine.bullet = writerBullet;
-    lines.push_back(std::move(writerLine));
+    writer->lines.push_back(std::move(writerLine));
     writerY += writerLh;
   }
   writerLine = Line{};
@@ -152,10 +232,13 @@ void StorygameReaderActivity::appendRun(const qg::SgRun& run) {
     headingLine.x = writerX;
     headingLine.height = writerLh;
     headingLine.heading = true;
+    // A heading inside a choice label has to invert with the rest of the button,
+    // or it would vanish on the black fill.
+    headingLine.choiceIndex = writerChoice;
     headingLine.text = run.text;
     headingLine.spans.push_back(
         Span{0, static_cast<uint16_t>(run.text.size()), static_cast<uint8_t>(run.style | qg::SG_BOLD)});
-    lines.push_back(std::move(headingLine));
+    if (writer) writer->lines.push_back(std::move(headingLine));
     writerY += writerLh;
     return;
   }
@@ -165,27 +248,22 @@ void StorygameReaderActivity::appendRun(const qg::SgRun& run) {
 
 // --- layout ------------------------------------------------------------------
 
-void StorygameReaderActivity::rebuildLayout() {
-  RenderLock lock(*this);  // owns `lines`; the render task reads it under the same lock
+void StorygameReaderActivity::rebuildParagraphLayout() {
+  RenderLock lock(*this);  // owns the column; the render task reads it under the same lock
 
-  lines.clear();
-  choiceTop.clear();
-  choiceBottom.clear();
-  contentHeight = 0;
-
-  if (showingCharsheet) {
-    buildCharsheetLayout();
-    return;
-  }
+  paragraph.lines.clear();
+  paragraph.choiceTop.clear();
+  paragraph.choiceBottom.clear();
+  paragraph.height = 0;
+  paragraph.width = textColumnWidth(sheetButtonEnabled());
 
   const int fontId = bodyFontId();
   const int lh = renderer.getLineHeight(fontId);
-  const Rect area = UITheme::getInstance().getScreenSafeArea(renderer, /*front*/ true, /*side*/ false);
   const int textX = CONTENT_PAD;
-  const int width = area.width - CONTENT_PAD * 2 - SCROLL_STRIP;
+  const int width = paragraph.width;
 
   int y = CONTENT_PAD;
-  resetWriter(y, textX, width, lh);
+  resetWriter(paragraph, y, textX, width, lh);
 
   const auto& texts = game.engine().texts();
   for (const qg::VisibleText& block : texts) {
@@ -199,31 +277,35 @@ void StorygameReaderActivity::rebuildLayout() {
       spoilerLine.text = block.spoiler;
       spoilerLine.spans.push_back(
           Span{0, static_cast<uint16_t>(block.spoiler.size()), static_cast<uint8_t>(qg::SG_BOLD)});
-      lines.push_back(std::move(spoilerLine));
+      paragraph.lines.push_back(std::move(spoilerLine));
       writerY += lh;
     }
     for (const qg::SgRun& run : block.runs) appendRun(run);
     breakLine();
     writerY += TEXT_GAP;
-    resetWriter(writerY, textX, width, lh);
+    resetWriter(paragraph, writerY, textX, width, lh);
   }
 
   const auto& choices = game.engine().choices();
   if (!choices.empty()) {
     writerY += CHOICE_GAP_BEFORE;
-    resetWriter(writerY, textX + CHOICE_INDENT, width - CHOICE_INDENT, lh);
-    writerChoice = true;
     for (size_t i = 0; i < choices.size(); ++i) {
-      const int top = writerY;
+      // Each choice is one button: the label is laid out inside the padding, and
+      // the button's own box is what render() fills and inverts.
+      const int boxTop = writerY;
+      resetWriter(paragraph, boxTop + CHOICE_PAD_Y, textX + CHOICE_PAD_X, width - CHOICE_PAD_X * 2, lh);
+      writerChoice = static_cast<int16_t>(i);
       for (const qg::SgRun& run : choices[i].runs) appendRun(run);
       breakLine();
-      writerY += CHOICE_GAP;
-      resetWriter(writerY, textX + CHOICE_INDENT, width - CHOICE_INDENT, lh);
-      writerChoice = true;
-      choiceTop.push_back(top);
-      choiceBottom.push_back(writerY - CHOICE_GAP);
+      int textBottom = writerY;
+      // An empty label still gets a full-height button rather than a hairline.
+      if (textBottom < boxTop + CHOICE_PAD_Y + lh) textBottom = boxTop + CHOICE_PAD_Y + lh;
+      const int boxBottom = textBottom + CHOICE_PAD_Y;
+      paragraph.choiceTop.push_back(boxTop);
+      paragraph.choiceBottom.push_back(boxBottom);
+      writerY = boxBottom + CHOICE_GAP;
     }
-    writerChoice = false;
+    writerChoice = -1;
   } else {
     breakLine();
     Line endLine;
@@ -234,22 +316,42 @@ void StorygameReaderActivity::rebuildLayout() {
     endLine.text = tr(STR_QUESTBOOK_THE_END);
     endLine.spans.push_back(
         Span{0, static_cast<uint16_t>(endLine.text.size()), static_cast<uint8_t>(qg::SG_BOLD)});
-    lines.push_back(std::move(endLine));
+    paragraph.lines.push_back(std::move(endLine));
     writerY += lh;
   }
 
-  contentHeight = writerY + CONTENT_PAD;
+  paragraph.height = writerY + CONTENT_PAD;
+  writer = nullptr;
 }
 
-void StorygameReaderActivity::buildCharsheetLayout() {
+void StorygameReaderActivity::rebuildSheetLayout() {
+  RenderLock lock(*this);
+
+  sheet.lines.clear();
+  sheet.height = 0;
+  sheet.scroll = 0;
+  // The paragraph keeps its own column, so it is laid out for the width it has
+  // when the floating button is on screen; the sheet is a full page, with
+  // nothing floating over it.
+  sheet.width = textColumnWidth(/*reserveSheetButton=*/false);
+
   const int fontId = bodyFontId();
   const int lh = renderer.getLineHeight(fontId);
-  const Rect area = UITheme::getInstance().getScreenSafeArea(renderer, /*front*/ true, /*side*/ false);
   const int x = CONTENT_PAD;
-  const int width = area.width - CONTENT_PAD * 2 - SCROLL_STRIP;
+  const int width = sheet.width;
 
   int y = CONTENT_PAD;
-  resetWriter(y, x, width, lh);
+  resetWriter(sheet, y, x, width, lh);
+
+  std::vector<qg::Engine::CharsheetGroup> groups;
+  game.engine().charsheet(groups);
+
+  // One header line per group plus one line per parameter is an upper bound for
+  // anything that does not wrap; reserving before the first push keeps a long
+  // sheet from growing the line array while the paragraph is still held.
+  size_t expectedLines = 1 + groups.size();
+  for (const qg::Engine::CharsheetGroup& group : groups) expectedLines += group.items.size();
+  sheet.lines.reserve(expectedLines);
 
   // Title.
   wordBuf = tr(STR_QUESTBOOK_CHARSHEET);
@@ -259,19 +361,17 @@ void StorygameReaderActivity::buildCharsheetLayout() {
   writerLine.heading = true;
   writerLine.text = wordBuf;
   writerLine.spans.push_back(Span{0, static_cast<uint16_t>(wordBuf.size()), qg::SG_BOLD});
-  lines.push_back(std::move(writerLine));
+  sheet.lines.push_back(std::move(writerLine));
   writerY = y + lh;
   writerLine = Line{};
-
-  std::vector<qg::Engine::CharsheetGroup> groups;
-  game.engine().charsheet(groups);
 
   if (groups.empty()) {
     writerLine = Line{};
     const std::string noParams = tr(STR_QUESTBOOK_NO_PARAMS);
     appendStyledText(noParams, qg::SG_REGULAR);
     flushLine();
-    contentHeight = writerY + CONTENT_PAD;
+    sheet.height = writerY + CONTENT_PAD;
+    writer = nullptr;
     return;
   }
 
@@ -286,7 +386,7 @@ void StorygameReaderActivity::buildCharsheetLayout() {
       header.heading = true;
       header.text = nameBuf;
       header.spans.push_back(Span{0, static_cast<uint16_t>(nameBuf.size()), qg::SG_BOLD});
-      lines.push_back(std::move(header));
+      sheet.lines.push_back(std::move(header));
       writerY += lh;
     }
     for (const qg::Engine::CharsheetItem& item : group.items) {
@@ -303,19 +403,39 @@ void StorygameReaderActivity::buildCharsheetLayout() {
     }
     writerY += TEXT_GAP;
   }
-  contentHeight = writerY + CONTENT_PAD;
+  sheet.height = writerY + CONTENT_PAD;
+  writer = nullptr;
 }
 
 // --- input -------------------------------------------------------------------
 
-int StorygameReaderActivity::visibleChoiceIndexAtY(const int screenY) {
+int StorygameReaderActivity::choiceIndexAt(const int screenX, const int screenY) {
   RenderLock lock(*this);
   const Rect area = UITheme::getInstance().getScreenSafeArea(renderer, /*front*/ true, /*side*/ false);
-  const int contentY = screenY - area.y + scroll;
-  for (size_t i = 0; i < choiceTop.size(); ++i) {
-    if (contentY >= choiceTop[i] && contentY < choiceBottom[i]) return static_cast<int>(i);
+  // Only the button's own box is a target. A tap in the same row but beside the
+  // text — the margin the floating sheet button sits in, for instance — must not
+  // advance the story.
+  if (screenX < area.x + CONTENT_PAD || screenX >= area.x + CONTENT_PAD + paragraph.width) return -1;
+  const int contentY = screenY - area.y + paragraph.scroll;
+  for (size_t i = 0; i < paragraph.choiceTop.size(); ++i) {
+    if (contentY >= paragraph.choiceTop[i] && contentY < paragraph.choiceBottom[i]) return static_cast<int>(i);
   }
   return -1;
+}
+
+void StorygameReaderActivity::clampScroll(Column& column, const int viewportHeight) {
+  const int maxScroll = column.height - viewportHeight;
+  if (maxScroll <= 0) {
+    column.scroll = 0;
+    return;
+  }
+  if (column.scroll < 0) column.scroll = 0;
+  if (column.scroll > maxScroll) column.scroll = maxScroll;
+}
+
+void StorygameReaderActivity::scrollColumn(Column& column, const int delta) {
+  column.scroll += delta;
+  clampScroll(column, viewportHeight());
 }
 
 void StorygameReaderActivity::revealFocusedChoice() {
@@ -324,16 +444,17 @@ void StorygameReaderActivity::revealFocusedChoice() {
   RenderLock lock(*this);
   if (focusChoice < 0) focusChoice = 0;
   if (static_cast<size_t>(focusChoice) >= choices.size()) focusChoice = static_cast<int>(choices.size()) - 1;
-  if (focusChoice < 0 || focusChoice >= static_cast<int>(choiceTop.size())) return;
+  if (focusChoice < 0 || focusChoice >= static_cast<int>(paragraph.choiceTop.size())) return;
 
   const int vh = viewportHeight();
-  const int top = choiceTop[focusChoice];
-  const int bottom = choiceBottom[focusChoice];
-  if (top < scroll) {
-    scroll = top;
-  } else if (bottom > scroll + vh) {
-    scroll = bottom - vh;
+  const int top = paragraph.choiceTop[focusChoice];
+  const int bottom = paragraph.choiceBottom[focusChoice];
+  if (top < paragraph.scroll) {
+    paragraph.scroll = top;
+  } else if (bottom > paragraph.scroll + vh) {
+    paragraph.scroll = bottom - vh;
   }
+  clampScroll(paragraph, vh);
 }
 
 void StorygameReaderActivity::activateVisibleChoice(const size_t index) {
@@ -346,12 +467,69 @@ void StorygameReaderActivity::activateVisibleChoice(const size_t index) {
     requestUpdate();
     return;
   }
+  // A choice changes the parameters, so both the sheet's contents and whether
+  // the sheet is worth showing change with it. The engine query runs outside the
+  // lock; only its result is published under it.
+  const bool sheetNow = game.engine().hasCharsheet();
   {
     RenderLock lock(*this);
-    scroll = 0;
+    charsheetAvailable = sheetNow;
+    paragraph.scroll = 0;
     focusChoice = 0;
   }
-  rebuildLayout();
+  rebuildParagraphLayout();
+  requestUpdate();
+}
+
+void StorygameReaderActivity::openCharsheet() {
+  // The sheet is laid out before the view changes, so no frame can render a
+  // sheet whose lines are still being built, and the view is published together
+  // with the first reveal step, so no frame can see "sheet open, nothing
+  // covered". The rest of the steps are advanced from loop() on a clock.
+  rebuildSheetLayout();
+  {
+    RenderLock lock(*this);
+    view = View::Sheet;
+    revealStep = 1;
+    revealNextStepAt = static_cast<uint32_t>(millis()) + SHEET_REVEAL_STEP_MS;
+    sheetInputArmed = false;
+  }
+  requestUpdate();
+}
+
+void StorygameReaderActivity::advanceSheetReveal() {
+  if (revealStep >= SHEET_REVEAL_STEPS) return;
+  // One position per painted frame. The render task clears its notification
+  // count when it starts a frame, so two requests raised while it is busy would
+  // merge and the position in between would never reach the panel.
+  if (RenderLock::peek()) return;
+  // `revealNextStepAt` is written and read only by the loop task; the lock above
+  // guards `revealStep`, which the render task reads.
+  const uint32_t now = static_cast<uint32_t>(millis());
+  // Signed difference: correct across the millis() wrap.
+  if (static_cast<int32_t>(now - revealNextStepAt) < 0) return;
+  {
+    RenderLock lock(*this);
+    if (revealStep < SHEET_REVEAL_STEPS) ++revealStep;
+    revealNextStepAt = now + SHEET_REVEAL_STEP_MS;
+  }
+  requestUpdate();
+}
+
+void StorygameReaderActivity::closeCharsheet() {
+  {
+    RenderLock lock(*this);
+    view = View::Paragraph;
+    revealStep = 0;
+    // Only the sheet's line payloads go: closeCharsheet keeps the vector's
+    // capacity so the next open reuses the same block instead of growing a new
+    // one beside the paragraph column the reader is still holding.
+    sheet.lines.clear();
+    sheet.height = 0;
+    sheet.scroll = 0;
+  }
+  // The paragraph keeps its own column and scroll position, so closing the sheet
+  // returns to where the reader was.
   requestUpdate();
 }
 
@@ -363,13 +541,7 @@ bool StorygameReaderActivity::handleParagraphInput() {
 
   const MappedInputManager::SwipeDir swipe = mappedInput.wasSwipe();
   if (swipe == MappedInputManager::SwipeDir::Left) {
-    {
-      RenderLock lock(*this);
-      showingCharsheet = true;
-      scroll = 0;
-    }
-    rebuildLayout();
-    requestUpdate();
+    openCharsheet();
     return true;
   }
   if (swipe == MappedInputManager::SwipeDir::Right) {
@@ -377,15 +549,10 @@ bool StorygameReaderActivity::handleParagraphInput() {
     return true;
   }
   if (swipe == MappedInputManager::SwipeDir::Up || swipe == MappedInputManager::SwipeDir::Down) {
-    const int vh = viewportHeight();
-    int step = vh * 3 / 4;
-    if (step < 40) step = 40;
+    const int step = scrollStep();
     {
       RenderLock lock(*this);
-      scroll += swipe == MappedInputManager::SwipeDir::Up ? step : -step;
-      const int maxScroll = contentHeight - vh;
-      if (scroll < 0) scroll = 0;
-      if (scroll > maxScroll && maxScroll >= 0) scroll = maxScroll;
+      scrollColumn(paragraph, swipe == MappedInputManager::SwipeDir::Up ? step : -step);
     }
     requestUpdate();
     return true;
@@ -394,7 +561,14 @@ bool StorygameReaderActivity::handleParagraphInput() {
   int tapX = 0;
   int tapY = 0;
   if (mappedInput.wasScreenTapped(tapX, tapY)) {
-    const int index = visibleChoiceIndexAtY(tapY);
+    if (sheetButtonVisible()) {
+      const Rect area = UITheme::getInstance().getScreenSafeArea(renderer, /*front*/ true, /*side*/ false);
+      if (contains(sheetButtonHitRect(area), tapX, tapY)) {
+        openCharsheet();
+        return true;
+      }
+    }
+    const int index = choiceIndexAt(tapX, tapY);
     if (index >= 0) {
       activateVisibleChoice(static_cast<size_t>(index));
       return true;
@@ -409,6 +583,9 @@ bool StorygameReaderActivity::handleParagraphInput() {
     }
     return true;
   }
+  // The up/down directions are the side buttons on a button-only board, which is
+  // the only way to move through a paragraph there: they scroll when the
+  // paragraph has no choice to focus, and step the focus when it has.
   if (mappedInput.wasReleased(MappedInputManager::Button::ScreenUp)) {
     if (!choices.empty()) {
       {
@@ -417,8 +594,12 @@ bool StorygameReaderActivity::handleParagraphInput() {
         if (focusChoice < 0) focusChoice = static_cast<int>(choices.size()) - 1;
       }
       revealFocusedChoice();
-      requestUpdate();
+    } else {
+      const int step = scrollStep();
+      RenderLock lock(*this);
+      scrollColumn(paragraph, -step);
     }
+    requestUpdate();
     return true;
   }
   if (mappedInput.wasReleased(MappedInputManager::Button::ScreenDown)) {
@@ -428,8 +609,18 @@ bool StorygameReaderActivity::handleParagraphInput() {
         focusChoice = (focusChoice + 1) % static_cast<int>(choices.size());
       }
       revealFocusedChoice();
-      requestUpdate();
+    } else {
+      const int step = scrollStep();
+      RenderLock lock(*this);
+      scrollColumn(paragraph, step);
     }
+    requestUpdate();
+    return true;
+  }
+  // The swipe is the touch way into the character sheet; the left direction is
+  // the same action on a board that has no touch, where a swipe cannot happen.
+  if (mappedInput.wasReleased(MappedInputManager::Button::ScreenLeft)) {
+    openCharsheet();
     return true;
   }
   return false;
@@ -437,42 +628,35 @@ bool StorygameReaderActivity::handleParagraphInput() {
 
 bool StorygameReaderActivity::handleCharsheetInput() {
   if (mappedInput.wasReleased(MappedInputManager::Button::Back) ||
-      mappedInput.wasReleased(MappedInputManager::Button::Confirm)) {
-    {
-      RenderLock lock(*this);
-      showingCharsheet = false;
-      scroll = 0;
-    }
-    rebuildLayout();
-    requestUpdate();
+      mappedInput.wasReleased(MappedInputManager::Button::Confirm) ||
+      mappedInput.wasReleased(MappedInputManager::Button::ScreenLeft)) {
+    closeCharsheet();
     return true;
   }
   const MappedInputManager::SwipeDir swipe = mappedInput.wasSwipe();
   if (swipe == MappedInputManager::SwipeDir::Right) {
-    {
-      RenderLock lock(*this);
-      showingCharsheet = false;
-      scroll = 0;
-    }
-    rebuildLayout();
-    requestUpdate();
+    closeCharsheet();
     return true;
   }
-  if (swipe == MappedInputManager::SwipeDir::Up || swipe == MappedInputManager::SwipeDir::Down) {
-    const int vh = viewportHeight();
-    int step = vh * 3 / 4;
-    if (step < 40) step = 40;
-    {
-      RenderLock lock(*this);
-      scroll += swipe == MappedInputManager::SwipeDir::Up ? step : -step;
-      const int maxScroll = contentHeight - vh;
-      if (scroll < 0) scroll = 0;
-      if (scroll > maxScroll && maxScroll >= 0) scroll = maxScroll;
-    }
-    requestUpdate();
-    return true;
+
+  int delta = 0;
+  if (swipe == MappedInputManager::SwipeDir::Up) {
+    delta = 1;
+  } else if (swipe == MappedInputManager::SwipeDir::Down) {
+    delta = -1;
+  } else if (mappedInput.wasReleased(MappedInputManager::Button::ScreenUp)) {
+    delta = -1;
+  } else if (mappedInput.wasReleased(MappedInputManager::Button::ScreenDown)) {
+    delta = 1;
   }
-  return false;
+  if (delta == 0) return false;
+
+  {
+    RenderLock lock(*this);
+    scrollColumn(sheet, delta * scrollStep());
+  }
+  requestUpdate();
+  return true;
 }
 
 void StorygameReaderActivity::loop() {
@@ -480,14 +664,197 @@ void StorygameReaderActivity::loop() {
     if (mappedInput.wasReleased(MappedInputManager::Button::Back)) finish();
     return;
   }
-  if (showingCharsheet) {
+  if (view == View::Sheet) {
+    // The wipe runs on a clock of its own; input is not read until the sheet has
+    // fully arrived, so a press during the wipe cannot act on a half-drawn page.
+    if (revealStep < SHEET_REVEAL_STEPS) {
+      // Back cancels an opening sheet. It is the same escape the open sheet
+      // honours, and the wipe must not swallow it while the panel is still moving.
+      if (mappedInput.wasReleased(MappedInputManager::Button::Back)) {
+        closeCharsheet();
+        return;
+      }
+      advanceSheetReveal();
+      return;
+    }
+    if (!sheetInputArmed) {
+      // A button held from before the sheet opened carries no intent for the
+      // sheet, so the sheet is armed only once nothing is held -- and the pass
+      // where the hold ends is dropped, because that is where its release edge
+      // arrives.
+      if (sheetButtonHeld()) return;
+      sheetInputArmed = true;
+      return;
+    }
     handleCharsheetInput();
     return;
   }
   handleParagraphInput();
 }
 
+bool StorygameReaderActivity::sheetButtonHeld() const {
+  return mappedInput.isPressed(MappedInputManager::Button::Back) ||
+         mappedInput.isPressed(MappedInputManager::Button::Confirm) ||
+         mappedInput.isPressed(MappedInputManager::Button::ScreenLeft) ||
+         mappedInput.isPressed(MappedInputManager::Button::ScreenUp) ||
+         mappedInput.isPressed(MappedInputManager::Button::ScreenDown);
+}
+
 // --- render ------------------------------------------------------------------
+
+Rect StorygameReaderActivity::sheetButtonRect(const Rect& area) const {
+  // Flush with the panel's right edge, vertically centred on the content area.
+  // The panel edge rather than the safe area is deliberate: a tab that stops
+  // short of the edge is exactly what made the old button look like it floated.
+  const int right = renderer.getScreenWidth();
+  const int y = area.y + (area.height - SHEET_BUTTON_HEIGHT) / 2;
+  return Rect{right - SHEET_BUTTON_WIDTH, y, SHEET_BUTTON_WIDTH, SHEET_BUTTON_HEIGHT};
+}
+
+Rect StorygameReaderActivity::sheetButtonHitRect(const Rect& area) const {
+  const Rect box = sheetButtonRect(area);
+  const fui::Rect visual{static_cast<int16_t>(box.x), static_cast<int16_t>(box.y), static_cast<int16_t>(box.width),
+                         static_cast<int16_t>(box.height)};
+  const fui::Rect screen{0, 0, static_cast<int16_t>(renderer.getScreenWidth()),
+                         static_cast<int16_t>(renderer.getScreenHeight())};
+  const fui::Rect hit = fui::ensureMinTouchRect(visual, SHEET_BUTTON_TOUCH_TARGET, screen);
+  return Rect{hit.x, hit.y, hit.width, hit.height};
+}
+
+void StorygameReaderActivity::paintBox(fui::DrawTarget& target, const Rect& box, const fui::BoxStyle& style) {
+  const fui::Rect rect{static_cast<int16_t>(box.x), static_cast<int16_t>(box.y), static_cast<int16_t>(box.width),
+                       static_cast<int16_t>(box.height)};
+  target.fill(rect, style.background, style.radius, style.corners);
+  if (style.border.kind != fui::PaintKind::None && style.borderWidth > 0) {
+    target.stroke(rect, style.border, style.borderWidth, style.radius, style.corners);
+  }
+}
+
+void StorygameReaderActivity::drawChoiceButton(fui::DrawTarget& target, const fui::StyleSet& styles, const Rect& box,
+                                               const bool selected) {
+  paintBox(target, box, styles.resolve(selected ? fui::StateSelected : fui::StateNormal));
+}
+
+void StorygameReaderActivity::drawScrollBar(fui::DrawTarget& target, const Rect& area, const Column& column) {
+  // A column that fits the viewport has no position to report, so it has no bar.
+  if (column.height <= area.height) return;
+  const int width = UITheme::getInstance().getMetrics().listScrollWidth;
+  if (width <= 0) return;
+
+  // The SDK indicator is written for lists, but its math is the ratio of visible
+  // to total and of offset to range. Fed pixel counts it reports the scroll
+  // position of a text column, so the bar reuses that geometry rather than
+  // growing a second one beside it.
+  fui::drawListScrollIndicator(
+      target,
+      fui::Rect{static_cast<int16_t>(area.x), static_cast<int16_t>(area.y), static_cast<int16_t>(area.width),
+                static_cast<int16_t>(area.height)},
+      static_cast<uint32_t>(column.height), static_cast<uint32_t>(area.height),
+      static_cast<uint32_t>(column.scroll < 0 ? 0 : column.scroll), static_cast<int16_t>(width), 0, 0);
+}
+
+void StorygameReaderActivity::drawSheetButton(fui::DrawTarget& target, const Rect& area) {
+  const Rect box = sheetButtonRect(area);
+  const int right = box.x + box.width;
+  const int top = box.y;
+  const int bottom = box.y + box.height - 1;
+
+  // The tab hangs on the panel edge, so only its left profile is drawn: a slanted
+  // top, a vertical side and a slanted bottom. The interior is filled paper
+  // because the reading-position bar runs underneath and must not show through.
+  renderer.fillRect(box.x, top + SHEET_BUTTON_TAPER, box.width, box.height - SHEET_BUTTON_TAPER * 2, false);
+  for (int i = 1; i < SHEET_BUTTON_TAPER; ++i) {
+    const int w = box.width * i / SHEET_BUTTON_TAPER;
+    renderer.fillRect(right - w, top + i, w, 1, false);
+    renderer.fillRect(right - w, bottom - i, w, 1, false);
+  }
+  renderer.drawLine(box.x, top + SHEET_BUTTON_TAPER, box.x, bottom - SHEET_BUTTON_TAPER, 1, true);
+  renderer.drawLine(box.x, top + SHEET_BUTTON_TAPER, right - 1, top, 1, true);
+  renderer.drawLine(box.x, bottom - SHEET_BUTTON_TAPER, right - 1, bottom, 1, true);
+
+  target.bitmap(fui::Rect{static_cast<int16_t>(box.x), static_cast<int16_t>(box.y), static_cast<int16_t>(box.width),
+                          static_cast<int16_t>(box.height)},
+                fui::bitmapFromIcon(storygameIcon24()), fui::BitmapMode::Center);
+}
+
+void StorygameReaderActivity::drawColumn(fui::DrawTarget& target, const fui::StyleSet& styles, const Rect& area,
+                                         const Column& column, const int fontId, const int lineHeight,
+                                         const bool drawChoices, const int xOffset) {
+  // Buttons are the background of their own text, so they are painted first.
+  if (drawChoices) {
+    for (size_t i = 0; i < column.choiceTop.size(); ++i) {
+      const int top = area.y + column.choiceTop[i] - column.scroll;
+      const int bottom = area.y + column.choiceBottom[i] - column.scroll;
+      if (bottom <= area.y || top >= area.y + area.height) continue;
+      drawChoiceButton(target, styles, Rect{area.x + CONTENT_PAD + xOffset, top, column.width, bottom - top},
+                       static_cast<int>(i) == focusChoice);
+    }
+  }
+
+  // A label is drawn in the paper colour only over a solid fill darker than paper.
+  // A dithered or bitmap fill keeps black ink: white over a light pattern would
+  // read worse than black. Deriving it from the fill, rather than from a colour
+  // constant, keeps the label visible if a theme changes the selected background.
+  const auto labelInk = [](const fui::BoxStyle& box) {
+    return !(box.background.kind == fui::PaintKind::Solid && box.background.color != fui::Color::White);
+  };
+
+  for (const Line& line : column.lines) {
+    const int top = area.y + line.y - column.scroll;
+    if (top + line.height <= area.y || top >= area.y + area.height) continue;
+    const bool inButton = drawChoices && line.choiceIndex >= 0;
+    const bool ink =
+        !inButton || labelInk(styles.resolve(line.choiceIndex == focusChoice ? fui::StateSelected : fui::StateNormal));
+
+    if (line.heading) {
+      int totalWidth = 0;
+      for (const Span& span : line.spans) {
+        wordBuf.assign(line.text, span.offset, span.length);
+        totalWidth += renderer.getTextWidth(fontId, wordBuf.c_str(), toFontStyle(span.style));
+      }
+      // A heading centres in the column, except inside a choice, where centring
+      // over the whole area would draw it outside its own button.
+      const bool headingInButton = line.choiceIndex >= 0;
+      const int left = area.x + xOffset + (headingInButton ? CONTENT_PAD : 0);
+      const int spanWidth = headingInButton ? column.width : area.width;
+      int x = left + (spanWidth - totalWidth) / 2;
+      for (const Span& span : line.spans) {
+        wordBuf.assign(line.text, span.offset, span.length);
+        const EpdFontFamily::Style style = toFontStyle(span.style);
+        const int w = renderer.getTextWidth(fontId, wordBuf.c_str(), style);
+        renderer.drawText(fontId, x, top, wordBuf.c_str(), ink, style);
+        if (span.style & qg::SG_UNDERLINE) {
+          renderer.drawLine(x, top + lineHeight - 2, x + w, top + lineHeight - 2, 1, ink);
+        }
+        x += w;
+      }
+      continue;
+    }
+
+    int x = area.x + line.x + xOffset;
+    if (line.bullet) {
+      renderer.fillRect(x, top + (line.height - 5) / 2, 5, 5, ink);
+      x += 8;
+    }
+    for (size_t s = 0; s < line.spans.size(); ++s) {
+      const Span& span = line.spans[s];
+      wordBuf.assign(line.text, span.offset, span.length);
+      const EpdFontFamily::Style style = toFontStyle(span.style);
+      const int w = renderer.getTextWidth(fontId, wordBuf.c_str(), style);
+      renderer.drawText(fontId, x, top, wordBuf.c_str(), ink, style);
+      if (span.style & qg::SG_UNDERLINE) {
+        renderer.drawLine(x, top + lineHeight - 2, x + w, top + lineHeight - 2, 1, ink);
+      }
+      x += w;
+      // getTextWidth measures ink extents, so a separator space adds nothing to
+      // it; the gap is advanced explicitly, matching the width the line writer
+      // measured with the next word's style.
+      if (s + 1 < line.spans.size()) {
+        x += spaceAdvance(line.spans[s + 1].style);
+      }
+    }
+  }
+}
 
 void StorygameReaderActivity::render(RenderLock&&) {
   renderer.clearScreen();
@@ -495,80 +862,56 @@ void StorygameReaderActivity::render(RenderLock&&) {
   const int fontId = bodyFontId();
   const int lh = renderer.getLineHeight(fontId);
 
-  // The render task already holds the render lock (ActivityManager acquired it
-  // before calling render), so `lines` and `scroll` cannot be mutated here.
-  const int maxScroll = contentHeight - area.height;
-  if (scroll < 0) scroll = 0;
-  if (scroll > maxScroll && maxScroll >= 0) scroll = maxScroll;
+  fui::GfxRendererTarget target(renderer);
 
-  renderer.setClipRect(area.x, area.y, area.width, area.height);
-
+  // The render task holds the render lock (ActivityManager acquired it before
+  // calling render). A column can still be scrolled past its end by a focused
+  // choice or by a viewport that grew with a font change, so both offsets are
+  // clamped to the area actually drawn, through the same rule the loop task uses.
   if (failed) {
-    const int y = area.y + area.height / 2;
-    renderer.drawCenteredText(fontId, y, tr(STR_QUESTBOOK_READ_FAILED));
-  } else {
-    for (const Line& line : lines) {
-      const int top = area.y + line.y - scroll;
-      if (top + line.height <= area.y || top >= area.y + area.height) continue;
-
-      if (line.heading) {
-        int totalWidth = 0;
-        for (const Span& span : line.spans) {
-          wordBuf.assign(line.text, span.offset, span.length);
-          totalWidth += renderer.getTextWidth(fontId, wordBuf.c_str(), toFontStyle(span.style));
-        }
-        int x = area.x + (area.width - totalWidth) / 2;
-        for (const Span& span : line.spans) {
-          wordBuf.assign(line.text, span.offset, span.length);
-          const EpdFontFamily::Style style = toFontStyle(span.style);
-          const int w = renderer.getTextWidth(fontId, wordBuf.c_str(), style);
-          renderer.drawText(fontId, x, top, wordBuf.c_str(), true, style);
-          if (span.style & qg::SG_UNDERLINE) renderer.drawLine(x, top + lh - 2, x + w, top + lh - 2, 1, true);
-          x += w;
-        }
-        continue;
-      }
-
-      int x = area.x + line.x;
-      if (line.bullet) {
-        renderer.fillRect(x, top + (line.height - 5) / 2, 5, 5, true);
-        x += 8;
-      }
-      for (size_t s = 0; s < line.spans.size(); ++s) {
-        const Span& span = line.spans[s];
-        wordBuf.assign(line.text, span.offset, span.length);
-        const EpdFontFamily::Style style = toFontStyle(span.style);
-        const int w = renderer.getTextWidth(fontId, wordBuf.c_str(), style);
-        renderer.drawText(fontId, x, top, wordBuf.c_str(), true, style);
-        if (span.style & qg::SG_UNDERLINE) renderer.drawLine(x, top + lh - 2, x + w, top + lh - 2, 1, true);
-        x += w;
-        // getTextWidth measures ink extents, so a separator space adds nothing to
-        // it; the gap is advanced explicitly, matching the width the line writer
-        // measured with the next word's style.
-        if (s + 1 < line.spans.size()) {
-          x += spaceAdvance(line.spans[s + 1].style);
-        }
-      }
+    renderer.setClipRect(area.x, area.y, area.width, area.height);
+    renderer.drawCenteredText(fontId, area.y + area.height / 2, tr(STR_QUESTBOOK_READ_FAILED));
+  } else if (view == View::Sheet) {
+    const bool revealing = revealStep < SHEET_REVEAL_STEPS;
+    clampScroll(paragraph, area.height);
+    clampScroll(sheet, area.height);
+    renderer.setClipRect(area.x, area.y, area.width, area.height);
+    // The sheet wipes in over the paragraph, so the paragraph stays on screen
+    // behind the part the sheet has not covered yet.
+    if (revealing) drawColumn(target, choiceButtonStyles, area, paragraph, fontId, lh, /*drawChoices=*/true);
+    const int covered = revealing ? area.width * revealStep / SHEET_REVEAL_STEPS : area.width;
+    if (covered > 0) {
+      const int x = area.x + area.width - covered;
+      renderer.setClipRect(x, area.y, covered, area.height);
+      renderer.fillRect(x, area.y, covered, area.height, false);
+      // The sheet's own left edge leads the wipe, so its content slides with the
+      // panel instead of being uncovered from the right.
+      drawColumn(target, choiceButtonStyles, area, sheet, fontId, lh, /*drawChoices=*/false, area.width - covered);
+      // While the sheet is only part-way in, its leading edge is a rule: without
+      // it the half-covered page reads as text simply stopping mid-screen.
+      if (revealing) renderer.drawLine(x, area.y, x, area.y + area.height - 1, 1, true);
     }
-
-    // The focus marker indexes the layout snapshot (choiceTop/choiceBottom are
-    // 1:1 with the engine's visible choices at layout time), never the engine's
-    // live choices vector, which the loop task mutates outside this task's lock.
-    if (!showingCharsheet && !choiceTop.empty()) {
-      if (focusChoice >= 0 && static_cast<size_t>(focusChoice) < choiceTop.size()) {
-        const int top = area.y + choiceTop[focusChoice] - scroll;
-        if (top >= area.y && top + lh <= area.y + area.height) {
-          const int cx = area.x + 2;
-          const int cy = top + lh / 2;
-          renderer.drawLine(cx, cy - 6, cx + 7, cy, 2, true);
-          renderer.drawLine(cx, cy + 6, cx + 7, cy, 2, true);
-        }
-      }
+    renderer.setClipRect(area.x, area.y, area.width, area.height);
+    if (!revealing) drawScrollBar(target, area, sheet);
+  } else {
+    clampScroll(paragraph, area.height);
+    renderer.setClipRect(area.x, area.y, area.width, area.height);
+    drawColumn(target, choiceButtonStyles, area, paragraph, fontId, lh, /*drawChoices=*/true);
+    drawScrollBar(target, area, paragraph);
+    if (sheetButtonVisible()) {
+      // The tab reaches the panel edge, which the content clip does not cover.
+      renderer.setClipRect(0, 0, renderer.getScreenWidth(), renderer.getScreenHeight());
+      drawSheetButton(target, area);
     }
   }
 
   renderer.setClipRect(0, 0, renderer.getScreenWidth(), renderer.getScreenHeight());
-  const auto labels = mappedInput.mapDirectionalLabels(tr(STR_BACK), tr(STR_SELECT), "", "", tr(STR_DIR_UP),
+  // The sheet button is a touch affordance, so its button-device equivalent is
+  // the left direction; label it only where it does something. The hint slot is
+  // narrow (about 72px per line on the default theme), which "Character sheet"
+  // overshoots, so this control carries its own short label.
+  const char* sheetLabel = view == View::Paragraph && charsheetAvailable ? tr(STR_QUESTBOOK_SHEET) : "";
+  const auto labels = mappedInput.mapDirectionalLabels(tr(STR_BACK), tr(STR_SELECT), sheetLabel, "", tr(STR_DIR_UP),
                                                        tr(STR_DIR_DOWN));
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
   renderer.displayBuffer();

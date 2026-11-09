@@ -948,12 +948,25 @@ void Engine::clearGroup(const GroupRecord& group) {
   for (uint32_t i = start; i < end && i < vars_.size(); ++i) vars_[i] = 0;
 }
 
+// The filter that decides whether a group reaches the sheet at all: visible, and
+// holding at least one non-zero parameter. Kept in one place so a rule change
+// cannot make hasCharsheet() and charsheet() disagree about what a sheet is.
+bool Engine::groupIsListed(const GroupRecord& group) const {
+  if (!header_.params) return false;
+  if ((group.flags & 1) == 0 || group.itemCount == 0) return false;  // hidden or empty
+  const uint32_t end = group.firstParam + group.itemCount;
+  for (uint32_t p = group.firstParam; p < end && p < header_.params->size(); ++p) {
+    if (value(static_cast<int32_t>(p)) != 0) return true;
+  }
+  return false;
+}
+
 void Engine::charsheet(std::vector<CharsheetGroup>& out) const {
   out.clear();
   if (!header_.groups || !header_.params) return;
   for (size_t g = 0; g < header_.groups->size(); ++g) {
     const GroupRecord& group = (*header_.groups)[g];
-    if ((group.flags & 1) == 0 || group.itemCount == 0) continue;  // hidden or empty
+    if (!groupIsListed(group)) continue;
     CharsheetGroup entry;
     entry.groupOrdinal = static_cast<uint32_t>(g);
     int32_t stored = 0;
@@ -968,10 +981,19 @@ void Engine::charsheet(std::vector<CharsheetGroup>& out) const {
         stored += v < 0 ? -v : v;
       }
     }
-    if (entry.items.empty()) continue;
     entry.stored = stored;
     out.push_back(std::move(entry));
   }
+}
+
+// True when charsheet() would list at least one group. Stops at the first one,
+// so a caller that only needs to hide a control pays no allocation.
+bool Engine::hasCharsheet() const {
+  if (!header_.groups || !header_.params) return false;
+  for (const GroupRecord& group : *header_.groups) {
+    if (groupIsListed(group)) return true;
+  }
+  return false;
 }
 
 }  // namespace questbook_game

@@ -314,13 +314,11 @@ void StorygameDetailsActivity::buildScreen(UiScreen& screen) {
   props.headingText = theme.bodyText;
   props.bodyText = theme.bodyText;
 
-  // Same outlined themed button the OPDS publication page uses, so the two
-  // detail screens read alike. The primary action is Play; the second one is
+  // Same outlined action button as the storygame reader's choices, so the two
+  // screens cannot drift apart. The primary action is Play; the second one is
   // the library action the game's presence on the card decides.
   const auto styleButton = [&theme](fui::ButtonProps& button) {
-    button.styles = theme.button;
-    button.styles.normal.border = fui::Paint::solid(fui::Color::Black);
-    button.styles.normal.borderWidth = 1;
+    button.styles = outlinedActionButtonStyles(theme.controlRadius);
     button.text = theme.bodyText;
     button.radius = theme.controlRadius;
     button.minTouchSize = theme.minTouchSize;

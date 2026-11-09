@@ -53,7 +53,8 @@ into `/storygames/<index_name>/` — `game.hdr`, `game.idx`, `game.dat`, `meta.j
 format is described in [docs/file-formats.md](docs/file-formats.md). **Play** opens the storygame reader:
 `lib/QuestBook/StorygameEngine` runs the game's tasks over its parameter array and follows the
 paragraph transition map, and `StorygameReaderActivity` renders one paragraph's formatted text and
-choices as a swipe-scrollable column, with the character sheet on a left swipe. A game that is not on
+choices as a swipe-scrollable column with a reading-position bar, and shows the character sheet on a
+left swipe or the reader's sheet button. A game that is not on
 the card yet is imported first (the same transfer as Add), then read.
 
 The page imports without holding the document: the response streams into the importer, which writes
@@ -99,7 +100,8 @@ framework, not a JS interpreter: `lib/QuestBook/StorygameGame` loads `game.hdr`/
 `StorygameEngine` evaluates the `k`/`r`/`s` conditions and runs the ~18 task classes over an integer
 parameter array; `StorygamePayload` parses each paragraph payload with the vendored expat; and
 `StorygameReaderActivity` draws one paragraph's BBCode-lowered text and choices as one scrollable
-column, with the character sheet on a left swipe. Play is wired into `StorygameDetailsActivity` and
+column with a reading-position bar, and shows the character sheet on a left swipe or its own sheet
+button. Play is wired into `StorygameDetailsActivity` and
 launches that reader (downloading the game first when it is not on the card).
 
 **Still planned:**

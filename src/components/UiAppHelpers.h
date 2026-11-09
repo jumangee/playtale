@@ -197,6 +197,22 @@ inline freeink::ui::BitmapRef listIconFor(const UIIcon icon, const int size = 24
   }
 }
 
+// The outlined action button both storygame screens use: a white card with a
+// 1px border at rest, and the inverted fill (black card, paper-coloured label)
+// for the chosen one. Built on the SDK's outlinedButtonStyles() so border and the
+// normal state come from one place; the radius is re-applied unclamped because
+// the factory caps it at 12px while the theme's controlRadius is the product
+// radius (18 on RoundedRaff), and fui::button() applies that raw value for the
+// game page. The white label is ours: the factory keeps a black one for its own
+// light selected fill.
+inline freeink::ui::StyleSet outlinedActionButtonStyles(const uint8_t radius) {
+  namespace fui = freeink::ui;
+  fui::StyleSet styles = fui::outlinedButtonStyles(radius, fui::Color::Black);
+  fui::setStyleRadius(styles, radius);
+  styles.selected.foreground = fui::Paint::solid(fui::Color::White);
+  return styles;
+}
+
 // Bottom-anchored Cancel / OK pair for slider dialogs on touch devices, where
 // the physical Back/Confirm buttons (and their auto-hidden hints) may not
 // exist. Callers gate on hasTouch(): button boards keep the hint chrome and

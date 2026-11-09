@@ -314,3 +314,61 @@ TEST(Engine, ExpressionCondition) {
   ASSERT_EQ(game.engine.texts().size(), 1u);
   EXPECT_EQ(game.engine.texts()[0].runs[0].text, "Match");
 }
+
+// hasCharsheet() answers the same question charsheet() does: a group counts only
+// when it is visible and holds at least one non-zero parameter.
+TEST(Engine, HasCharsheetMatchesTheVisibleGroups) {
+  Game game;
+  // Group 0 is a visible counter group with one set and one zero parameter;
+  // group 1 is a visible flag group with a set flag; group 2 is hidden but has a
+  // set parameter; group 3 is visible and entirely zero.
+  game.groups = {group(0, 'r', 0, 2), group(1, 'k', 2, 1), group(2, 'r', 3, 1, false), group(3, 'k', 4, 1)};
+  game.params = {param(0, 'r', 4), param(0, 'r', 0), param(1, 'k', 1), param(2, 'r', 7), param(3, 'k', 0)};
+
+  qg::Paragraph start;
+  start.ordinal = 0;
+  start.flags = qg::PARA_START;
+  start.texts = {text("Hello")};
+  start.choices = {choiceCmd("Gain", -1, 0)};
+  start.scripts = {taskScript(0, {inc(4, 1)})};
+  game.harness.paras = {start};
+  ASSERT_TRUE(game.begin());
+
+  EXPECT_TRUE(game.engine.hasCharsheet());
+  std::vector<qg::Engine::CharsheetGroup> groups;
+  game.engine.charsheet(groups);
+  // Groups 0 and 1 only: the hidden group and the empty one are omitted.
+  ASSERT_EQ(groups.size(), 2u);
+  EXPECT_EQ(groups[0].groupOrdinal, 0u);
+  EXPECT_EQ(groups[1].groupOrdinal, 1u);
+
+  // The do script sets the empty visible flag group's only item, so that group
+  // joins the two the sheet already listed.
+  game.engine.choose(game.source, 0);
+  ASSERT_FALSE(game.engine.failed());
+  std::vector<qg::Engine::CharsheetGroup> afterDo;
+  game.engine.charsheet(afterDo);
+  ASSERT_EQ(afterDo.size(), 3u);
+  EXPECT_EQ(afterDo.back().groupOrdinal, 3u);
+  EXPECT_TRUE(game.engine.hasCharsheet());
+}
+
+// A game whose every parameter is zero (or hidden) has no character sheet to
+// show, which is what keeps the reader's sheet button off the screen.
+TEST(Engine, HasCharsheetIsFalseWithoutVisibleParameters) {
+  Game game;
+  game.groups = {group(0, 'r', 0, 1), group(1, 'k', 1, 1, false)};
+  game.params = {param(0, 'r', 0), param(1, 'k', 5)};
+
+  qg::Paragraph start;
+  start.ordinal = 0;
+  start.flags = qg::PARA_START;
+  start.texts = {text("Hello")};
+  game.harness.paras = {start};
+  ASSERT_TRUE(game.begin());
+
+  EXPECT_FALSE(game.engine.hasCharsheet());
+  std::vector<qg::Engine::CharsheetGroup> groups;
+  game.engine.charsheet(groups);
+  EXPECT_TRUE(groups.empty());
+}
