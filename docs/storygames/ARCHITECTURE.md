@@ -1113,7 +1113,7 @@ friendlier outcome [C: `lib/QuestBook/StorygameEngine.cpp` `moveTo`/`choose`].
 | Screen | Base | Responsibility |
 | --- | --- | --- |
 | КвестБук catalogue | `CatalogActivity` | list of games with paging; **shipped** for `new` + `editorial`, no tags/search entry yet |
-| Game page | own activity, `freeink::ui::publicationPage` | name, author, tags, description, likes/dislikes, stars, the cover, and **Play / Add to Library / Remove from Library**; **shipped**, Play opens the runtime reader |
+| Game page | own activity, `fui::` primitives (see §6.3) | name, author, tags, the rating as stars, likes/dislikes, a scrolling description, the cover, and **Play / Add to Library / Remove from Library**; **shipped**, Play opens the runtime reader |
 | Tag list | `UiListActivity` | the tag catalogue from §2.2; selecting one lists its games |
 | Tag results | catalogue list with a filter | [O] blocked on §2.3 |
 | Search | `CatalogActivity::launchSearch()` | [O] blocked on §2.4 |
@@ -1130,11 +1130,15 @@ one.
 
 ### 6.3 Why the game page is not `DetailsActivity`
 
-The shipped page is its own activity (`StorygameDetailsActivity`), built on the same
-`freeink::ui::publicationPage` component `DetailsActivity` uses. `DetailsSpec` could have carried most
-of this page (`source` for the tags, `metadata` for the facts, `description` for the text, an empty
-action label for no button), and one extra field — a line count for the tags — would have closed the
-gap. The page is separate anyway, for two reasons:
+The shipped page is its own activity (`StorygameDetailsActivity`). It started on the same
+`freeink::ui::publicationPage` component `DetailsActivity` uses and now composes its own bands from
+`fui::` primitives instead. Two things the component cannot express forced that: its hero is cover plus
+one text column, so the like and dislike counts have no place beside the tags — its single metadata slot
+is a text band *below* the hero — and its description is drawn once into a clipped area, so a scrolling
+viewport had to be built around it (`descriptionPainter` is the component's hook for a caller-drawn
+description; this page draws its own viewport instead). `DetailsSpec` could still have carried most of
+the text fields (`source` for the tags, `description` for the text, an empty action label for no button).
+The page is separate anyway, for two reasons:
 
 - **The fork diff stays out of an upstream file.** `DetailsActivity` came from upstream (OPDS 2.0, then
   the stack-safety fix in `f73d788a`); a storygame-only field there means carrying it through every
@@ -1143,25 +1147,86 @@ gap. The page is separate anyway, for two reasons:
   the page needs none of `DetailsActivity`'s styled-description machinery and none of its `More`
   viewer.
 
-The cost is a second screen with the same shape: if upstream changes `publicationPage`'s contract,
-both must be revisited. The page carries two action buttons; the storage behavior of the second one,
-which downloads and removes, is defined below.
+The price is that three rules now live in two places: the cover cap and aspect (`publicationHeader`
+against `StorygameDetailsActivity::buildScreen`), the action band height (a simplified copy of
+`publicationPage`'s, which also adds the button's text height), and "keep only the lines that fit"
+(`media_detail::text()` against the page's `drawTextBlock()`). The page's versions are one-liners beside
+the code that needs them, but an SDK change to any of those rules will silently diverge on this page
+only.
+
+#### Layout
+
+Three bands, top to bottom, inside the content band the header helper reserves:
+
+```
+hero      cover (≤128×192) with the rating as five stars right under it, in the
+          cover's own column; title, author and tags in the column beside it,
+          then a gap and the like and dislike counts, one per line
+about     the "About this game" heading, then the description viewport
+actions   Add to Library / Remove from Library above Play, at the bottom edge
+```
+
+The hero is measured, not fixed: its height is the taller of the cover (plus the star row under it)
+and the text column, so the rating reads as part of the cover block and the counts sit beside it
+instead of in a band below. A cap keeps about three description lines on the page; a panel too short
+for the cap shrinks the cover instead of dropping the description.
+
+The star row is as wide as the cover slot: five 24 px stars with 2 px gaps make exactly the 128 px the
+service renders for. A board whose cover column is narrower (a third of a narrow panel) scales all five
+stars down together rather than dropping the rating; below 14 px a star stops reading as a star, and only
+then is the rating omitted.
+
+An import in flight, or the error line after a failed one, takes a full-width band of its own under the
+hero, in addition to the count lines: both are sentences and the column beside the cover is too narrow
+for them. That band is why the page is not pixel-identical during a transfer — it reserves up to two
+lines, so the hero grows and the column above it has that much less room — while the count lines keep
+their order under the tags.
+
+The description viewport ends just above the actions and is clipped there, so text longer than the
+viewport scrolls inside it until it is cut just above the buttons, which never move. Its width always leaves
+the reading-position bar's column free, so the wrap does not change when the text grows past the
+viewport. The scroll is paged, not pixel-stepped: a side direction or a vertical swipe moves by one
+viewport less one line, which keeps a line of the previous page as the cue that text continues. A
+description that already fits leaves the side directions doing what they did before the text could
+scroll — stepping the selection.
+
+The viewport is drawn through `fui::layoutText()`, the same routine `fui::measureWrappedText()` measures
+with, so the scroll offset can never disagree with the height that was measured. That routine lays out
+at most 16 lines and ellipsizes the last one; a description that long would be cut rather than scrolled
+to its end. The service's 140-character cap (§2.1) is two to three rendered lines at the viewport's width
+on the supported panels, so the limit is headroom rather than a shipped restriction — and, for the same
+reason, scrolling cannot be observed with real catalogue data: a test needs a description long enough to
+overflow the viewport.
+
+#### The two actions and the selection
+
+The page carries two action buttons; the storage behavior of the second one, which downloads and
+removes, is defined below. They are also the page's only choice: a direction press moves a selection
+between them and Confirm runs the selected one, which is drawn with the outlined style's chosen
+(inverted) state. Play is selected on entry, so Confirm plays the game as it did before the selection
+existed; a tap on either button also moves the selection there, so the page always paints the action
+Confirm would run. The front Left/Right buttons always step the selection; the side ones step it only
+while the description fits, and scroll the description otherwise. The hint bar therefore names that
+navigation (Back / Select / Left / Right) instead of the actions: a label on a direction key would
+promise an action the key no longer runs.
 
 | Required | Where it goes |
 | --- | --- |
-| `fullname` | `props.book.title` |
-| `author_name` | `props.book.author` |
-| `tags` | `props.book.series` (the hero's extra text line) |
-| `likes` / `dislikes` / `stars` | `props.metadata`, as `Rating 4/5 · Likes: 6 · Dislikes: 1` |
-| `desc` | `props.description` |
+| `fullname` | hero column, bold title (up to 3 lines) |
+| `author_name` | hero column, the line under the title |
+| `tags` | hero column, up to 3 lines under the author |
+| `stars` | the star row right under the cover: one filled star per point, outlines up to five; omitted when 0 |
+| `likes` / `dislikes` | the hero column under the tags, one line each, as `Likes: 6` and `Dislikes: 1`; each omitted when 0 |
+| an import's status or its error | a full-width line under the hero, above the "About this game" heading |
+| `desc` | the scrolling viewport under the "About this game" heading |
 | `cover` | the cache key for the hero slot's image |
 
 #### The cover
 
 The page reserves a hero slot of at most 128×192 and fills it with a cover, or with the storygame icon
 when there is none (`lib/QuestBook/QuestBookCover.h`, `StorygameDetailsActivity::paintCover`). The slot
-is reserved whether or not an image resolves, so the page has exactly one layout and the text reaches
-the panel before any transfer starts.
+is reserved whether or not an image resolves, so the layout never depends on the image and the text
+reaches the panel before any transfer starts.
 
 The service converts the catalogue's `cover` URL itself, so the device never downloads the original
 upload and never runs an image decoder for a cover:
@@ -1288,8 +1353,16 @@ the geometric-shapes and miscellaneous-symbols ranges [C: `lib/EpdFont/scripts/f
 The SD-font `symbols` preset does include that range [C: `lib/EpdFont/scripts/fontconvert_sdcard.py:66-68`],
 but SD fonts are optional and cannot be assumed.
 
-Therefore the rating is rendered as text, `Rating 4/5`, on the game page. The list rows carry no
-rating at all.
+Therefore the page cannot draw the rating with a `★` character. The shipped page draws it as icons
+instead: five star slots from the two bitmaps in `src/components/icons/star-filled24.h` and
+`star-outline24.h`, filled for each point the game has and outlined for the rest. Those assets come from
+`scripts/convert_icon.py`, which pre-rotates artwork for `GfxRenderer::drawIcon`, so the page transposes
+them once at entry (`icon_orientation::transpose`) and hands them to `fui::bitmapFromIcon`, exactly as it
+does for the two action icons. The list rows carry no rating at all.
+
+The format's `STR_QUESTBOOK_RATING` key stays in `english.yaml` and `russian.yaml`. There is no reason
+to touch the other locales: they never had it, and the generator already drops unreferenced keys from
+the compiled table, so the firmware no longer carries the string.
 
 ### 6.6 New strings and a new menu entry cost real work
 

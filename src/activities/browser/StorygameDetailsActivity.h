@@ -24,6 +24,19 @@ class MappedInputManager;
 // it does (availability, price, loan). Descriptions here are the service's
 // plain text capped at 140 characters, so this page needs no HTML layout pass.
 //
+// The page is laid out by hand rather than by fui::publicationPage, because its
+// two halves need different treatment than that component gives them:
+//
+//   hero band     cover on the left with the rating as five stars right under it;
+//                 title, author and tags in the column beside it, then the like
+//                 and dislike counts, one per line. Everything the page knows
+//                 about the game sits in this band, which is what leaves the
+//                 page free for the description.
+//   description   a viewport under the "About this game" heading, clipped just
+//                 above the two action buttons, which stay attached to the bottom
+//                 edge of the content band. Text longer than the viewport scrolls
+//                 inside it and is cut just above the buttons.
+//
 // The hero reserves a cover slot that the service fills with a 1-bit BMP: the
 // text is drawn first, the cover is resolved afterwards in loop(), and the slot
 // shows the storygame icon until — or instead of — an image. See
@@ -37,6 +50,11 @@ class MappedInputManager;
 //
 // Play never creates a library item: a game that is not on the card is imported
 // into Play's shared workspace /storygames/___temp/ and read from there (§6.3).
+//
+// The two buttons are the page's only choice, so the direction keys move a
+// selection between them and Confirm runs the selected one, as the start screen
+// and the reader's choices do. The selected button is drawn inverted; Play starts
+// selected, so Confirm opens the game as it did before there was a selection.
 //
 // "Downloaded" is a filesystem question, answered on entry and after each
 // action, so a page reopened over a game that was removed elsewhere is right
@@ -72,18 +90,35 @@ class StorygameDetailsActivity final : public Activity, private UiAppHost {
  private:
   static void detailsScreen(UiScreen& screen, void* user);
   void buildScreen(UiScreen& screen);
-  // "Rating 4/5 · Likes 6 · Dislikes 1", omitting facts the game does not have.
-  void buildFacts();
+  // "Likes 6" and "Dislikes 1" as two lines, each kept only when the game has
+  // that count. The rating is stars under the cover, so it is not part of these.
+  void buildCounts();
   // Draws the resolved cover, or the storygame icon when there is none.
-  static bool paintCover(freeink::ui::DrawTarget& target, freeink::ui::Rect rect,
-                         const freeink::ui::PublicationHeaderProps& props, void* user);
+  void paintCover(freeink::ui::DrawTarget& target, freeink::ui::Rect rect);
+  // Draws the rating as five stars at (x, y), each `side` pixels square: one
+  // filled per point, outlines for the rest.
+  void drawStars(freeink::ui::DrawTarget& target, int16_t x, int16_t y, int16_t side, int rating) const;
   // Resolves and, when needed, fetches the cover. Blocks; called once per
   // visit. True when a path became available and a repaint is needed.
   bool loadCover();
 
   // --- the two actions -------------------------------------------------------
+  // Which button the direction keys have selected. The touch handlers move the
+  // selection to the button that was tapped, so the page always paints the
+  // action Confirm would run.
+  enum class Selected : uint8_t { Play, Library };
+
   static void onPlayEvent(const freeink::ui::ActionEvent&, void* user);
   static void onLibraryEvent(const freeink::ui::ActionEvent&, void* user);
+  // Runs the action the selection names. The one place that maps a selection to
+  // a handler, so the keys and the touch handlers cannot diverge.
+  void activate(Selected action);
+  // Steps the selection to the other button.
+  void stepSelection();
+  // Scrolls the description viewport by one screenful: `direction` -1 up /
+  // +1 down. True when there was text to scroll, so the caller can let a side
+  // direction step the selection instead when the whole description fits.
+  bool scrollDescription(int8_t direction);
   // Primary action. Opens the reader on the downloaded game; a game that is not
   // on the card is imported into Play's shared workspace first (§6.3), so playing
   // it does not add it to the library.
@@ -116,9 +151,10 @@ class StorygameDetailsActivity final : public Activity, private UiAppHost {
 
   std::string headerTitle;
   QuestBookListParser::Row game;
-  // Built once in onEnter: the facts line holds localized numbers and must not
+  // Built once in onEnter: the count lines hold localized numbers and must not
   // be reformatted on every repaint.
-  std::string facts;
+  std::string likesText;
+  std::string dislikesText;
   // Empty until a cover resolves: the slot then keeps the icon.
   std::string coverPath;
   bool coverPending = true;
@@ -130,8 +166,23 @@ class StorygameDetailsActivity final : public Activity, private UiAppHost {
   bool downloaded = false;
   // True while the import runs, which also holds the page's second action off.
   bool downloading = false;
-  // The last failure, shown in the metadata line. Cleared by the next attempt,
-  // so the page keeps one layout and the button stays usable for a retry.
+  // The button the direction keys have selected. Written by the loop task under
+  // the render lock, read by buildScreen().
+  Selected selected = Selected::Play;
+  // The description viewport: where the scroll sits, and what the last paint
+  // measured as scrollable and as one step. buildScreen() publishes all three on
+  // the render task; the loop task reads and moves them under the same lock.
+  int16_t descScroll = 0;
+  int16_t descMaxScroll = 0;
+  int16_t descPageStep = 0;
+  // The two action buttons share one props object, held here rather than in
+  // buildScreen's frame: a ButtonProps carries a whole StyleSet (~400 B), and a
+  // CJK title's SD-font glyph load runs on top of that frame on the render task.
+  // One object is enough because fui::button() only reads the props during its
+  // call, so the second button overwrites the first's fields after it is drawn.
+  freeink::ui::ButtonProps actionButton;
+  // The last failure, shown in its own line under the hero. Cleared by the next
+  // attempt, so the page keeps one layout and the button stays usable for a retry.
   std::string errorText;
   questbook_game::Importer importer;
 
@@ -139,7 +190,4 @@ class StorygameDetailsActivity final : public Activity, private UiAppHost {
   // 256-entry palette). Bitmap borrows coverFile, so the order matters.
   HalFile coverFile;
   Bitmap coverBitmap{coverFile};
-  // Kept off the render task stack: a CJK title's SD-font glyph load runs on
-  // top of publicationPage().
-  freeink::ui::PublicationPageProps pageProps{};
 };

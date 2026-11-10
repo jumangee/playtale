@@ -9,7 +9,6 @@
 #include <Memory.h>
 #include <WiFi.h>
 
-#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstdio>
@@ -28,6 +27,8 @@
 #include "components/icons/delete32.h"
 #include "components/icons/library.h"
 #include "components/icons/play32.h"
+#include "components/icons/star-filled24.h"
+#include "components/icons/star-outline24.h"
 #include "network/HttpDownloader.h"
 
 namespace fui = freeink::ui;
@@ -124,20 +125,32 @@ bool drawCoverBitmap(GfxRenderer& renderer, Bitmap& bitmap, const fui::Rect rect
 // The 32-pixel icons the action buttons carry are the firmware's own 1-bpp
 // assets (src/components/icons), which are pre-rotated for GfxRenderer::drawIcon
 // rather than laid out row-major. icon_orientation::transpose (UiAppHelpers.h)
-// owns that conversion and explains it; this page keeps three separate buffers
-// because all three icons are drawn within one publicationPage() call, so they
-// cannot share one scratch buffer.
+// owns that conversion and explains it; this page keeps one buffer per icon
+// because all of them are drawn within one screen build, so they cannot share a
+// scratch buffer.
 constexpr int ICON_SIDE = 32;
 constexpr int ICON_BYTES = ICON_SIDE * ICON_SIDE / 8;
+
+// The rating is a row of stars, drawn from the same pre-rotated assets: the
+// filled one for each point the game has, the outline for the rest of the five.
+constexpr int STAR_SIDE = 24;
+constexpr int STAR_GAP = 2;
+constexpr int STAR_COUNT = 5;
+// Below this a star stops reading as a star, so a cover column narrower than
+// that many pixels loses the rating instead of drawing dots.
+constexpr int STAR_MIN_SIDE = 14;
 
 // The assets are `static const uint8_t[]`, not `constexpr`, so they cannot be
 // read inside a constant expression; the transposition therefore runs once, in
 // onEnter(), before this page's first render and on the same task that later
 // only reads the result.
 using IconImage = std::array<uint8_t, ICON_BYTES>;
+using StarImage = std::array<uint8_t, STAR_SIDE * STAR_SIDE / 8>;
 IconImage playIconImage{};
 IconImage deleteIconImage{};
 IconImage libraryIconImage{};
+StarImage starOnImage{};
+StarImage starOffImage{};
 bool iconsReady = false;
 
 void transposeIcon(const uint8_t (&asset)[ICON_BYTES], IconImage& out) {
@@ -151,10 +164,45 @@ void prepareIcons() {
   transposeIcon(PlayIcon32, playIconImage);
   transposeIcon(DeleteIcon32, deleteIconImage);
   transposeIcon(LibraryIcon, libraryIconImage);
+  icon_orientation::transpose(StarFilledIcon24, starOnImage.data(), STAR_SIDE);
+  icon_orientation::transpose(StarOutlineIcon24, starOffImage.data(), STAR_SIDE);
 }
 
 fui::BitmapRef icon32(const IconImage& bits) {
   return fui::bitmapFromIcon(freeink::Icon({ICON_SIDE, ICON_SIDE, 16, bits.data()}));
+}
+
+fui::BitmapRef starIcon(const bool filled) {
+  return fui::bitmapFromIcon(
+      freeink::Icon({STAR_SIDE, STAR_SIDE, STAR_SIDE / 2, filled ? starOnImage.data() : starOffImage.data()}));
+}
+
+// The size one star is drawn at in a row `width` wide: the artwork's own 24 px
+// when the slot has that much room, and a smaller square (still square, four
+// gaps of STAR_GAP between them) when a narrow panel gives the cover less, so
+// the rating never disappears on a board whose cover column is narrow.
+int16_t starSideFor(const int16_t width) {
+  const int16_t side = static_cast<int16_t>((width - (STAR_COUNT - 1) * STAR_GAP) / STAR_COUNT);
+  return side < STAR_SIDE ? side : STAR_SIDE;
+}
+
+// Draws one wrapped block at the column's current line and returns the y of the
+// line below it. `limit` is the band the block may not leave: a block that does
+// not fit keeps only the lines that do, so the hero column can never run into
+// the description that follows it.
+int16_t drawTextBlock(fui::DrawTarget& target, const int16_t x, int16_t y, const int16_t limit, const int16_t width,
+                      const char* text, fui::TextStyle style, const uint8_t maxLines, const int16_t gap) {
+  if (!text || !*text || width <= 0 || y >= limit) return y;
+  const int16_t line = target.lineHeight(style.font);
+  if (line <= 0) return y;
+  const int room = (limit - y) / line;
+  if (room <= 0) return y;
+  style.maxLines = room < maxLines ? static_cast<uint8_t>(room < 255 ? room : 255) : maxLines;
+  if (style.maxLines == 0) return y;
+  const fui::Size size = fui::measureWrappedText(target, text, style, width);
+  if (size.height <= 0) return y;
+  target.text(fui::Rect{x, y, width, size.height}, text, style);
+  return static_cast<int16_t>(y + size.height + gap);
 }
 
 }  // namespace
@@ -197,7 +245,7 @@ std::unique_ptr<StorygameDetailsActivity> StorygameDetailsActivity::forLibrary(G
 
 void StorygameDetailsActivity::onEnter() {
   Activity::onEnter();
-  buildFacts();
+  buildCounts();
   refreshDownloaded();
   // Before the first render of this page: the button icons need one
   // transposition of the firmware's pre-rotated assets.
@@ -215,26 +263,20 @@ void StorygameDetailsActivity::refreshDownloaded() {
   downloaded = present;
 }
 
-// The service reports 0 stars for a game nobody has rated, which is not the
-// same claim as "rated zero"; that fact is omitted instead of shown as a zero.
-void StorygameDetailsActivity::buildFacts() {
-  facts.clear();
-  const auto add = [this](const char* text) {
-    if (!facts.empty()) facts += " \xC2\xB7 ";
-    facts += text;
-  };
-  char buffer[48];
-  if (game.stars > 0) {
-    snprintf(buffer, sizeof(buffer), tr(STR_QUESTBOOK_RATING), game.stars, 5);
-    add(buffer);
-  }
+// The two count lines beside the cover: "Likes 6" and "Dislikes 1", each kept
+// only when the game has that count, and shown as separate lines. The rating is
+// stars under the cover now, so it is not part of these.
+void StorygameDetailsActivity::buildCounts() {
+  likesText.clear();
+  dislikesText.clear();
+  char buffer[32];
   if (game.likes > 0) {
     snprintf(buffer, sizeof(buffer), tr(STR_QUESTBOOK_LIKES), game.likes);
-    add(buffer);
+    likesText = buffer;
   }
   if (game.dislikes > 0) {
     snprintf(buffer, sizeof(buffer), tr(STR_QUESTBOOK_DISLIKES), game.dislikes);
-    add(buffer);
+    dislikesText = buffer;
   }
 }
 
@@ -245,100 +287,223 @@ void StorygameDetailsActivity::detailsScreen(UiScreen& screen, void* user) {
 // The cover is optional chrome: an unresolved, unreadable or partially drawn
 // file leaves the slot's icon in place, never delays the first frame and never
 // fails the page.
-bool StorygameDetailsActivity::paintCover(fui::DrawTarget& target, const fui::Rect rect,
-                                          const fui::PublicationHeaderProps&, void* user) {
-  auto* self = static_cast<StorygameDetailsActivity*>(user);
-  if (!self->coverPath.empty() && Storage.openFileForRead("QBOOK", self->coverPath, self->coverFile)) {
-    if (self->coverBitmap.parseHeaders() == BmpReaderError::Ok &&
-        drawCoverBitmap(self->renderer, self->coverBitmap, rect)) {
-      self->coverFile.close();
-      return true;
+void StorygameDetailsActivity::paintCover(fui::DrawTarget& target, const fui::Rect rect) {
+  if (!coverPath.empty() && Storage.openFileForRead("QBOOK", coverPath, coverFile)) {
+    if (coverBitmap.parseHeaders() == BmpReaderError::Ok && drawCoverBitmap(renderer, coverBitmap, rect)) {
+      coverFile.close();
+      return;
     }
     // A draw can fail after painting some rows, so the slot is wiped before the
     // icon: the icon only stamps ink, it cannot cover what is already there.
-    LOG_ERR("QBOOK", "Unusable cover, falling back to the icon: %s", self->coverPath.c_str());
+    LOG_ERR("QBOOK", "Unusable cover, falling back to the icon: %s", coverPath.c_str());
     target.fill(rect, fui::Paint::solid(fui::Color::White));
-    self->coverFile.close();
+    coverFile.close();
   }
   target.bitmap(rect, listIconFor(UIIcon::Storygame, 32), fui::BitmapMode::Center);
-  return true;
+}
+
+// The rating as five stars: one filled per point, outlines for the rest, each
+// `side` pixels square with STAR_GAP between them.
+void StorygameDetailsActivity::drawStars(fui::DrawTarget& target, const int16_t x, const int16_t y, const int16_t side,
+                                         const int rating) const {
+  int filled = rating;
+  if (filled < 0) filled = 0;
+  if (filled > STAR_COUNT) filled = STAR_COUNT;
+  for (int i = 0; i < STAR_COUNT; ++i) {
+    const fui::Rect star{static_cast<int16_t>(x + i * (side + STAR_GAP)), y, side, side};
+    target.bitmap(star, starIcon(i < filled), fui::BitmapMode::Contain);
+  }
 }
 
 void StorygameDetailsActivity::buildScreen(UiScreen& screen) {
   catalogScreenHeader(screen, renderer, headerTitle.c_str());
   const auto& theme = screen.theme();
+  fui::DrawTarget& target = screen.target();
   const auto asPtr = [](const std::string& s) { return s.empty() ? nullptr : s.c_str(); };
-  const int16_t line = uiTarget.lineHeight(theme.bodyText.font);
+  const int16_t line = target.lineHeight(theme.bodyText.font);
+  if (line <= 0) return;
+  const fui::Rect body =
+      screen.body().inset(fui::Insets{theme.spaceLg, theme.spaceLg, theme.spaceLg, theme.spaceLg});
+  if (body.empty()) return;
 
-  fui::PublicationPageProps& props = pageProps;
-  props.book.title = asPtr(game.title);
-  props.book.author = asPtr(game.author);
-  // The series slot is just a further hero line; the catalogue's tags sit there.
-  props.book.series = asPtr(game.tags);
-  props.book.titleText = theme.bodyText;
-  props.book.detailText = theme.bodyText;
-  props.book.titleLines = 3;
-  props.book.authorLines = 1;
-  props.book.seriesLines = 3;
-  // The slot is always reserved, so the page has one layout whether or not the
-  // image resolved; only the slot's contents change. paintCover() draws either
-  // the cover or the storygame icon.
-  props.book.coverSize = fui::Size{static_cast<int16_t>(questbook_cover::SLOT_WIDTH),
-                                   static_cast<int16_t>(questbook_cover::SLOT_HEIGHT)};
-  props.book.coverPainter = &StorygameDetailsActivity::paintCover;
-  props.book.coverPainterUserData = this;
+  // The two actions keep the bottom edge of the content band: the description
+  // viewport ends above them, so a long description scrolls behind the buttons
+  // instead of pushing them off the page.
+  const int16_t actionHeight = theme.rowHeight > theme.minTouchSize ? theme.rowHeight : theme.minTouchSize;
+  const int16_t actionGap = theme.spaceSm;
+  const int16_t actionsHeight = static_cast<int16_t>(2 * actionHeight + actionGap);
+  const int16_t actionsTop = static_cast<int16_t>(body.bottom() - actionsHeight);
+  const int16_t headingHeight = static_cast<int16_t>(line + theme.spaceSm);
+  // What the hero (cover and its text column) may take once the description
+  // heading and a few description lines are reserved.
+  int16_t heroCap = static_cast<int16_t>(actionsTop - headingHeight - 3 * line - body.y);
+  if (heroCap < 0) heroCap = 0;
 
-  const bool hasAuthor = !game.author.empty();
-  const bool hasTags = !game.tags.empty();
-  const int heroLines = props.book.titleLines + (hasAuthor ? props.book.authorLines : 0) +
-                        (hasTags ? props.book.seriesLines : 0);
-  const int16_t textHero = static_cast<int16_t>(
-      heroLines * line + (hasAuthor ? 2 : 1) * props.book.titleGap + (hasTags ? props.book.textGap : 0));
-  // The cover puts a floor under the hero. publicationPage() then clamps the
-  // hero to min(heroHeight, max(budget, body.height / 2)) and the header caps
-  // the cover at a third of the width, so a panel too short for the slot shrinks
-  // the cover instead of pushing the description off the page.
-  props.heroHeight = std::max<int16_t>(textHero, static_cast<int16_t>(questbook_cover::SLOT_HEIGHT));
+  // An import in flight and a failed attempt take a full-width line under the
+  // hero rather than a column line: both are sentences, and the column beside the
+  // cover is too narrow for them. The column — and the cover with it — leaves that
+  // line its room, and a normal page has no such line, so the space goes to the
+  // description instead.
+  const char* statusLine = downloading ? tr(STR_DOWNLOADING) : (!errorText.empty() ? errorText.c_str() : nullptr);
+  const int16_t statusReserve = statusLine ? static_cast<int16_t>(2 * line + theme.spaceSm) : 0;
+  const int16_t columnCap = heroCap > statusReserve ? static_cast<int16_t>(heroCap - statusReserve) : heroCap;
+  const int16_t columnLimit = static_cast<int16_t>(body.y + columnCap);
 
-  // Rating and like counts, not availability: a storygame is always available.
-  // An import in flight and a failed attempt take the same line, so the page
-  // never changes shape.
-  if (downloading) {
-    props.metadata = tr(STR_DOWNLOADING);
-  } else if (!errorText.empty()) {
-    props.metadata = errorText.c_str();
-  } else {
-    props.metadata = asPtr(facts);
+  // The cover keeps the 128x192 slot the service renders for, shrunk only when
+  // the band has to be: the page then still shows the whole description area.
+  int16_t coverWidth = questbook_cover::SLOT_WIDTH;
+  if (coverWidth > body.width / 3) coverWidth = static_cast<int16_t>(body.width / 3);
+  int16_t coverHeight = static_cast<int16_t>(coverWidth * questbook_cover::SLOT_HEIGHT / questbook_cover::SLOT_WIDTH);
+  if (coverHeight > columnCap) {
+    // A band too short for the slot shrinks the cover rather than letting it run
+    // into the status line or the description: with no band left the slot is
+    // simply not drawn.
+    coverHeight = columnCap;
+    coverWidth = static_cast<int16_t>(coverHeight * questbook_cover::SLOT_WIDTH / questbook_cover::SLOT_HEIGHT);
   }
-  props.metadataLines = 2;
-  props.descriptionHeading = tr(STR_QUESTBOOK_ABOUT_GAME);
-  props.description = asPtr(game.description);
-  props.headingText = theme.bodyText;
-  props.bodyText = theme.bodyText;
+  const int16_t columnX = static_cast<int16_t>(body.x + coverWidth + theme.spaceLg);
+  int16_t columnWidth = static_cast<int16_t>(body.width - coverWidth - theme.spaceLg);
+  if (columnWidth < 0) columnWidth = 0;
+  // A band with no room for the slot draws neither the image nor the fallback
+  // icon, and must not open the file to find that out.
+  if (coverWidth > 0 && coverHeight > 0) {
+    paintCover(target, fui::Rect{body.x, body.y, coverWidth, coverHeight});
+  }
+
+  // The rating sits right under the cover, in the cover's own column: the row is
+  // as wide as the slot the service renders for, so it reads as part of the cover
+  // block. A column too narrow for five legible stars loses the rating rather
+  // than overlapping the text column.
+  int16_t heroHeight = coverHeight;
+  const int16_t starSide = starSideFor(coverWidth);
+  if (game.stars > 0 && starSide >= STAR_MIN_SIDE) {
+    const int16_t starsY = static_cast<int16_t>(body.y + coverHeight + theme.spaceXs);
+    if (static_cast<int16_t>(starsY + starSide) <= columnLimit) {
+      drawStars(target, body.x, starsY, starSide, game.stars);
+      heroHeight = static_cast<int16_t>(starsY + starSide - body.y);
+    }
+  }
+
+  // The hero column beside the cover: title, author and tags, then — after a gap
+  // that keeps them apart from the tags — the like and dislike counts, one per
+  // line.
+  fui::TextStyle titleText = theme.bodyText;
+  titleText.bold = true;
+  int16_t y = drawTextBlock(target, columnX, body.y, columnLimit, columnWidth, asPtr(game.title), titleText, 3,
+                            theme.spaceXs);
+  y = drawTextBlock(target, columnX, y, columnLimit, columnWidth, asPtr(game.author), theme.bodyText, 1,
+                    theme.spaceSm);
+  y = drawTextBlock(target, columnX, y, columnLimit, columnWidth, asPtr(game.tags), theme.bodyText, 3, 0);
+  // The gap only exists when there is something to separate the counts from.
+  const bool haveCounts = !likesText.empty() || !dislikesText.empty();
+  if (haveCounts) y = static_cast<int16_t>(y + theme.spaceMd);
+  y = drawTextBlock(target, columnX, y, columnLimit, columnWidth, asPtr(likesText), theme.bodyText, 2, theme.spaceXs);
+  y = drawTextBlock(target, columnX, y, columnLimit, columnWidth, asPtr(dislikesText), theme.bodyText, 2, 0);
+
+  if (y > columnLimit) y = columnLimit;
+  const int16_t columnHeight = static_cast<int16_t>(y - body.y);
+  if (columnHeight > heroHeight) heroHeight = columnHeight;
+  if (heroHeight > columnCap) heroHeight = columnCap;
+  if (statusLine) {
+    const int16_t statusTop = static_cast<int16_t>(body.y + heroHeight + theme.spaceSm);
+    const int16_t statusEnd = drawTextBlock(target, body.x, statusTop, static_cast<int16_t>(body.y + heroCap),
+                                            body.width, statusLine, theme.bodyText, 2, 0);
+    // Only a line that was actually drawn grows the band: a status that does not
+    // fit must not push the heading off the reserved area.
+    if (statusEnd > statusTop) heroHeight = static_cast<int16_t>(statusEnd - body.y);
+  }
+
+  // Description heading, then the viewport the text scrolls in. Both exist only
+  // when the game has a description: an empty one would leave a heading over
+  // blank paper. The viewport's width always leaves the reading-position bar's
+  // column free, so the wrap does not change when the text grows past it; the
+  // bar's side and inset come from the theme, the same tokens the list component
+  // reads.
+  const char* description = asPtr(game.description);
+  fui::TextStyle headingText = theme.bodyText;
+  headingText.bold = true;
+  headingText.maxLines = 1;
+  const int16_t headingY = static_cast<int16_t>(body.y + heroHeight + theme.spaceSm);
+  if (description) {
+    target.text(fui::Rect{body.x, headingY, body.width, line}, tr(STR_QUESTBOOK_ABOUT_GAME), headingText);
+  }
+
+  const int16_t barWidth = theme.listScrollWidth > 0 ? theme.listScrollWidth : 0;
+  const int16_t barInset = theme.listScrollInset > 0 ? theme.listScrollInset : 0;
+  const int16_t barReserve = barWidth > 0 ? static_cast<int16_t>(barWidth + barInset) : 0;
+  const bool barOnLeft = theme.listScrollSide == 1;
+  const int16_t viewportTop = static_cast<int16_t>(headingY + headingHeight);
+  const int16_t viewportBottom = static_cast<int16_t>(actionsTop - theme.spaceSm);
+  fui::Rect viewport{static_cast<int16_t>(barOnLeft ? body.x + barReserve : body.x), viewportTop,
+                     static_cast<int16_t>(body.width - barReserve),
+                     static_cast<int16_t>(viewportBottom > viewportTop ? viewportBottom - viewportTop : 0)};
+
+  fui::TextStyle descriptionText = theme.bodyText;
+  descriptionText.maxLines = 255;
+  int16_t contentHeight = 0;
+  if (description && viewport.width > 0 && viewport.height > 0) {
+    contentHeight = fui::measureWrappedText(target, description, descriptionText, viewport.width).height;
+  }
+  // The loop task scrolls with these, and this pass holds the render lock that
+  // guards them.
+  descMaxScroll = contentHeight > viewport.height ? static_cast<int16_t>(contentHeight - viewport.height) : 0;
+  descPageStep = viewport.height > line ? static_cast<int16_t>(viewport.height - line) : line;
+  if (descScroll > descMaxScroll) descScroll = descMaxScroll;
+  if (descScroll < 0) descScroll = 0;
+  if (contentHeight > 0) {
+    // The lines are laid out once more through the same layoutText() the height
+    // came from and drawn one by one, rather than drawn as a block: text()
+    // centres a block inside its rect and wraps through the renderer's own
+    // wrapper, so a block draw could disagree with the measured height by a line
+    // and the scroll would be off. The rect is exactly `contentHeight` tall and
+    // shifted by the scroll, and the viewport clip hides the rest.
+    const fui::Rect block{viewport.x, static_cast<int16_t>(viewport.y - descScroll), viewport.width, contentHeight};
+    // Each emitted run is already a complete line, so it is drawn as one line:
+    // a second wrap would re-break text the measurement already counted.
+    fui::TextStyle lineText = descriptionText;
+    lineText.maxLines = 1;
+    const auto drawLine = [&target, &lineText](const char* run, const fui::Rect runRect) {
+      target.text(runRect, run, lineText);
+    };
+    const fui::Rect previousClip = target.clipRect();
+    target.setClipRect(viewport);
+    fui::layoutText(target, block, description, descriptionText, drawLine);
+    target.setClipRect(previousClip);
+  }
+  if (descMaxScroll > 0 && barWidth > 0) {
+    fui::drawListScrollIndicator(target, fui::Rect{body.x, viewportTop, body.width, viewport.height},
+                                 static_cast<uint32_t>(contentHeight), static_cast<uint32_t>(viewport.height),
+                                 static_cast<uint32_t>(descScroll), barWidth, theme.listScrollSide, barInset);
+  }
 
   // Same outlined action button as the storygame reader's choices, so the two
   // screens cannot drift apart. The primary action is Play; the second one is
-  // the library action the game's presence on the card decides.
-  const auto styleButton = [&theme](fui::ButtonProps& button) {
-    button.styles = outlinedActionButtonStyles(theme.controlRadius);
-    button.text = theme.bodyText;
-    button.radius = theme.controlRadius;
-    button.minTouchSize = theme.minTouchSize;
-  };
-  props.primary.label = tr(STR_QUESTBOOK_PLAY);
-  props.primary.icon = icon32(playIconImage);
-  props.primary.action = ACTION_PLAY;
-  props.primary.enabled = !downloading;
-  styleButton(props.primary);
+  // the library action the game's presence on the card decides. One props object
+  // serves both: fui::button() copies what it needs during the call.
+  fui::ButtonProps& button = actionButton;
+  button.styles = outlinedActionButtonStyles(theme.controlRadius);
+  button.text = theme.bodyText;
+  button.radius = theme.controlRadius;
+  button.minTouchSize = theme.minTouchSize;
 
-  props.secondary.label = downloaded ? tr(STR_QUESTBOOK_REMOVE_FROM_LIBRARY) : tr(STR_QUESTBOOK_ADD_TO_LIBRARY);
-  props.secondary.icon = icon32(downloaded ? deleteIconImage : libraryIconImage);
-  props.secondary.action = ACTION_LIBRARY;
-  props.secondary.enabled = !downloading;
-  styleButton(props.secondary);
-  props.actionHeight = theme.rowHeight;
+  button.label = tr(STR_QUESTBOOK_PLAY);
+  button.icon = icon32(playIconImage);
+  button.action = ACTION_PLAY;
+  button.enabled = !downloading;
+  // The selected action is drawn inverted (the outlined style's chosen state);
+  // the other one keeps the outline. A disabled page ignores the selection,
+  // because the disabled style resolves first.
+  button.state = selected == Selected::Play ? fui::StateSelected : fui::StateNormal;
+  fui::button(screen.frame(),
+              fui::Rect{body.x, static_cast<int16_t>(actionsTop + actionHeight + actionGap), body.width, actionHeight},
+              button);
 
-  fui::publicationPage(screen.frame(), screen.body(), props);
+  button.label = downloaded ? tr(STR_QUESTBOOK_REMOVE_FROM_LIBRARY) : tr(STR_QUESTBOOK_ADD_TO_LIBRARY);
+  button.icon = icon32(downloaded ? deleteIconImage : libraryIconImage);
+  button.action = ACTION_LIBRARY;
+  button.enabled = !downloading;
+  button.state = selected == Selected::Library ? fui::StateSelected : fui::StateNormal;
+  fui::button(screen.frame(), fui::Rect{body.x, actionsTop, body.width, actionHeight}, button);
 }
 
 // Runs on the main task: the transfer blocks here, which is why it waits for the
@@ -362,11 +527,10 @@ void StorygameDetailsActivity::render(RenderLock&&) {
   renderer.clearScreen();
   renderUi();
 
-  const char* libraryLabel = downloaded ? tr(STR_QUESTBOOK_REMOVE_FROM_LIBRARY) : tr(STR_QUESTBOOK_ADD_TO_LIBRARY);
-  // Screen-relative labels, so a rotated or inverted screen paints the label on
-  // the button that will run it: loop() checks the same Screen* buttons.
-  const auto labels = mappedInput.mapDirectionalLabels(tr(STR_BACK), tr(STR_QUESTBOOK_PLAY), libraryLabel, "",
-                                                       libraryLabel, "");
+  // Confirm runs the selected button, the directions scroll the description and
+  // move the selection, so the hints name both halves of that: Select for
+  // Confirm, and the Left/Right pair that always steps the selection.
+  const auto labels = mappedInput.mapLabels(tr(STR_BACK), tr(STR_SELECT), tr(STR_DIR_LEFT), tr(STR_DIR_RIGHT));
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
   renderer.displayBuffer();
   // The panel now shows the text: loop() may start the cover transfer.
@@ -390,23 +554,61 @@ void StorygameDetailsActivity::loop() {
     return;
   }
   if (downloading) return;
-  // Confirm is the primary action, as on any other detail page; the library
-  // action sits on the screen's left and up directions, which is where render()
-  // paints its label.
-  if (mappedInput.wasReleased(MappedInputManager::Button::Confirm) ||
-      mappedInput.wasReleased(MappedInputManager::Button::ScreenRight) ||
-      mappedInput.wasReleased(MappedInputManager::Button::ScreenDown)) {
-    play();
+  // Confirm runs the button the panel shows as selected. Read before the
+  // directions step the selection, so a pass that carries both edges runs what
+  // the panel was already showing rather than a selection made in that pass.
+  if (mappedInput.wasReleased(MappedInputManager::Button::Confirm)) {
+    activate(selected);
     return;
   }
-  if (mappedInput.wasReleased(MappedInputManager::Button::ScreenLeft) ||
-      mappedInput.wasReleased(MappedInputManager::Button::ScreenUp)) {
-    if (downloaded) {
-      promptRemoveFromLibrary();
-    } else {
-      addToLibrary();
+  // Swipes scroll the description by a viewport, as they page the reader's
+  // paragraph; a page step keeps one line of overlap as the cue that more text
+  // follows.
+  const MappedInputManager::SwipeDir swipe = mappedInput.wasSwipe();
+  if (swipe == MappedInputManager::SwipeDir::Up || swipe == MappedInputManager::SwipeDir::Down) {
+    scrollDescription(swipe == MappedInputManager::SwipeDir::Up ? 1 : -1);
+    return;
+  }
+  // The side directions scroll the description while it overflows and step the
+  // selection while it fits — which is what they did before the text could
+  // scroll at all — and the front Left/Right buttons always step the selection,
+  // so the two actions stay reachable whichever the page shows.
+  if (mappedInput.wasPressed(MappedInputManager::Button::ScreenUp) && !scrollDescription(-1)) {
+    stepSelection();
+  } else if (mappedInput.wasPressed(MappedInputManager::Button::ScreenDown) && !scrollDescription(1)) {
+    stepSelection();
+  } else if (mappedInput.wasPressed(MappedInputManager::Button::ScreenLeft) ||
+             mappedInput.wasPressed(MappedInputManager::Button::ScreenRight)) {
+    stepSelection();
+  }
+}
+
+void StorygameDetailsActivity::stepSelection() {
+  {
+    // buildScreen() paints the selection on the render task.
+    RenderLock lock;
+    selected = selected == Selected::Play ? Selected::Library : Selected::Play;
+  }
+  requestUpdate();
+}
+
+bool StorygameDetailsActivity::scrollDescription(const int8_t direction) {
+  bool scrollable = false;
+  bool moved = false;
+  {
+    // buildScreen() published these on the render task under the same lock.
+    RenderLock lock;
+    scrollable = descMaxScroll > 0;
+    if (scrollable) {
+      int16_t next = static_cast<int16_t>(descScroll + (direction > 0 ? descPageStep : -descPageStep));
+      if (next < 0) next = 0;
+      if (next > descMaxScroll) next = descMaxScroll;
+      moved = next != descScroll;
+      descScroll = next;
     }
   }
+  if (moved) requestUpdate();
+  return scrollable;
 }
 
 // --- actions -----------------------------------------------------------------
@@ -414,19 +616,33 @@ void StorygameDetailsActivity::loop() {
 void StorygameDetailsActivity::onPlayEvent(const fui::ActionEvent&, void* user) {
   auto* self = static_cast<StorygameDetailsActivity*>(user);
   self->app.clearTapFlash();
-  if (self->downloading) return;
-  self->play();
+  self->activate(Selected::Play);
 }
 
 void StorygameDetailsActivity::onLibraryEvent(const fui::ActionEvent&, void* user) {
   auto* self = static_cast<StorygameDetailsActivity*>(user);
   self->app.clearTapFlash();
-  if (self->downloading) return;
-  if (self->downloaded) {
-    self->promptRemoveFromLibrary();
-  } else {
-    self->addToLibrary();
+  self->activate(Selected::Library);
+}
+
+void StorygameDetailsActivity::activate(const Selected action) {
+  if (downloading) return;
+  {
+    // A tap runs its own action, but the page keeps one selection: the one it
+    // paints inverted is the one Confirm would run.
+    RenderLock lock;
+    selected = action;
   }
+  if (action == Selected::Library) {
+    // The second action follows whether the game is on the card.
+    if (downloaded) {
+      promptRemoveFromLibrary();
+    } else {
+      addToLibrary();
+    }
+    return;
+  }
+  play();
 }
 
 void StorygameDetailsActivity::play() {
