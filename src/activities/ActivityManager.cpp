@@ -31,6 +31,7 @@
 #include "plugins/PluginCatalogActivity.h"
 #include "reader/ReaderActivity.h"
 #include "reader/RemoteTurnGate.h"
+#include "reader/StorygameReaderActivity.h"
 #include "settings/OpdsServerListActivity.h"
 #include "settings/SettingsListActivity.h"
 #include "util/BmpViewerActivity.h"
@@ -366,10 +367,60 @@ void ActivityManager::goToReader(std::string path, const bool allowFastInitialRe
     return;
   }
 
+  // Play's shared workspace has no game page of its own: it is one scratch slot,
+  // not a library item, so its recent card resumes the game directly (§6.3). A
+  // workspace whose game is gone or incomplete still goes to the reader, which
+  // reports the failure; handing it to the EPUB reader would only misread it.
+  if (questbook_game::isTempWorkspace(path)) {
+    goToStorygameReader(path);
+    return;
+  }
+
   auto activity = ReaderActivity::create(renderer, mappedInput, std::move(path), allowFastInitialRefresh);
   if (activity) {
     replaceActivity(std::move(activity));
   }
+}
+
+// A storygame the reader picked from the recent-books store starts playing, exactly
+// like a recent book opens its reader. The game page is what the Library lists —
+// a shelf entry is a place to look at the game and manage it — while a card in
+// "recently opened" is a place to continue it, so the two surfaces reach different
+// screens for the same directory (docs/storygames/ARCHITECTURE.md §4.9).
+//
+// The workspace needs no case of its own: goToReader() already sends it to the
+// reader, because it is not a book and has no game page. Only the permanent game
+// directory needs the intent, since goToReader() gives it its page.
+void ActivityManager::goToRecent(const std::string& path) {
+  if (questbook_game::isGameAtPath(path)) {
+    goToStorygameReader(path);
+    return;
+  }
+  // A game directory that no longer holds a complete game — one of its files was
+  // deleted from the file browser, or a transfer stopped half way — is still not a
+  // book. Handing it to the EPUB reader would fail there and drop the reader back
+  // to Home; its page is where the game can be downloaded again, so a card that has
+  // gone stale still leads somewhere useful. isIncompleteGameAtPath() is the store's
+  // predicate for that state, so the file set stays in one place.
+  if (questbook_game::isIncompleteGameAtPath(path)) {
+    auto page = StorygameDetailsActivity::forLibrary(renderer, mappedInput, path);
+    if (page) {
+      replaceActivity(std::move(page));
+      return;
+    }
+    LOG_ERR("ACT", "OOM: storygame page for %s", path.c_str());
+    return;
+  }
+  goToReader(path);
+}
+
+void ActivityManager::goToStorygameReader(const std::string& gameDir) {
+  auto activity = StorygameReaderActivity::create(renderer, mappedInput, gameDir);
+  if (!activity) {
+    LOG_ERR("ACT", "OOM: storygame reader for %s", gameDir.c_str());
+    return;
+  }
+  replaceActivity(std::move(activity));
 }
 
 void ActivityManager::goToSleep(bool fromTimeout) {

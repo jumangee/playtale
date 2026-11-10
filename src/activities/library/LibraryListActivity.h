@@ -78,6 +78,10 @@ class LibraryListActivity final : public UiTabListActivity {
   void openSearch();
   // Shared tail of row activation and the options menu's Open entry.
   void openBookByPath(const std::string& path);
+  // The same for a row that came from the recent-books store: a storygame there
+  // starts playing instead of opening its page, because that card is "continue
+  // this", not "look at this".
+  void openRecentByPath(const std::string& path);
   void promptRebuildIndex();
   void resetAfterRebuild();
   // Recent-row long-press menu: open / remove from recents / delete / rebuild.

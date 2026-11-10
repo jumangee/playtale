@@ -44,6 +44,10 @@ class ActivityManager {
   std::unique_ptr<Activity> currentActivity;
 
   void exitActivity(const RenderLock& lock);
+  // The storygame runtime reader for `gameDir`, with no game page in between. It is
+  // not public: which surface continues a game and which browses it is the intent
+  // rule the goTo… entry points own, so nothing outside this class may bypass it.
+  void goToStorygameReader(const std::string& gameDir);
 
   // Pending activity to be launched on next loop iteration
   std::unique_ptr<Activity> pendingActivity;
@@ -95,6 +99,10 @@ class ActivityManager {
   void goToPlugins(bool showOpds);
   void goToQuestBook();
   void goToReader(std::string path, bool allowFastInitialRefresh = false);
+  // An entry of the recent-books store: a storygame plays immediately, a game
+  // directory that lost its files opens its page, everything else opens as
+  // goToReader() would.
+  void goToRecent(const std::string& path);
   void goToSleep(bool fromTimeout = false);
   void goToBoot();
   void goToFullScreenMessage(std::string message, EpdFontFamily::Style style = EpdFontFamily::REGULAR);

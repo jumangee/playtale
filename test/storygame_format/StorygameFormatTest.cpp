@@ -103,6 +103,39 @@ TEST(StorygameFormat, PathsAreRecognisedAsGames) {
   EXPECT_TRUE(qg::indexNameFromPath(std::string("/storygames/") + std::string(33, 'a')).empty());
 }
 
+// Play's shared workspace is a directory in the same root, so every path rule
+// above has to be able to tell it apart from a game. The name is a legal path
+// segment, which is exactly why the refusal has to be explicit.
+TEST(StorygameFormat, PlayWorkspaceIsNotAGame) {
+  EXPECT_TRUE(questbook_cover::isSafeIndexName(qg::TEMP_DIR_NAME));
+  EXPECT_EQ(qg::tempDirectory(), "/storygames/___temp");
+  EXPECT_EQ(qg::tempPath(qg::META_FILE_NAME), "/storygames/___temp/meta.json");
+  EXPECT_TRUE(qg::isTempWorkspace(qg::tempDirectory()));
+  EXPECT_FALSE(qg::isTempWorkspace(qg::directory("skeptiki1")));
+  EXPECT_FALSE(qg::isTempWorkspace("/storygames"));
+
+  // The library walk's allocation-free form answers the same question from the
+  // parent and the leaf name, and only for the one real location: a folder the
+  // reader happens to have named "___temp" deeper in the tree is an ordinary
+  // folder.
+  EXPECT_TRUE(qg::isTempWorkspaceEntry("/storygames", qg::TEMP_DIR_NAME));
+  EXPECT_FALSE(qg::isTempWorkspaceEntry("/storygames", "skeptiki1"));
+  EXPECT_FALSE(qg::isTempWorkspaceEntry("/Books", qg::TEMP_DIR_NAME));
+  EXPECT_FALSE(qg::isTempWorkspaceEntry("/storygames/skeptiki1", qg::TEMP_DIR_NAME));
+
+  // The leaf join for a directory the caller already holds: empty in, empty out, so
+  // a caller that never got a directory cannot build a file path from nothing.
+  EXPECT_EQ(qg::pathIn("/storygames/skeptiki1", qg::META_FILE_NAME), "/storygames/skeptiki1/meta.json");
+  EXPECT_TRUE(qg::pathIn("", qg::META_FILE_NAME).empty());
+
+  // No game name, no game directory and no game path: a catalogue Play writes
+  // there, but nothing may read it back as a downloadable game (§6.3).
+  EXPECT_TRUE(qg::directory(qg::TEMP_DIR_NAME).empty());
+  EXPECT_TRUE(qg::path(qg::TEMP_DIR_NAME, qg::HDR_FILE_NAME).empty());
+  EXPECT_TRUE(qg::indexNameFromPath(qg::tempDirectory()).empty());
+  EXPECT_TRUE(qg::indexNameFromPath(qg::tempPath(qg::HDR_FILE_NAME)).empty());
+}
+
 // meta.json is what gives a library row the game's real title and author; the
 // reader is hand-written because the library walk is compiled on the host, where
 // ArduinoJson is not available.

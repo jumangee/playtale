@@ -17,7 +17,11 @@
 //     game.dat    paragraph payloads back to back, XML as the service serves it
 //                 (§4.6, §4.8)
 //     meta.json   the catalogue fields needed for offline display (§4.2)
-//     cover.bmp   this game's cover, written by Download (§6.3)
+//     cover.bmp   this game's cover, written by Add to Library or by Play (§6.3)
+//
+// The same content files, cover.bmp included, also fill the one shared workspace
+// /storygames/___temp/ that a catalogue Play uses when the game is not on the
+// card (§6.3).
 //
 // The header and index are declared here, in one place, because the importer
 // writes them and the runtime will read them: a field cannot drift between the
@@ -38,38 +42,73 @@ inline constexpr const char* META_FILE_NAME = "meta.json";
 // screen-slot cache, so a downloaded game shows its cover offline.
 inline constexpr const char* COVER_FILE_NAME = "cover.bmp";
 
+// The shared workspace a catalogue Play imports into when the game is not on the
+// card (§4.2, §6.3). It holds one game at a time and is never a library item, so
+// it is not a game name: directory() and indexNameFromPath() both refuse it, and
+// the library walk skips the directory rather than listing or descending into it.
+inline constexpr const char* TEMP_DIR_NAME = "___temp";
+
+// The root and the name rule are declared once, in QuestBookCover.h, because the
+// cover tier predates the game tree; this module owns every path below the root
+// and builds all of them from that one declaration.
+//
 // "/storygames/<index_name>", or empty when `indexName` is not a safe path
 // segment. An unsafe name cannot be a real game (§2.1: index_name is the
 // download path segment), so an empty path means "no game", never "unknown".
-//
-// The root and the name rule are still declared in QuestBookCover.h, because the
-// cover tier predates the game tree; this module is now the tree's main consumer
-// and owns every leaf below it. Moving the two constants here is the next change
-// that adds a third consumer (Play's shared workspace, §6.3) — until then the
-// path equality is pinned by test/storygame_format, which is a weaker guarantee
-// than a single owner.
 inline std::string directory(const std::string& indexName) {
-  if (!questbook_cover::isSafeIndexName(indexName)) return {};
+  if (!questbook_cover::isSafeIndexName(indexName) || indexName == TEMP_DIR_NAME) return {};
   std::string path = questbook_cover::GAMES_DIR;
   path += '/';
   path += indexName;
   return path;
 }
 
+// `dir` + "/" + leaf, for a directory the caller already holds: the game's own or
+// the workspace. Empty for an empty directory. This is the one place the leaf join
+// lives, so every consumer that has a directory rather than a name builds the same
+// path (§4.2).
+inline std::string pathIn(const std::string& dir, const char* leaf) {
+  if (dir.empty()) return {};
+  std::string path = dir;
+  path += '/';
+  path += leaf;
+  return path;
+}
+
 // directory() + "/" + leaf; empty when the name is unsafe.
 inline std::string path(const std::string& indexName, const char* leaf) {
-  std::string dir = directory(indexName);
-  if (dir.empty()) return {};
-  dir += '/';
-  dir += leaf;
-  return dir;
+  return pathIn(directory(indexName), leaf);
+}
+
+// "/storygames/___temp": the one workspace, with no <index_name> below it.
+inline std::string tempDirectory() {
+  std::string path = questbook_cover::GAMES_DIR;
+  path += '/';
+  path += TEMP_DIR_NAME;
+  return path;
+}
+
+// tempDirectory() + "/" + leaf.
+inline std::string tempPath(const char* leaf) { return pathIn(tempDirectory(), leaf); }
+
+// True when `dir` is the workspace itself. Callers that must not treat it as a
+// game directory — the reader dispatch, the delete path — ask this first.
+inline bool isTempWorkspace(const std::string& dir) { return dir == tempDirectory(); }
+
+// isTempWorkspace() for a walk that already holds the parent directory and the
+// leaf name: no path is built, so the question costs no allocation. The workspace
+// lives directly under the games root and nowhere else, so a user's own "___temp"
+// folder deeper in the tree is an ordinary folder.
+inline bool isTempWorkspaceEntry(const std::string& parentDir, const std::string& name) {
+  return name == TEMP_DIR_NAME && parentDir == questbook_cover::GAMES_DIR;
 }
 
 // The inverse of directory(): the game's index_name for "/storygames/<name>",
 // or empty when `gameDir` is not a game directory. This is how the library index
 // and the reader dispatch recognise a game without testing its files — the
 // library stores the directory itself as one item (§4.9), so every path that
-// reaches them for a game has exactly this shape.
+// reaches them for a game has exactly this shape. The workspace has the same
+// shape but no game name, which is why it is refused here.
 inline std::string indexNameFromPath(const std::string& gameDir) {
   const std::string prefix = std::string(questbook_cover::GAMES_DIR) + '/';
   if (gameDir.size() <= prefix.size() || gameDir.compare(0, prefix.size(), prefix) != 0) return {};
@@ -77,6 +116,7 @@ inline std::string indexNameFromPath(const std::string& gameDir) {
   // A nested path ("/storygames/a/b") is not a game, and neither is an unsafe
   // name: both would address something other than the game's own directory.
   if (name.find('/') != std::string::npos) return {};
+  if (name == TEMP_DIR_NAME) return {};
   return questbook_cover::isSafeIndexName(name) ? name : std::string();
 }
 

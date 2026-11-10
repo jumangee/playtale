@@ -202,7 +202,8 @@ void LibraryListActivity::refreshOverlap() {
 
 void LibraryListActivity::openSelectedBook() {
   std::string path;
-  if (selectedEntry() < pinnedCount()) {
+  const bool storeRow = selectedEntry() < pinnedCount();
+  if (storeRow) {
     const auto& books = RECENT_BOOKS.getBooks();
     if (selectedEntry() >= static_cast<int>(books.size())) return;
     path = books[static_cast<size_t>(selectedEntry())].path;
@@ -217,7 +218,11 @@ void LibraryListActivity::openSelectedBook() {
       return;
     }
   }
-  openBookByPath(path);
+  if (storeRow) {
+    openRecentByPath(path);
+  } else {
+    openBookByPath(path);
+  }
 }
 
 // Shared by row activation and the options menu: the reader screen this opens
@@ -228,6 +233,15 @@ void LibraryListActivity::openBookByPath(const std::string& path) {
   app.clearTapFlash();
   index.close();
   onSelectBook(path);
+}
+
+// A recent-books row is the "continue this" surface, so a storygame there starts
+// playing; a row from the library index keeps going to the game page, where the
+// game is managed. Same card discipline as openBookByPath().
+void LibraryListActivity::openRecentByPath(const std::string& path) {
+  app.clearTapFlash();
+  index.close();
+  activityManager.goToRecent(path);
 }
 
 void LibraryListActivity::activateIndex(const int index) {
@@ -290,7 +304,11 @@ void LibraryListActivity::showRecentBookOptions(const int entry) {
                      swallowHeldReleases();
                      switch (choice) {
                        case 0:
-                         openBookByPath(path);
+                         if (isStoreRow) {
+                           openRecentByPath(path);
+                         } else {
+                           openBookByPath(path);
+                         }
                          break;
                        case 1:
                          if (isStoreRow) {
@@ -423,9 +441,16 @@ void LibraryListActivity::promptDeleteBookByPath(const std::string& path, const 
         // A storygame's row stands for its whole directory, so the row's removal
         // removes the game. The complete-game check matters: a book file inside
         // /storygames/ must still go through removeBookFile(), which also clears its
-        // cache and progress.
-        const bool removed = questbook_game::isGameAtPath(path) ? questbook_game::removeGameAtPath(path)
-                                                               : removeBookFile(path);
+        // cache and progress. Play's workspace is neither a game directory nor a
+        // file: its one temporary game is the whole tree (§6.3).
+        bool removed;
+        if (questbook_game::isTempWorkspace(path)) {
+          removed = questbook_game::removeTempWorkspace();
+        } else if (questbook_game::isGameAtPath(path)) {
+          removed = questbook_game::removeGameAtPath(path);
+        } else {
+          removed = removeBookFile(path);
+        }
         if (!removed) LOG_ERR("LIB", "cannot delete %s", path.c_str());
         if (RECENT_BOOKS.removeByPath(path)) RECENT_BOOKS.saveToFile();
         GUI.drawPopup(renderer, tr(STR_LIBRARY_REBUILDING));

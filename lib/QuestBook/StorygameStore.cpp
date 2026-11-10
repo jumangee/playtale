@@ -38,6 +38,16 @@ bool removeGame(const std::string& indexName) {
   return true;
 }
 
+bool removeTempWorkspace() {
+  const std::string dir = tempDirectory();
+  if (!Storage.exists(dir.c_str())) return true;
+  if (!Storage.removeDir(dir.c_str())) {
+    LOG_ERR("QBG", "cannot remove the play workspace %s", dir.c_str());
+    return false;
+  }
+  return true;
+}
+
 bool removeGameAtPath(const std::string& gameDir) {
   // Only the game's own directory is ever removed here: a path from the library
   // index that is not one is refused rather than handed to removeDir().
@@ -46,12 +56,21 @@ bool removeGameAtPath(const std::string& gameDir) {
   return removeGame(indexName);
 }
 
-bool copyCover(const std::string& indexName, const std::string& sourcePath) {
-  const std::string destination = path(indexName, COVER_FILE_NAME);
-  if (destination.empty() || sourcePath.empty()) return false;
-  // The page resolves the stored copy first, so this is the ordinary case when a
-  // game is downloaded twice; there is nothing to copy onto itself.
-  if (sourcePath == destination) return true;
+bool copyCoverTo(const std::string& gameDir, const std::string& sourcePath) {
+  if (gameDir.empty() || sourcePath.empty()) return false;
+  // Only a game directory or Play's workspace may receive the file. The destination
+  // is built from a caller-supplied path, and a cover must not be written anywhere
+  // else on the card.
+  if (!isTempWorkspace(gameDir) && indexNameFromPath(gameDir).empty()) {
+    LOG_ERR("QBG", "%s is not a game directory", gameDir.c_str());
+    return false;
+  }
+  const std::string destination = pathIn(gameDir, COVER_FILE_NAME);
+  // A game that already has its cover keeps it, even when the catalogue later
+  // re-uploads the art: the file is the game's own, and rewriting it on every Play
+  // would cost a write for a change nobody asked for. A fresh import clears the
+  // tree first, so a re-download does replace the art.
+  if (sourcePath == destination || Storage.exists(destination.c_str())) return true;
 
   HalFile source;
   if (!Storage.openFileForRead("QBG", sourcePath, source)) return false;

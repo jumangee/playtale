@@ -122,11 +122,21 @@ bool Importer::reject(const Status reason) {
   return false;
 }
 
-bool Importer::begin(const std::string& indexName, const Meta& catalogue) {
+bool Importer::beginAt(const std::string& gameDir, const std::string& indexName, const Meta& catalogue) {
   discard();
-  const std::string gameDir = directory(indexName);
-  if (gameDir.empty()) {
+  // The name is validated even when the caller supplied the directory itself:
+  // it is what the served <meta> must agree with, and what the game is called
+  // afterwards.
+  if (gameDir.empty() || !questbook_cover::isSafeIndexName(indexName)) {
     LOG_ERR("QBG", "refusing an unsafe index_name: %s", indexName.c_str());
+    return false;
+  }
+  // The import clears its target before writing, so the two directories the tree
+  // is allowed to live in are checked here rather than trusted from the caller:
+  // the game's own directory, or Play's shared workspace (§6.3). Anything else is
+  // refused before the removeDir() below can touch it.
+  if (gameDir != directory(indexName) && gameDir != tempDirectory()) {
+    LOG_ERR("QBG", "refusing to import %s into %s", indexName.c_str(), gameDir.c_str());
     return false;
   }
   dir = gameDir;
@@ -135,7 +145,9 @@ bool Importer::begin(const std::string& indexName, const Meta& catalogue) {
   meta.indexName = indexName;
 
   // A Download of a game that is already present replaces it (§6.3), and an
-  // interrupted earlier attempt must not be mixed into this one.
+  // interrupted earlier attempt must not be mixed into this one. For the shared
+  // workspace this is also its cleanup rule: the previous temporary game goes
+  // away when the next Play imports over it.
   if (Storage.exists(dir.c_str()) && !Storage.removeDir(dir.c_str())) {
     LOG_ERR("QBG", "cannot clear %s", dir.c_str());
     discard();
@@ -146,9 +158,9 @@ bool Importer::begin(const std::string& indexName, const Meta& catalogue) {
     discard();
     return false;
   }
-  if (!Storage.openFileForWrite("QBG", path(indexName, HDR_FILE_NAME), headerFile) ||
-      !Storage.openFileForWrite("QBG", path(indexName, IDX_FILE_NAME), indexFile) ||
-      !Storage.openFileForWrite("QBG", path(indexName, DAT_FILE_NAME), dataFile)) {
+  if (!Storage.openFileForWrite("QBG", pathIn(dir, HDR_FILE_NAME), headerFile) ||
+      !Storage.openFileForWrite("QBG", pathIn(dir, IDX_FILE_NAME), indexFile) ||
+      !Storage.openFileForWrite("QBG", pathIn(dir, DAT_FILE_NAME), dataFile)) {
     reject(Status::FileError);
     discard();
     return false;
@@ -837,7 +849,7 @@ bool Importer::buildHeader() {
 }
 
 bool Importer::writeMeta() {
-  const std::string metaPath = path(meta.indexName, META_FILE_NAME);
+  const std::string metaPath = pathIn(dir, META_FILE_NAME);
   if (metaPath.empty()) {
     LOG_ERR("QBG", "cannot build a meta path for %s", meta.indexName.c_str());
     return false;

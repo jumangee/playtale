@@ -2,6 +2,7 @@
 
 #include <GfxRenderer.h>
 #include <HalMemory.h>
+#include <HalStorage.h>
 #include <I18n.h>
 #include <LibraryBuilder.h>
 #include <Logging.h>
@@ -16,6 +17,7 @@
 
 #include "MappedInputManager.h"
 #include "QuestBookCover.h"
+#include "RecentBooksStore.h"
 #include "StorygameStore.h"
 #include "activities/network/WifiSelectionActivity.h"
 #include "activities/reader/StorygameReaderActivity.h"
@@ -159,15 +161,16 @@ fui::BitmapRef icon32(const IconImage& bits) {
 
 StorygameDetailsActivity::StorygameDetailsActivity(GfxRenderer& renderer, MappedInputManager& mappedInput,
                                                    std::string headerTitle, QuestBookListParser::Row game,
-                                                   const bool fromLibrary)
-    : Activity(fromLibrary ? "StorygameDetailsLibrary" : "StorygameDetails", renderer, mappedInput),
+                                                   const Origin origin)
+    : Activity(origin == Origin::Library ? "StorygameDetailsLibrary" : "StorygameDetails", renderer, mappedInput),
       UiAppHost(renderer),
       headerTitle(std::move(headerTitle)),
       game(std::move(game)) {}
 
 std::unique_ptr<StorygameDetailsActivity> StorygameDetailsActivity::forLibrary(GfxRenderer& renderer,
                                                                                MappedInputManager& mappedInput,
-                                                                               const std::string& gameDir) {
+                                                                               const std::string& gameDir,
+                                                                               const Origin origin) {
   const std::string indexName = questbook_game::indexNameFromPath(gameDir);
   if (indexName.empty()) return nullptr;
   // A game that is no longer on the card still opens: the page then offers Add to
@@ -189,8 +192,7 @@ std::unique_ptr<StorygameDetailsActivity> StorygameDetailsActivity::forLibrary(G
   if (!haveMeta) LOG_ERR("QBOOK", "game %s has no readable meta.json", indexName.c_str());
   // The header names the section the page was opened from, as the catalogue does:
   // the game's own title is already the hero line right below it.
-  return makeUniqueNoThrow<StorygameDetailsActivity>(renderer, mappedInput, tr(STR_LIBRARY), std::move(row),
-                                                     /*fromLibrary=*/true);
+  return makeUniqueNoThrow<StorygameDetailsActivity>(renderer, mappedInput, tr(STR_LIBRARY), std::move(row), origin);
 }
 
 void StorygameDetailsActivity::onEnter() {
@@ -423,9 +425,6 @@ void StorygameDetailsActivity::onLibraryEvent(const fui::ActionEvent&, void* use
   if (self->downloaded) {
     self->promptRemoveFromLibrary();
   } else {
-    // The manual Add action never carries a play-after-download intent, even if
-    // a previous Play-initiated download failed somewhere along the way.
-    self->launchAfterDownload = false;
     self->addToLibrary();
   }
 }
@@ -433,17 +432,39 @@ void StorygameDetailsActivity::onLibraryEvent(const fui::ActionEvent&, void* use
 void StorygameDetailsActivity::play() {
   if (downloading) return;
   if (downloaded) {
-    openReader();
+    const std::string gameDir = questbook_game::directory(game.indexName);
+    // A game downloaded before its cover arrived can get one now.
+    storeCover(gameDir);
+    openReader(gameDir);
     return;
   }
-  // §6.3: playing a game that is not on the card downloads it first; the
-  // transfer is the Add action's own, after which the reader opens.
-  launchAfterDownload = true;
-  addToLibrary();
+  // The workspace already holds this game — the reader is open again after a
+  // return to this page — so there is nothing to transfer: the import would only
+  // clear and rewrite the same tree. The page's cover may have arrived after that
+  // import, so it is filled in before the reader draws the game's recent card.
+  if (questbook_game::tempWorkspaceHolds(game.indexName)) {
+    storeCover(questbook_game::tempDirectory());
+    openReader(questbook_game::tempDirectory());
+    return;
+  }
+  // A complete workspace that is not this game takes the same path, and so does
+  // one whose meta.json could not be read or parsed. Replacing it is the fail-safe
+  // direction: opening the reader on it would risk showing another game, while the
+  // import can only cost time. The log names both cases, because they are not the
+  // same fault.
+  if (questbook_game::isDownloadedAt(questbook_game::tempDirectory())) {
+    LOG_INF("QBOOK", "replacing the play workspace (another game or unreadable meta) with %s",
+            game.indexName.c_str());
+  }
+  // §6.3: playing a game that is not on the card imports it into Play's shared
+  // workspace and opens the reader from there. The workspace is not a library
+  // item, so a catalogue Play leaves the library as it was; the game's own page
+  // keeps offering Add to Library.
+  startImport(questbook_game::tempDirectory(), /*openWhenDone=*/true);
 }
 
-void StorygameDetailsActivity::openReader() {
-  auto reader = makeUniqueNoThrow<StorygameReaderActivity>(renderer, mappedInput, game.indexName);
+void StorygameDetailsActivity::openReader(const std::string& gameDir) {
+  auto reader = StorygameReaderActivity::create(renderer, mappedInput, gameDir);
   if (!reader) {
     LOG_ERR("QBOOK", "OOM: storygame reader");
     RenderLock lock;
@@ -474,6 +495,20 @@ void StorygameDetailsActivity::addToLibrary() {
   // The action is the page's own; a game that is already there is removed
   // instead, and the download that makes it present is this one.
   if (downloading || downloaded) return;
+  startImport(questbook_game::directory(game.indexName), /*openWhenDone=*/false);
+}
+
+void StorygameDetailsActivity::startImport(const std::string& gameDir, const bool openWhenDone) {
+  if (downloading) return;
+  if (gameDir.empty()) {
+    // The path layer refused the game's name, so there is nowhere to import to.
+    // The page reports it like any other failed import instead of doing nothing.
+    LOG_ERR("QBOOK", "no destination for %s", game.indexName.c_str());
+    RenderLock lock;
+    errorText = tr(STR_QUESTBOOK_IMPORT_FAILED);
+    requestUpdate();
+    return;
+  }
   if (!sessionUp()) {
     // The catalogue connected before it listed, so an idle page is the case
     // this covers: reopen the picker and continue when the radio is up.
@@ -485,9 +520,9 @@ void StorygameDetailsActivity::addToLibrary() {
       requestUpdate();
       return;
     }
-    startActivityForResult(std::move(wifi), [this](const ActivityResult& result) {
+    startActivityForResult(std::move(wifi), [this, gameDir, openWhenDone](const ActivityResult& result) {
       if (result.isCancelled) return;
-      addToLibrary();
+      startImport(gameDir, openWhenDone);
     });
     return;
   }
@@ -510,40 +545,92 @@ void StorygameDetailsActivity::addToLibrary() {
   // while this task is blocked inside the transfer.
   requestUpdate(true);
 
-  const bool imported = transferGame();
+  // An import is about to replace the workspace. Its recent card names the game
+  // that was there, and that game is gone once the tree is rewritten, so the card
+  // is dropped before the first write rather than after: a card that outlives its
+  // game would open the wrong one. Only reached once the radio and heap gates have
+  // passed, so a Play refused before the transfer leaves the previous card alone.
+  if (gameDir == questbook_game::tempDirectory()) {
+    RECENT_BOOKS.removeByPath(questbook_game::tempDirectory());
+  }
+
+  const bool imported = transferGame(gameDir);
+  // Only the permanent directory makes the game a library item; the workspace is
+  // a scratch copy and leaves "downloaded" alone.
+  const bool permanent = gameDir == questbook_game::directory(game.indexName);
   {
     RenderLock lock;
     downloading = false;
-    if (imported) {
+    if (imported && permanent) {
       downloaded = true;
     }
   }
   if (imported) {
-    // The cover the page already resolved becomes the game's own copy, which is
-    // the page's first choice next time and works with no cache (§6.3). A game
-    // without a cover simply keeps its icon offline.
-    if (!coverPath.empty() && !questbook_game::copyCover(game.indexName, coverPath)) {
-      LOG_ERR("QBOOK", "game %s imported without its cover copy", game.indexName.c_str());
-    }
+    // The page's cover becomes the game's own copy in either location (§6.3). A
+    // game without a cover simply keeps its icon.
+    storeCover(gameDir);
+  }
+  if (imported && permanent) {
     // The library lists a downloaded game as one row; the next Library visit
     // rebuilds its index rather than waiting for some other reason to (§4.9).
     library::markLibraryIndexDirty();
+    retireTempCopy();
   }
-  // The action's label and icon changed; the interaction table is rebuilt from
-  // the next render, so close routing the way the remove path does.
+  // The interaction table is rebuilt from the next render, and a permanent import
+  // changes the second action's label and icon. Closing routing on both exits keeps
+  // a queued tap from landing on the table that has just been replaced.
   closeRouting();
-  const bool launchNow = launchAfterDownload;
-  launchAfterDownload = false;
-  if (launchNow && imported) {
-    openReader();
+  if (openWhenDone && imported) {
+    openReader(gameDir);
     return;
   }
   requestUpdate(true);
 }
 
-bool StorygameDetailsActivity::transferGame() {
+// Gives the game its own copy of the page's cover. The destination is the directory
+// the game was imported into: a permanent copy is what the game page resolves first
+// next time, and the workspace copy is what the recent-books card reads, since the
+// page itself only ever looks in `/storygames/<index_name>/` (§6.3). copyCoverTo()
+// leaves an existing copy alone, so this is cheap on every launch. A game without a
+// resolved cover, or a card that refused the write, is not an error: it keeps its
+// icon.
+void StorygameDetailsActivity::storeCover(const std::string& gameDir) {
+  if (gameDir.empty() || coverPath.empty()) return;
+  if (!questbook_game::copyCoverTo(gameDir, coverPath)) {
+    LOG_ERR("QBOOK", "game %s imported without its cover copy", game.indexName.c_str());
+  }
+}
+
+// A game played from the workspace leaves a copy of its files under
+// /storygames/___temp/ and a recent card pointing there. Once the same game is a
+// library item the copy is wrong — the same game twice on the card (§6.3) — but the
+// card itself is right: the game was launched, so it stays in recents, now under the
+// book rules. A workspace holding a different game is left alone: that game is still
+// the one being played from the catalogue.
+void StorygameDetailsActivity::retireTempCopy() {
+  if (!questbook_game::tempWorkspaceHolds(game.indexName)) return;
+  // Unreachable through startImport(): it refuses an empty destination before any
+  // transfer, so a permanent import only happens with a real directory. Kept
+  // because this function writes a recents path, and an empty one would be a card
+  // for nothing.
+  const std::string gameDir = questbook_game::directory(game.indexName);
+  if (gameDir.empty()) return;
+  RECENT_BOOKS.removeByPath(questbook_game::tempDirectory());
+
+  std::string cardCover = questbook_game::pathIn(gameDir, questbook_game::COVER_FILE_NAME);
+  // storeCover() runs before this call, so the game's own cover is the card image
+  // when the import had one; otherwise the card is the coverless one.
+  if (!Storage.exists(cardCover.c_str())) cardCover.clear();
+  RECENT_BOOKS.addBook(gameDir, game.title.empty() ? game.indexName : game.title, game.author, cardCover);
+
+  if (!questbook_game::removeTempWorkspace()) {
+    LOG_ERR("QBOOK", "cannot clear the play workspace after adding %s", game.indexName.c_str());
+  }
+}
+
+bool StorygameDetailsActivity::transferGame(const std::string& gameDir) {
   const std::string url = gameEndpointUrl(game.indexName);
-  if (!importer.begin(game.indexName, catalogueMeta())) {
+  if (!importer.beginAt(gameDir, game.indexName, catalogueMeta())) {
     LOG_ERR("QBOOK", "cannot start the import of %s", game.indexName.c_str());
     RenderLock lock;
     errorText = tr(STR_QUESTBOOK_IMPORT_FAILED);
@@ -644,7 +731,7 @@ void StorygameDetailsActivity::removeFromLibrary() {
     downloaded = false;
     errorText.clear();
     // The stored cover lived in the directory that just went away. Keeping the
-    // path would make a re-add on this same visit a no-op: copyCover() treats
+    // path would make a re-add on this same visit a no-op: copyCoverTo() treats
     // source == destination as "nothing to do", so the new game would silently
     // lose its cover.
     coverPath.clear();

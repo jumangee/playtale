@@ -9,9 +9,12 @@
 #include <Memory.h>
 
 #include <cstring>
+#include <utility>
 
 #include "CrossPointSettings.h"
 #include "MappedInputManager.h"
+#include "RecentBooksStore.h"
+#include "StorygameStore.h"
 #include "components/UiAppHelpers.h"
 #include "components/UITheme.h"
 
@@ -71,15 +74,15 @@ bool contains(const Rect& rect, const int x, const int y) {
 }  // namespace
 
 StorygameReaderActivity::StorygameReaderActivity(GfxRenderer& renderer, MappedInputManager& mappedInput,
-                                                 std::string indexName)
-    : Activity("StorygameReader", renderer, mappedInput), indexName(std::move(indexName)) {
+                                                 std::string gameDir)
+    : Activity("StorygameReader", renderer, mappedInput), gameDir(std::move(gameDir)) {
   source = game.paragraphSource();
 }
 
 std::unique_ptr<StorygameReaderActivity> StorygameReaderActivity::create(GfxRenderer& renderer,
                                                                          MappedInputManager& mappedInput,
-                                                                         const std::string& indexName) {
-  auto activity = makeUniqueNoThrow<StorygameReaderActivity>(renderer, mappedInput, indexName);
+                                                                         const std::string& gameDir) {
+  auto activity = makeUniqueNoThrow<StorygameReaderActivity>(renderer, mappedInput, gameDir);
   if (!activity) LOG_ERR("QBG", "no room for the storygame reader");
   return activity;
 }
@@ -177,9 +180,8 @@ void StorygameReaderActivity::onEnter() {
 }
 
 bool StorygameReaderActivity::loadGame() {
-  const std::string dir = qg::directory(indexName);
-  if (dir.empty()) return false;
-  if (!game.load(dir)) return false;
+  if (gameDir.empty()) return false;
+  if (!game.load(gameDir)) return false;
   source = game.paragraphSource();
   if (!game.engine().startGame(source)) return false;
   // Read once before the first layout, so the first frame already knows whether
@@ -192,6 +194,45 @@ bool StorygameReaderActivity::loadGame() {
   }
   rebuildParagraphLayout();
   return !game.engine().failed();
+}
+
+// Deferred to the first painted frame for the reason ReaderActivity defers its own
+// entry: the store's strings and its JSON write must not land between the
+// reader's allocations. The path is the directory the game was opened from, so a
+// game played from Play's shared workspace takes the workspace's single card
+// instead of adding a library item that does not exist (ARCHITECTURE.md §6.3).
+void StorygameReaderActivity::rememberRecentOnceRendered() {
+  if (recentRemembered || failed || !painted.load(std::memory_order_acquire)) return;
+  recentRemembered = true;
+
+  std::string metaPath = qg::pathIn(gameDir, qg::META_FILE_NAME);
+  questbook_game::Meta meta;
+  // A game whose meta.json is unreadable still plays, and its card then carries the
+  // fallback the library row uses: the folder name, which for a game is its own
+  // name. The workspace's folder name is not one — "___temp" is internal — so a
+  // temporary game without readable metadata takes the library's unknown-title
+  // string rather than showing that name to the reader.
+  questbook_game::readMetaFile(metaPath, meta);
+  std::string title = std::move(meta.title);
+  if (title.empty()) title = std::move(meta.indexName);
+  if (title.empty()) {
+    if (qg::isTempWorkspace(gameDir)) {
+      title = tr(STR_LIBRARY_UNKNOWN_TITLE);
+    } else {
+      const size_t slash = gameDir.rfind('/');
+      title = slash == std::string::npos ? gameDir : gameDir.substr(slash + 1);
+    }
+  }
+  // The cover sits beside the game in either location: Add to Library writes it into
+  // a permanent directory and Play writes it into the workspace before this reader
+  // opens (§6.3), so a temporary game's card carries it too. It is the game page's
+  // 128x192 slot art, and the home card draws a cover path 1:1 rather than scaling
+  // it, so the game's cover shows smaller than a book's thumb, which is generated at
+  // the card's own height. Card-sized game art would need a scaler this tree does not
+  // have (ARCHITECTURE.md §4.9 is the canonical note).
+  std::string coverPath = qg::pathIn(gameDir, qg::COVER_FILE_NAME);
+  if (!Storage.exists(coverPath.c_str())) coverPath.clear();
+  RECENT_BOOKS.addBook(gameDir, title, meta.author, coverPath);
 }
 
 // --- line writer -------------------------------------------------------------
@@ -779,6 +820,7 @@ bool StorygameReaderActivity::handleCharsheetInput() {
 }
 
 void StorygameReaderActivity::loop() {
+  rememberRecentOnceRendered();
   if (failed) {
     if (mappedInput.wasReleased(MappedInputManager::Button::Back)) finish();
     return;
@@ -1035,4 +1077,6 @@ void StorygameReaderActivity::render(RenderLock&&) {
                                                        tr(STR_DIR_DOWN));
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
   renderer.displayBuffer();
+  // The panel now shows the game: loop() may write its recent-books entry.
+  painted.store(true, std::memory_order_release);
 }

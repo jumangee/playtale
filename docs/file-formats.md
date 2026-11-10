@@ -662,8 +662,10 @@ and the record's name is the game's `index_name`
 own `meta.json` — when metadata reading is enabled, as it is for books; otherwise
 the row shows the folder name. The files inside the game directory are never
 indexed: they are not books, and a game missing `meta.json` is not listed at all.
-Nothing in the file layout below is game-specific — a game is an ordinary record
-whose `readPath()` reconstructs a directory instead of a file.
+Play's `/storygames/___temp/` workspace is skipped as a whole, so a game being
+played from the catalogue never appears as a row. Nothing in the file layout
+below is game-specific — a game is an ordinary record whose `readPath()`
+reconstructs a directory instead of a file.
 
 Format version 3. An index written by another version fails validation on open
 and is rebuilt; that is the entire migration mechanism. Version 3 is the bump that
@@ -804,13 +806,21 @@ directory (§4.9). The layout and the record shapes are declared once, in
   game.idx    16-byte record per paragraph, addressed by ordinal
   game.dat    paragraph payloads back to back, one `<p>` element each
   meta.json   catalogue fields for offline display
-  cover.bmp   this game's cover, copied after Add to Library (optional)
+  cover.bmp   this game's cover, copied after Add to Library or Play (optional)
 ```
+
+The same content files are also written into the one shared Play workspace
+`/storygames/___temp/` when **Play** imports a game that is not on the card
+(§6.3), together with the same `cover.bmp` copy. That directory has no
+`<index_name>` below it, is not a game name, and is never indexed: it holds the
+single game currently being played from the catalogue.
 
 The library root is the SD root today, so the tree is the literal path above.
 `<index_name>` is the service's own path segment and is refused unless it is a
 safe segment (letters, digits, `_`, `-`, single dots; at most 32 bytes), the
-same rule the cover cache uses.
+same rule the cover cache uses. `___temp` is reserved as a game name: it passes
+that character rule, so `directory()` and `indexNameFromPath()` refuse it
+explicitly and no game can be addressed by it.
 
 **`meta.json` is the commit marker.** The import creates the directory and the
 three content files before any byte of the document arrives, writes `meta.json`

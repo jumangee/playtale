@@ -573,6 +573,12 @@ void walk(WalkState& st, const std::string& path, const int depth) {
     const std::string name(st.nameBuf);
 
     if (isDir) {
+      // Play's shared workspace is a scratch slot for the game being played, not
+      // a library item: it is neither listed as a game nor descended into, so
+      // its files never surface as rows (docs/storygames/ARCHITECTURE.md §6.3).
+      // The check takes the name and the parent, so it builds no path: this walk
+      // is the one place that must not allocate per entry.
+      if (questbook_game::isTempWorkspaceEntry(path, name)) continue;
       const std::string gameDir = joinLibraryPath(path, name);
       // A downloaded game is one library item, not a folder of files: it is listed
       // under its own name and never descended into (§4.9). isGameAtPath() is the

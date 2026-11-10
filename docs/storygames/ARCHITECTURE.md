@@ -466,14 +466,16 @@ Two properties of the source format make this cheap, and both were verified rath
   meta.json     catalogue fields needed for offline display (title, author, tags, description)
   state.bin     player state: vars, current paragraph, steps, lastarticle
   cover.bmp     the game page's cover: a 1-bit BMP of at most 128x192 (~3 KB when full size).
-                Read by the game page; written by its Add to Library action after a successful import (§6.3)
+                Read by the game page and by the recent-books card; written by Add to Library or by
+                Play, whenever the game has none there yet (§6.3)
 ```
 
-The tree above is the **permanent** game layout. Catalogue actions also use the same game-content files
+The tree above is the **permanent** game layout. Catalogue **Play** also uses the same game-content files
 in one shared temporary workspace, `/<library>/storygames/___temp/` (without an `<index_name>`
-subdirectory); `cover.bmp` is not one of them, because only Download writes it. That workspace is
-opened by Play but is never registered as a library item. Its contents belong only to the currently
-played temporary game; cleanup/replacement timing is specified in §6.3.
+subdirectory). That workspace is written by Play when the game is not downloaded and is never registered
+as a library item. Its contents belong only to the currently played temporary game; cleanup/replacement
+timing is specified in §6.3. The workspace carries `cover.bmp` too, so a game played from the catalogue
+shows its cover in recents exactly as a downloaded one does.
 
 `/<library>` is the library root the firmware indexes today, which is the SD card's root — every
 `/<library>/…` path in this document resolves relative to it.
@@ -536,8 +538,8 @@ Three requirements on this document:
   `fullname`, `author_name`, `tags`, `desc`, and the identifiers `game_id`/`index_name`. It does not
   need to preserve `cover`, `likes`, `dislikes` or `stars`; those fields are not required by the
   on-device game experience. The cover is not carried by the import document either: the game page
-  fetches it from its own endpoint into its cover cache, and a downloaded game's own copy beside the
-  game is written by Download (§6.3).
+  fetches it from its own endpoint into its cover cache, and the copy beside the game is written by
+  whichever action imported it — Add to Library or Play (§6.3).
 
 The original `.../data/` XML endpoint stays as it is. The converted endpoint is additive, so a
 converter regression cannot break existing clients.
@@ -855,15 +857,58 @@ writes is refused. A corrupt file falls back to the folder name and never hides 
 that is not `.xtc` to the EPUB reader, so `ActivityManager::goToReader()` dispatches a game directory
 to `StorygameDetailsActivity::forLibrary()`, which builds the page from `meta.json` [C:
 `src/activities/ActivityManager.cpp`]. That page is also where the game is downloaded or removed, so
-the library row and the catalogue row reach the same screen. The page carries a name of its own in
-that case (`StorygameDetailsLibrary`), because `ActivityManager::goHome()` dispatches on the activity
-name and Home must return to the Library rather than to the КвестБук row.
+the library row and the catalogue row reach the same screen. The page carries a name of its own when a
+Library row opens it (`StorygameDetailsLibrary`), because `ActivityManager::goHome()` dispatches on the
+activity name and Home must return to the Library rather than to the КвестБук row. A page opened from a
+recent card whose game is no longer playable takes that library name too, so Home returns to the Library
+tab: it is the management surface for a game that has to be downloaded again.
 
-**What is still planned:** games never enter the recent-books store, because only the reader activities
-add entries there. They are therefore absent from the pinned "recently opened" rows at the top of the
-Recent tab and from the home screen's continue-reading slot, even though the Recent tab lists them with
-the rest of the index. The Library has no separate games grouping — a game sits in the general lists like
-any book, and its row carries the storygame glyph instead of the generic file icon.
+**Recent books.** Launching a game records it in the recent-books store — the same store the reader
+activities fill — so the game appears in the home screen's continue-reading slot and among the pinned
+"recently opened" rows of the Recent tab. The entry's path is the directory the reader opened, which is
+what keeps the two cases apart:
+
+- A **downloaded** game is recorded under `/storygames/<index_name>/` and follows the book rules: it goes
+  to the front of the list, the list keeps at most `RecentBooksStore::MAX_RECENT_BOOKS` entries, and an
+  entry whose path disappears is hidden on Home and pruned at the next add or Library visit. Its home card
+  carries the game's own `cover.bmp`. That file is the game page's 128×192 slot art, while a book's card
+  carries a thumb generated at the card's own height and every home theme draws a cover path 1:1 and
+  centred rather than scaling it — so a game's cover appears smaller than a book's on the same card.
+  Card-sized game art would need a BMP-to-BMP scaler at a chosen height, which `lib/QuestBook` does not
+  have: the firmware's only BMP-input scaler (`lib/BmpToBmpConverter`, called by the sleep screen) targets
+  the display and keeps a 1-bit source 1-bit, while the book-thumb path (`Epub::generateThumbBmp`) scales
+  from JPEG/PNG/GIF sources, not from a BMP. The Recent tab's entry for the same game is a text row, so it
+  shows the title and author without an image.
+- A game played from **Play's shared workspace** is recorded under `/storygames/___temp/`, so it is one
+  card: the workspace holds one game at a time, and the next Play updates that same entry instead of
+  adding another. Its home card carries the workspace's own `cover.bmp`, which Play writes from the page's
+  resolved cover before the reader opens. When the same game is added to the library the card is repointed
+  to the game's own directory, so the temporary and permanent copies never stand side by side. A Play that
+  replaces the workspace's game drops the stale card first, so a card never names a game the workspace no
+  longer holds.
+
+**A recent card continues the game; a Library row opens its page.** Selecting either card —
+`/storygames/<index_name>/` or `/storygames/___temp/` — reaches
+`ActivityManager::goToRecent()`, which dispatches a storygame straight to the runtime reader, the way a
+recent book opens its reader. A Library row is a shelf entry, so it still goes through
+`goToReader()` and opens the game page, where the game is downloaded or removed (§4.9). The two
+surfaces answer different questions — "continue this" and "look at this" — for the same directory.
+
+In the Recent tab the pinned overlay hides the index row of a game it already pins, so there the
+downloaded game's only entry is its card, which continues the game. The game page is reached from the
+catalogue, from the Title and Author lists, and from the Recent tab while its sort is ascending, where
+no pins are drawn.
+
+A **downloaded** game's card whose directory lost its files — a `game.hdr` or `meta.json` deleted from the
+file browser, a transfer stopped half way — opens the game page instead, because that is where the game
+can be downloaded again. `goToRecent()` recognises that state with `isIncompleteGameAtPath()`, so a book
+file that happens to sit in `/storygames/` still opens as a book. Two states it cannot serve: a directory
+emptied of every file, which is indistinguishable from an ordinary folder and falls through to the book
+reader, and a stale workspace card, which has no page at all — the workspace name is not a game name, so
+it reaches the reader's own failure screen.
+
+The Library has no separate games grouping — a game sits in the general lists like any book, and its
+row carries the storygame glyph instead of the generic file icon.
 
 ### 4.10 What the device does at import
 
@@ -1059,9 +1104,9 @@ friendlier outcome [C: `lib/QuestBook/StorygameEngine.cpp` `moveTo`/`choose`].
 > The shipped catalogue offers the `new` and `editorial` lists only and shows no covers in its rows;
 > tags and search remain unbuilt. The game page shows a cover, **downloads**, **plays**, and removes:
 > its second action imports the game into `/storygames/<index_name>/` and removes that directory again
-> on request (§6.3), and Play opens the runtime reader — downloading the game with the same import
-> first when it is not on the card. A downloaded game is also one row of the Library (§4.9).
-> Progress persistence and the `___temp` play workspace are still plans (§6.3).
+> on request (§6.3), and Play opens the runtime reader — importing the game into the shared
+> `/storygames/___temp/` workspace first when it is not on the card. A downloaded game is also one row
+> of the Library (§4.9). Progress persistence is still a plan (§6.3, `ROADMAP.md`).
 
 ### 6.1 Screens
 
@@ -1135,8 +1180,10 @@ shorter than 192 rows; the page centres whatever it gets in the slot.
 Resolution order, one attempt per visit:
 
 1. `/<library>/storygames/<index_name>/cover.bmp` — the copy beside a downloaded game, written by the
-   page's Add action right after a successful import. It is read first so a downloaded game keeps its
-   cover offline and across an emptied cache.
+   page's Add action after a successful import. It is read first so the game keeps its cover offline and
+   across an emptied cache. A game played from the workspace is not on this path: Play writes its copy
+   into the workspace for the recent-books card, while the page resolves the workspace game through its
+   screen-slot cache or, with that cache empty, the service below.
 2. `/.crosspoint/qbcover/<md5(cover)>_v1_128x192.bmp` — the screen-slot cache.
 3. The endpoint above; the downloader stages the body and the file is kept only after it passes the
    cover library's check — 1 bpp, within the slot, and exactly as long as its own header and row count
@@ -1158,39 +1205,56 @@ retried on a later visit rather than showing a broken image forever.
 > **Both shipped.** The page's second action is **Add to Library** (Download described below): it
 > fetches the converted document and imports it into `/<library>/storygames/<index_name>/`, then the
 > same button becomes **Remove from Library**, which asks for confirmation and deletes that directory.
-> **Play** opens the runtime reader directly; when the game is not on the card yet, Play first runs the
-> same import and opens the reader when it succeeds, so for now a catalogue Play also leaves the game as
-> a permanent library item. The reserved `___temp` workspace below is still the plan for a later Play
-> that does not. The importer's exact behaviour (streaming, the counts check, the rejection rules) and
-> the byte layout it writes are current behaviour, documented in
+> **Play** opens the runtime reader directly; when the game is not on the card yet, Play imports it into
+> the shared workspace `/<library>/storygames/___temp/` and opens the reader from there, so a catalogue
+> Play does not create a library item. The importer's exact behaviour (streaming, the counts check, the
+> rejection rules) and the byte layout it writes are current behaviour, documented in
 > [file-formats.md](../file-formats.md).
 
 The game page exposes two distinct actions. Both fetch the converted `/playtale/` document using
-`index_name` (§2.5, §4.3), then import it into the on-device file layout (§4.2). They differ in
-whether they open the reader immediately:
+`index_name` (§2.5, §4.3), then import it into the on-device file layout (§4.2). They differ in where
+the tree goes and in whether they open the reader immediately:
 
 - **Download (Add to Library)** stores the game persistently at
   `/<library>/storygames/<index_name>/`. The game remains available for later offline play. Downloading
   a game that is already present replaces its files in that directory — in the shipped page, Add is
   offered only while the game is absent, so replacing means Remove and then Add. The game then appears
   in the Library as one row (§4.9).
-- **Play** opens the reader from the downloaded game. When the game is absent, Play performs the same
-  import and opens the reader on success, so a catalogue Play currently also leaves the permanent
-  library entry. The planned behaviour below — importing into the shared temporary workspace
-  `/<library>/storygames/___temp/` so a catalogue Play does not create a library item — is not
-  implemented yet.
+- **Play** opens the reader. When the game is absent, Play runs the same import into
+  `/<library>/storygames/___temp/` and opens the reader from that workspace on success, so a catalogue
+  Play leaves no library entry and the game page keeps offering Add to Library. When the workspace
+  already holds this same game — the reader was closed and Play is pressed again — Play opens the
+  reader from the existing copy with no transfer, so a second Play works without a radio. Both
+  destinations get the page's cover copied beside the game before the reader opens: a permanent copy is
+  what the game page resolves offline, and the workspace copy is what the recent card reads.
 
-The `___temp` directory would be a single shared workspace, not a per-game directory. A Play operation
-that uses it must therefore treat its contents as belonging only to the game currently being played and
-must not register that workspace as a library item. The reader itself reads from its opened workspace
-and never from another game's directory (the engine's `ParagraphSource` is bound to one open
-`StorygameGame`). The exact cleanup policy (for example, clearing it before the next Play operation
-and/or when leaving the reader) is an implementation detail to settle when it is built; it must not
-affect games stored in permanent `<index_name>` directories.
+The `___temp` directory is a single shared workspace, not a per-game directory: one game at a time, with
+no `<index_name>` below it. Play therefore treats its contents as belonging only to the game currently
+being played, and the workspace is never a library item — the library walk skips the directory, and
+`indexNameFromPath()` refuses its name, so no row and no game page can be built for it. The reader reads
+only the directory it was opened with and never another game's directory (the engine's
+`ParagraphSource` is bound to one open `StorygameGame`). Cleanup is the importer's own rule: it clears
+the target directory before writing, so an import replaces whatever was there, and an import that fails
+deletes the tree it started. A Play that fails after its transfer began therefore leaves the workspace
+empty rather than holding the previous game; a Play refused before that — no radio, or not enough heap
+for the session — never touches the card, so the previous copy stays. Nothing in the workspace can affect
+a game stored in a permanent `<index_name>` directory.
+
+Because the workspace holds one game, its recent-books entry is a single card at
+`/storygames/___temp/` (§4.9), carrying the workspace's own `cover.bmp`. That card starts the game, like
+any recent card does. When the same game is added to the
+library, the workspace copy is removed and the card is repointed to `/storygames/<index_name>/` — the game
+was launched, so it stays in recents, now under the book rules — and the two copies never stand side by
+side. Removing the card from recents on its own leaves the tree in place: removing a recent entry never
+deletes content, and that rule is not special here, so the copy then stays until a later Play of another
+game replaces it. **Delete** in the Recent tab is the action that removes the workspace tree with the
+card.
 
 Covers are fetched per game page, from the converted endpoint above. The cover file is at most ~3 KB
 of 1-bit BMP, so it neither competes with the retained catalogue page nor needs a decoder; an
-unavailable cover leaves the slot's icon, never delays the first frame and never fails the page.
+unavailable cover leaves the slot's icon, never delays the first frame and never fails the page. The
+copy that sits beside the game is what the recent card reads, in the workspace and in a permanent
+directory alike.
 
 ### 6.4 Resource constraint that shapes the navigation
 
@@ -1280,7 +1344,7 @@ excluded from v1. The mitigation is to implement exactly the twelve BBCode const
 | 6 | TLS posture for a first-party service: keep `setInsecure()`, add a CA bundle, or pin | Security review |
 | 7 | ~~Expression evaluator: vendor `tinyexpr` with adaptations, or write the small evaluator (§5.3)~~ **Decided and shipped:** a small handwritten recursive-descent evaluator in `lib/QuestBook/StorygameEngine`; no third-party engine is added | — |
 | 8 | Compression: `uzlib` + 32 KB ring, a server switch to raw deflate, or neither (§4.11) | Download flow, memory |
-| 9 | ~~Game file root under the library (§4.2)~~ **Decided:** permanent games use `/<library>/storygames/<index_name>/`; catalogue Play uses the shared `/<library>/storygames/___temp/` workspace (§6.3) — the `___temp` part is still to build; Play currently imports into the permanent directory | — |
+| 9 | ~~Game file root under the library (§4.2)~~ **Decided and shipped:** permanent games use `/<library>/storygames/<index_name>/`; catalogue Play imports into the shared `/<library>/storygames/___temp/` workspace and is never a library item (§6.3) | — |
 | 10 | ~~Home-screen placement for the КвестБук entry (§6.6)~~ **Decided:** the first constant entry of the home menu | — |
 | 11 | ~~Whether the storygame screen reuses the reader's paginated layout or needs its own view (§5.2)~~ **Decided and shipped:** its own activity (`StorygameReaderActivity`), a vertically swipe-scrollable paragraph+choices column, not the paginated book reader | — |
 | 12 | Should `STORYGAME_TECH.md` be translated to English and corrected to match this study? | Documentation |

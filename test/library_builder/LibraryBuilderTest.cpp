@@ -157,6 +157,32 @@ TEST_F(LibraryBuilderTest, DoesNotListAnIncompleteGame) {
   }
 }
 
+// Play's shared workspace holds the game being played from the catalogue, and it is
+// not a library item: neither the directory nor its files may become rows
+// (docs/storygames/ARCHITECTURE.md §6.3). It is skipped before the game check, so
+// a complete tree there is skipped too.
+TEST_F(LibraryBuilderTest, DoesNotListPlayWorkspace) {
+  const std::string workspace = "/storygames/___temp";
+  fake::add(workspace + "/game.hdr", "QBG1 core and tables");
+  fake::add(workspace + "/game.idx", "index records");
+  fake::add(workspace + "/game.dat", "paragraph payloads");
+  fake::add(workspace + "/meta.json", R"({"index_name":"skeptiki1","fullname":"Скептики"})");
+  initial();
+
+  LibraryIndexFile index;
+  ASSERT_TRUE(index.open(INDEX));
+  EXPECT_EQ(index.header().bookCount, 2u);  // the two books, and nothing else
+  for (uint16_t ordinal = 0; ordinal < index.header().bookCount; ordinal++) {
+    ClixRecord record{};
+    std::string path;
+    ASSERT_TRUE(index.readRecord(ordinal, record));
+    ASSERT_TRUE(index.readPath(record, path));
+    EXPECT_NE(path, workspace);
+    EXPECT_NE(path, workspace + "/game.hdr");
+    EXPECT_NE(path, workspace + "/meta.json");
+  }
+}
+
 // A file dropped into the user-visible /storygames folder is a book, not a game:
 // it must be listed under its stem and must not be treated as a game whose
 // metadata lives in a meta.json beside it. The walk knows the entry is a file.

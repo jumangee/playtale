@@ -29,10 +29,7 @@ namespace questbook_game {
 inline bool isDownloadedAt(const std::string& gameDir) {
   if (gameDir.empty()) return false;
   for (const char* leaf : {HDR_FILE_NAME, IDX_FILE_NAME, DAT_FILE_NAME, META_FILE_NAME}) {
-    std::string filePath = gameDir;
-    filePath += '/';
-    filePath += leaf;
-    if (!Storage.exists(filePath.c_str())) return false;
+    if (!Storage.exists(pathIn(gameDir, leaf).c_str())) return false;
   }
   return true;
 }
@@ -47,6 +44,19 @@ inline bool isDownloaded(const std::string& indexName) { return isDownloadedAt(d
 // game-shaped path but is a book, and must open as one.
 inline bool isGameAtPath(const std::string& path) {
   return !indexNameFromPath(path).empty() && isDownloadedAt(path);
+}
+
+// True when `path` is a game directory that is not playable any more: the shape of a
+// game's directory, with at least one of its own files still there. That is the
+// evidence a tree is a broken game rather than something else — a book file inside
+// /storygames/ has the shape but none of the files. Callers use it to reach the game
+// page (where the game can be downloaded again) instead of a reader that cannot open
+// it (§4.9). A directory emptied of every file is indistinguishable from a folder,
+// so it is not recognised here.
+inline bool isIncompleteGameAtPath(const std::string& path) {
+  if (indexNameFromPath(path).empty()) return false;
+  return Storage.exists(pathIn(path, HDR_FILE_NAME).c_str()) ||
+         Storage.exists(pathIn(path, META_FILE_NAME).c_str());
 }
 
 // Reads the game's meta.json into `out`. False when it is missing or is not the
@@ -70,13 +80,32 @@ inline bool readMetaFile(const std::string& metaPath, Meta& out) {
 // when there was nothing there.
 bool removeGame(const std::string& indexName);
 
+// Removes the shared Play workspace and the one temporary game in it. True when
+// nothing is left behind, including when the workspace was already empty. The
+// workspace is not a game name, so this is the only way to delete it (§6.3).
+bool removeTempWorkspace();
+
+// True when the shared Play workspace holds the game named `indexName`. Its own
+// meta.json records which game was imported there last, so this is how a caller
+// tells "the workspace card is this same game" from "another game is in the
+// workspace" (§6.3). False when the workspace is empty or holds a half import.
+inline bool tempWorkspaceHolds(const std::string& indexName) {
+  if (indexName.empty() || !isDownloadedAt(tempDirectory())) return false;
+  Meta meta;
+  if (!readMetaFile(tempPath(META_FILE_NAME), meta)) return false;
+  return meta.indexName == indexName;
+}
+
 // removeGame() for a path the library index hands back, which for a game is the
 // game's own directory. False when the path is not a game directory.
 bool removeGameAtPath(const std::string& gameDir);
 
-// Copies the page's resolved cover to /storygames/<index_name>/cover.bmp, which
-// the page then prefers over its screen-slot cache (§6.3). A missing or
+// Copies the page's resolved cover to `<gameDir>/cover.bmp`: the game's own
+// directory for a downloaded game, or Play's shared workspace for a temporary one.
+// A permanent copy is what the game page resolves first, so it draws the cover
+// offline; the workspace copy is what the recent-books card reads, because the page
+// only ever resolves `/storygames/<index_name>/cover.bmp` (§6.3). A missing or
 // oversized source is not an error: the game simply keeps its icon offline.
-bool copyCover(const std::string& indexName, const std::string& sourcePath);
+bool copyCoverTo(const std::string& gameDir, const std::string& sourcePath);
 
 }  // namespace questbook_game

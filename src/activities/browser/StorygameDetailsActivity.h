@@ -3,6 +3,7 @@
 #include <Bitmap.h>
 
 #include <atomic>
+#include <cstdint>
 #include <memory>
 #include <string>
 
@@ -28,32 +29,37 @@ class MappedInputManager;
 // shows the storygame icon until — or instead of — an image. See
 // lib/QuestBook/QuestBookCover.h.
 //
-// Two actions sit under the description. Play is the primary one and is not
-// implemented yet (§5, §9); the second one follows whether the game is on the
-// card, which is the only fact that decides it:
+// Two actions sit under the description. Play is the primary one; the second one
+// follows whether the game is on the card, which is the only fact that decides it:
 //
 //   not downloaded  -> "Add to Library"  downloads and imports the game (§4.10)
 //   downloaded      -> "Remove from Library"  asks first, then deletes its tree
+//
+// Play never creates a library item: a game that is not on the card is imported
+// into Play's shared workspace /storygames/___temp/ and read from there (§6.3).
 //
 // "Downloaded" is a filesystem question, answered on entry and after each
 // action, so a page reopened over a game that was removed elsewhere is right
 // without keeping state between visits.
 class StorygameDetailsActivity final : public Activity, private UiAppHost {
  public:
+  // Which surface opened this page. It decides where Home goes back to, because
+  // ActivityManager::goHome() dispatches on the activity name, so the two origins
+  // are distinct names.
+  enum class Origin : uint8_t { Catalogue, Library };
+
   // `game` is copied: this page outlives nothing the catalogue frees while it
   // is stacked, but owning the row keeps the page independent of that rule.
-  // `fromLibrary` is true when the library index opened the page instead of the
-  // catalogue, which decides where Home goes back to (ActivityManager::goHome
-  // dispatches on the activity name, so the two origins are two names).
   StorygameDetailsActivity(GfxRenderer& renderer, MappedInputManager& mappedInput, std::string headerTitle,
-                           QuestBookListParser::Row game, bool fromLibrary = false);
+                           QuestBookListParser::Row game, Origin origin = Origin::Catalogue);
 
   // The page for a game the library lists, where no catalogue row exists: the
   // title and author come from the game's own meta.json, and the rating and like
   // counts are simply absent (§4.9). Null only when the path is not a game or the
-  // page cannot be allocated.
+  // page cannot be allocated. `origin` is the surface the page is opened from.
   static std::unique_ptr<StorygameDetailsActivity> forLibrary(GfxRenderer& renderer, MappedInputManager& mappedInput,
-                                                              const std::string& gameDir);
+                                                              const std::string& gameDir,
+                                                              Origin origin = Origin::Library);
 
   void onEnter() override;
   void loop() override;
@@ -79,18 +85,33 @@ class StorygameDetailsActivity final : public Activity, private UiAppHost {
   static void onPlayEvent(const freeink::ui::ActionEvent&, void* user);
   static void onLibraryEvent(const freeink::ui::ActionEvent&, void* user);
   // Primary action. Opens the reader on the downloaded game; a game that is not
-  // on the card is imported first and the reader follows when that succeeds.
+  // on the card is imported into Play's shared workspace first (§6.3), so playing
+  // it does not add it to the library.
   void play();
-  // Replaces this page with the storygame reader (game must be downloaded).
-  void openReader();
+  // Opens the storygame reader on top of this page, on the game in `gameDir`;
+  // Back returns here.
+  void openReader(const std::string& gameDir);
   // Second action, chosen by whether the game is on the card.
   void addToLibrary();
   void promptRemoveFromLibrary();
   void removeFromLibrary();
-  // Downloads the converted document and imports it. Sets errorText on failure.
-  bool transferGame();
+  // Downloads the converted document and imports it into `gameDir`: the
+  // permanent /storygames/<index_name> for Add, or the shared workspace for Play.
+  // Sets errorText on failure. True when a complete game is on the card.
+  bool transferGame(const std::string& gameDir);
+  // Copies the page's resolved cover to `<gameDir>/cover.bmp` when the game has
+  // none there yet: a permanent copy is what the game page resolves first, and the
+  // workspace copy is what the recent card reads.
+  void storeCover(const std::string& gameDir);
+  // Runs transferGame() for `gameDir` with the Wi-Fi and heap preconditions.
+  // `openWhenDone` is Play's intent and travels with the call rather than in a
+  // member, so a refused or failed attempt cannot leak it into a later Add.
+  void startImport(const std::string& gameDir, bool openWhenDone);
   // Re-reads the card: a game is "downloaded" only when its whole tree is there.
   void refreshDownloaded();
+  // Repoints the workspace card to the game's own directory and removes the
+  // workspace copy, so the same game is not on the card twice.
+  void retireTempCopy();
   questbook_game::Meta catalogueMeta() const;
 
   std::string headerTitle;
@@ -109,9 +130,6 @@ class StorygameDetailsActivity final : public Activity, private UiAppHost {
   bool downloaded = false;
   // True while the import runs, which also holds the page's second action off.
   bool downloading = false;
-  // Set by play() when the game had to be downloaded first: the reader opens as
-  // soon as that import succeeds instead of returning to this page.
-  bool launchAfterDownload = false;
   // The last failure, shown in the metadata line. Cleared by the next attempt,
   // so the page keeps one layout and the button stays usable for a retry.
   std::string errorText;

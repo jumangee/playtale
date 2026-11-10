@@ -2,6 +2,7 @@
 
 #include <FreeInkUICore.h>
 
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <string>
@@ -47,9 +48,13 @@ struct Rect;
 // cannot leave the reader scrolled past the end.
 class StorygameReaderActivity final : public Activity {
  public:
-  StorygameReaderActivity(GfxRenderer& renderer, MappedInputManager& mappedInput, std::string indexName);
+  // `gameDir` is the directory the game's files were imported into: the
+  // permanent /storygames/<index_name>, or Play's shared workspace
+  // /storygames/___temp when the game was played without being downloaded
+  // (ARCHITECTURE.md §6.3). The reader only needs the tree it opens.
+  StorygameReaderActivity(GfxRenderer& renderer, MappedInputManager& mappedInput, std::string gameDir);
   static std::unique_ptr<StorygameReaderActivity> create(GfxRenderer& renderer, MappedInputManager& mappedInput,
-                                                         const std::string& indexName);
+                                                         const std::string& gameDir);
 
   void onEnter() override;
   void loop() override;
@@ -100,6 +105,11 @@ class StorygameReaderActivity final : public Activity {
   enum class View : uint8_t { Paragraph, Sheet };
 
   bool loadGame();
+  // Puts this game at the front of the recent-books store once the first frame is
+  // on the panel, so the home screen and the Recent tab show what was played last.
+  // The entry's path is the directory the reader opened: a game played from the
+  // Play workspace therefore shows as the workspace's card, not as a library item.
+  void rememberRecentOnceRendered();
   void rebuildParagraphLayout();
   void rebuildSheetLayout();
 
@@ -180,10 +190,14 @@ class StorygameReaderActivity final : public Activity {
   bool sheetButtonEnabled() const;
   Rect sheetButtonHitRect(const Rect& area) const;
 
-  std::string indexName;
+  std::string gameDir;
   questbook_game::StorygameGame game;
   questbook_game::ParagraphSource source;
   bool failed = false;
+  // Set at the end of render(): the recent-books entry is written after the first
+  // frame, not while the reader is laying the first paragraph out.
+  std::atomic<bool> painted{false};
+  bool recentRemembered = false;
   View view = View::Paragraph;
   // Cached engine query for the tab and the hint label: it only changes when a
   // choice rebuilds the paragraph.

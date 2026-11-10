@@ -17,6 +17,10 @@ struct XML_ParserStruct;  // expat's opaque handle; <expat.h> stays in the .cpp
 //   GET https://quest-book.ru/online/<index_name>/playtale/
 //     -> /storygames/<index_name>/{game.hdr, game.idx, game.dat, meta.json}
 //
+// The same files are also written into Play's shared workspace
+// /storygames/___temp/ when a game is played without being downloaded (§6.3);
+// only the destination directory differs, so beginAt() takes it as an argument.
+//
 // The document is walked once, as the response arrives, so the largest game
 // (2.5 MB, §1.5) is never held: paragraph payloads go straight to game.dat,
 // names and function task payloads straight to game.hdr, and one 16-byte record
@@ -71,7 +75,13 @@ class Importer {
   // meta.json needs when the document's own <meta> omits them (§4.3 leaves
   // author_name out of the captured examples). False on an unusable name or a
   // card failure; nothing is left behind in that case either.
-  bool begin(const std::string& indexName, const Meta& catalogue);
+  //
+  // `indexName` is the game's catalogue name — the served document must agree
+  // with it — and `gameDir` is where the tree goes: directory(indexName) for the
+  // permanent copy, or Play's shared workspace tempDirectory() (§6.3). The two
+  // are separate arguments because the workspace has no name of its own: it
+  // still has to know which game it is importing.
+  bool beginAt(const std::string& gameDir, const std::string& indexName, const Meta& catalogue);
 
   // One response chunk. False means the document cannot be imported, so the
   // caller should stop the transfer: the header, the index or the data was

@@ -55,7 +55,9 @@ format is described in [docs/file-formats.md](docs/file-formats.md). **Play** op
 paragraph transition map, and `StorygameReaderActivity` renders one paragraph's formatted text and
 choices as a swipe-scrollable column with a reading-position bar, and shows the character sheet on a
 left swipe or the reader's sheet button. A game that is not on
-the card yet is imported first (the same transfer as Add), then read.
+the card yet is imported first (the same transfer as Add) into the shared
+`/storygames/___temp/` workspace, then read from there, so playing a catalogue game does not add it to
+the library. Either destination also gets the page's cover copied beside the game.
 
 The page imports without holding the document: the response streams into the importer, which writes
 each paragraph payload straight to `game.dat`. Every in-session failure deletes the game's directory;
@@ -66,11 +68,18 @@ it.
 A downloaded game is also a row of the **Library**: the index lists `/storygames/<index_name>` as one
 item, under the title and author from the game's own `meta.json`, and selecting that row opens the same
 game page. Adding or removing a game marks the index stale, and deleting the row in the Library deletes
-the whole game. Games never enter the recent-books store, so they are not among the «недавно открытые» rows
-at the top of the Recent tab or in the home screen's continue-reading slot.
+the whole game.
 
-**Still planned:** persisting progress and game parameters, recent-books integration, and a separate
-games grouping in the Library.
+**Recent books.** Launching a game records it in the recent-books store, so it appears among the
+«недавно открытые» rows at the top of the Recent tab and in the home screen's continue-reading slot. A
+downloaded game is recorded under its own directory and follows the book rules; a game played from the
+`___temp` workspace is recorded under that workspace, so it is one card. Either card starts the game in
+the runtime reader while its files are intact, while a Library row still opens the game page. Adding a
+game played from the workspace to the library moves the card to the game's own directory and removes the
+temporary copy. The game's cover is copied beside it in both locations, so the card shows it.
+
+**Still planned:** persisting progress and game parameters, and a separate games grouping in the
+Library.
 
 **Why a built-in section rather than a plugin catalogue.** The SD-plugin path below could list the
 same games with no new firmware, and it is the cheaper route for a generic catalogue. It was not taken
@@ -101,14 +110,14 @@ framework, not a JS interpreter: `lib/QuestBook/StorygameGame` loads `game.hdr`/
 parameter array; `StorygamePayload` parses each paragraph payload with the vendored expat; and
 `StorygameReaderActivity` draws one paragraph's BBCode-lowered text and choices as one scrollable
 column with a reading-position bar, and shows the character sheet on a left swipe or its own sheet
-button. Play is wired into `StorygameDetailsActivity` and
-launches that reader (downloading the game first when it is not on the card).
+button. Play is wired into `StorygameDetailsActivity` and launches that reader (importing the game into
+the `___temp` workspace first when it is not on the card). Every launch that reaches the reader's first
+frame also records the game in the recent-books store.
 
 **Still planned:**
 
 * Persist progress and game parameters, so a game resumes where it stopped.
-* Put games into the recent-books store (so they appear among «недавно открытые» and in continue-reading)
-  and give games their own grouping in the Library, once there is a play state to remember.
+* Give games their own grouping in the Library, once there is a play state to remember.
 
 **What already exists and should be reused rather than rebuilt:**
 
