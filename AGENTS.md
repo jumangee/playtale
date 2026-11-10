@@ -2,8 +2,9 @@
 
 PlayTale is the firmware behind **КвестБук Читалка**, an open-source e-reader for Xteink and other
 FreeInk-supported devices. Its mission is a lightweight, high-performance reading experience for two
-kinds of long-form content: **EPUB books**, which work today, and **storygames** (interactive gamebooks
-whose rules will run in a scripting engine on the device), which are planned and not implemented. The
+kinds of long-form content, both shipped: **EPUB books**, and **storygames** — interactive gamebooks
+from quest-book.ru whose declarative rules run in a native interpreter on the device. Saving storygame
+progress is the open piece; `ROADMAP.md` is the only place that records it. The
 X4's ESP32-C3 remains the resource baseline: roughly 380 KB usable RAM, no PSRAM, and a single
 framebuffer sized for the selected panel. Other board profiles have different CPUs, display sizes,
 input, and memory capabilities; check the selected profile before assuming them.
@@ -78,7 +79,7 @@ Use the table to find guidance for the decisions being changed. Read relevant se
 | Activity resources or worker tasks | [activity lifecycle](.agents/rules/ui-activities.md#activity-lifecycle-and-memory-management) and [workers](.agents/rules/ui-activities.md#freertos-task-guidelines) |
 | Runtime font discovery, rendering, or cache lifetime | [font ownership](.agents/rules/ui-activities.md#runtime-fonts-and-cache-ownership) |
 | Plugin, service, web endpoint, or protected-book contracts | [service contracts](.agents/rules/architecture-hal.md#service-and-plugin-contracts) and the linked contract that applies |
-| Storygame formats, the storygame runtime, or download integration | `SCOPE.md` for what is in scope; `ROADMAP.md` for what is only planned |
+| Storygame formats, the storygame runtime, or download integration | [SD format](docs/file-formats.md#storygames-on-the-sd-card), [subsystem architecture](docs/contributing/architecture.md#storygames), and the design record in `docs/storygames/ARCHITECTURE.md` |
 | Builds, formatting, or verification | [testing workflow](.agents/rules/testing-debugging.md#testing-and-verification-workflow) and [compact build output](.agents/rules/testing-debugging.md#compact-build-output) |
 | Crashes, CI, or serial measurements | [crash diagnosis](.agents/rules/testing-debugging.md#debugging-crashes) or the matching CI/serial section |
 | Branch creation, merges, commits, or publication | [git-workflow.md](.agents/rules/git-workflow.md) |

@@ -89,6 +89,11 @@ completed and partial caches after a format change.
 - `/.crosspoint/library.idx` has independent format/fold versions, freshness,
   and rebuild rules: see the CLX1 section of [file-formats.md](../../docs/file-formats.md)
   and `lib/LibraryIndex/`.
+- `/storygames/` is **content, not a cache**: a downloaded game survives every cache
+  clear, and its files are a stored-format contract described in
+  [file-formats.md](../../docs/file-formats.md#storygames-on-the-sd-card). A game's own
+  `cover.bmp` also survives; only `/.crosspoint/qbcover/` is reclaimed. Play's
+  `/storygames/___temp/` workspace is derived and is replaced by the next import.
 - Plugin manifests, outboxes, metadata sidecars, and per-book keys follow
   [sd-plugins.md](../../docs/sd-plugins.md) and
   [plugin-events.md](../../docs/plugin-events.md). Preserve isolation and

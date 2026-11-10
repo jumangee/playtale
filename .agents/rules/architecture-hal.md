@@ -100,14 +100,33 @@ extending the predicates in `lib/FsHelpers/FsHelpers.cpp`, the library filter in
 in `src/util/` that map a path to cached state. Do not scatter extension checks through
 activities.
 
-Storygames are planned, not implemented. When that work starts:
+Storygames are a **directory**, not a file, so they are recognised by content rather than
+by extension: `ActivityManager::goToReader()` and `goToRecent()` ask
+`questbook_game::isGameAtPath()`/`isTempWorkspace()`/`isIncompleteGameAtPath()` before
+`ReaderActivity::create()`. A book file that happens to sit in `/storygames/` must still
+open as a book, and a game directory must reach its game page rather than the EPUB
+reader. Shape:
 
 - **XML parsing reuses the vendored expat** (`lib/expat/`, already used by the EPUB
-  parsers). Add a parser for the storygame schema on top of `lib/XmlParserUtils/`;
-  do not add a second XML library. Keep the existing entity-security flags
+  parsers) through `lib/XmlParserUtils/`; `StorygamePayload` parses one paragraph per
+  call. Do not add a second XML library. Keep the existing entity-security flags
   (`XML_GE=0`) and the small input-buffer setting unless a measured need changes them.
-- **The scripting engine is an open decision.** Nothing suitable is vendored. Any
-  engine must fit the ESP32-C3 baseline, and its worst-case RAM and flash cost belong in
-  the change that adds it, not in a later cleanup.
-- Storygame state is per-game persistent data. Follow the cache-format versioning rules
-  in [generated-files-cache.md](generated-files-cache.md#cache-file-format-versioning).
+- **There is no scripting engine and none may be added for this format.** The rules are a
+  hand-written task interpreter and condition evaluator in
+  `lib/QuestBook/StorygameEngine.*`; the `s` expression type has its own allocated-nothing
+  recursive-descent evaluator. It fits the ESP32-C3 baseline and is host-tested.
+- **The on-SD container is a stored-format contract.** `lib/QuestBook/StorygameFormat.h`
+  declares every record; `test/storygame_format` asserts the field offsets, so a
+  reordering must break the build. Bump `FORMAT_VERSION` only with a re-download story:
+  there is no migration, a mismatched header is refused and the game must be fetched
+  again. The byte layout is documented in
+  [file-formats.md](../../docs/file-formats.md#storygames-on-the-sd-card).
+- **`meta.json` is written last and is the commit marker.** Anything that lists games asks
+  `isDownloadedAt()`, never tests the directory.
+- **Play state is not persisted yet.** When it is, it is per-game persistent data: follow
+  the cache-format versioning rules in
+  [generated-files-cache.md](generated-files-cache.md#cache-file-format-versioning), and
+  add the format to `docs/file-formats.md` in the same change.
+- **Do not allocate per step.** The play path is one 16-byte index read plus one payload
+  parse; the payload buffer is released after each parse and the parameter array is sized
+  once at load. See [architecture.md §Storygames](../../docs/contributing/architecture.md#storygames).

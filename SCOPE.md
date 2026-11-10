@@ -4,14 +4,14 @@ PlayTale is the open-source firmware behind **КвестБук Читалка**,
 It targets the Xteink X4 and other FreeInk-supported boards, and it exists to do one thing
 exceptionally well: **let someone read at length, comfortably, on cheap e-ink hardware.**
 
-It serves two kinds of long-form content. Only the first works today; the second is the
-project's goal and is not implemented:
+It serves two kinds of long-form content:
 
 - **Books** — EPUB 2/3, plus TXT and Markdown through the same reflowable pipeline, and XTC for
   pre-rendered pages. **Shipped.**
 - **Storygames** — interactive gamebooks. The author writes the rules, the reader makes choices, and
-  the plot continues from the author's transition map and game parameters. Storygames will be
-  distributed by КвестБук and run on the device. **Planned** — see `ROADMAP.md`.
+  the plot continues from the author's transition map and game parameters. Storygames are
+  distributed by КвестБук and run on the device. **Shipped**: catalogue, download, on-device storage
+  and the rules runtime all work; saving progress is planned. See `ROADMAP.md`.
 
 ## 1. Core Mission
 
@@ -56,8 +56,8 @@ The codebase was inherited with a large surface area. The priorities are:
 
 * **Memory footprint:** Reducing DRAM usage and heap fragmentation. The C3 is the tightest target and
   sets the ceiling, but the gains benefit every ESP32 variant.
-* **Flash footprint:** Trimming binary size. Storygames need an XML parser and a scripting engine, and
-  both must fit.
+* **Flash footprint:** Trimming binary size. The storygame runtime is shipped and adds no scripting
+  engine or database, but built-in hyphenation data still competes for the same budget.
 * **Code cleanup:** Refactoring, removing dead code, tightening abstractions, and improving
   readability.
 * **Book reading experience:** EPUB parsing and rendering, typography, hyphenation, line spacing, font
@@ -132,9 +132,10 @@ These are the areas where help is most valuable right now.
 
 ### The Storygame Runtime
 
-The XML parser exists (expat is already vendored and used by the EPUB parsers). The scripting engine
-does not exist, and nothing suitable is vendored. Choosing and sizing one for the C3's 380 KB budget is
-the critical path for storygames. See `ROADMAP.md`.
+The XML parser (expat, already vendored and used by the EPUB parsers), the on-device container, the
+rules interpreter and the reader are all shipped. What remains is the second half of playing a game:
+**saving progress**, so a game resumes where it stopped, and the Library grouping that depends on it.
+See `ROADMAP.md` Phase 2.
 
 ### Font and Hyphenation Footprint
 

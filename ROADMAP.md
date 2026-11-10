@@ -31,55 +31,51 @@ Phase 0 is closed.
 
 **Goal:** Let a reader find and download storygames from КвестБук without a computer.
 
-**Planned work:**
+**Status:** 🚧 in progress. Browsing, the game page and download are shipped; tags and search are not.
 
-* A **Quest-Book.ru** entry in the device UI as the reader's route to quest-book.ru.
-* Browsing the КвестБук catalogue and downloading a storygame to the SD card.
-* A storygame file format placed under the library root, so downloaded games appear in the existing
-  library and file browser. **Shipped:** a downloaded game is one row of the Library and its directory is
-  browsable from the file browser.
+**Shipped**
 
-**Shipped so far.** The **Quest-Book.ru** entry leads the home menu (behind «Продолжить чтение» in themes
-that put it there) and opens `QuestBookCatalogActivity`: the service's `new` and `editorial` lists,
-twelve games per page, each row showing the game's name and author. Selecting a row opens
-`StorygameDetailsActivity` — name, author, tags, rating, like counts, the game's description and its
-cover, which is fetched from the service's own conversion endpoint and cached on the SD card. For
-the reader's view of these screens see [USER_GUIDE.md](USER_GUIDE.md#311-квестбук).
+* A **КвестБук** entry in the device UI as the reader's route to quest-book.ru. It leads the home
+  menu (behind «Продолжить чтение» in themes that put it there) and opens `QuestBookCatalogActivity`:
+  the service's `new` and `editorial` lists, twelve games per page, each row showing the game's name
+  and author.
+* Selecting a row opens `StorygameDetailsActivity` — name, author, tags, rating, like counts, the
+  game's description and its cover, which is fetched from the service's own conversion endpoint and
+  cached on the SD card. For the reader's view of these screens see
+  [USER_GUIDE.md](USER_GUIDE.md#311-квестбук).
+* **Add to Library** reads the SD card first: a game that is not there offers it, which fetches the
+  converted document (`/online/<index_name>/playtale/`), imports it into `/storygames/<index_name>/`
+  — `game.hdr`, `game.idx`, `game.dat`, `meta.json` and the game's own `cover.bmp` — and then offers
+  **Remove from Library**, which asks first and deletes that directory. The format is described in
+  [docs/file-formats.md](docs/file-formats.md#storygames-on-the-sd-card).
+* The page imports without holding the document: the response streams into the importer, which writes
+  each paragraph payload straight to `game.dat`. Every in-session failure deletes the game's directory;
+  a power cut can leave files behind, but `meta.json` is written last and a game counts as downloaded
+  only when all four files are there, so such a leftover is never offered and the next download
+  replaces it.
+* A downloaded game is also a row of the **Library** and is browsable from the file browser: the index
+  lists `/storygames/<index_name>` as one item, under the title and author from the game's own
+  `meta.json`, and selecting that row opens the same game page. Adding or removing a game marks the
+  index stale, and deleting the row in the Library deletes the whole game.
+* **Play** opens the storygame reader. A game that is not on the card is imported first (the same
+  transfer as Add) into the shared `/storygames/___temp/` workspace, so playing a catalogue game does
+  not add it to the library. Either destination also gets the page's cover copied beside the game.
+* **Recent books.** Launching a game records it in the recent-books store, so it appears among the
+  «недавно открытые» rows at the top of the Recent tab and in the home screen's continue-reading slot.
+  A downloaded game is recorded under its own directory and follows the book rules; a game played from
+  the `___temp` workspace is recorded under that workspace, so it is one card. Either card starts the
+  game in the runtime reader while its files are intact, while a Library row still opens the game page.
+  Adding a game played from the workspace to the library moves the card to the game's own directory and
+  removes the temporary copy.
 
-That page also downloads. Its second action reads the SD card: a game that is not there offers
-**Add to Library**, which fetches the converted document (`/online/<index_name>/playtale/`), imports it
-into `/storygames/<index_name>/` — `game.hdr`, `game.idx`, `game.dat`, `meta.json` and the game's own
-`cover.bmp` — and then offers **Remove from Library**, which asks first and deletes that directory. The
-format is described in [docs/file-formats.md](docs/file-formats.md). **Play** opens the storygame reader:
-`lib/QuestBook/StorygameEngine` runs the game's tasks over its parameter array and follows the
-paragraph transition map, and `StorygameReaderActivity` renders one paragraph's formatted text and
-choices as a swipe-scrollable column with a reading-position bar, and shows the character sheet on a
-left swipe or the reader's sheet button. A game that is not on
-the card yet is imported first (the same transfer as Add) into the shared
-`/storygames/___temp/` workspace, then read from there, so playing a catalogue game does not add it to
-the library. Either destination also gets the page's cover copied beside the game.
+**Still planned**
 
-The page imports without holding the document: the response streams into the importer, which writes
-each paragraph payload straight to `game.dat`. Every in-session failure deletes the game's directory;
-a power cut can leave files behind, but `meta.json` is written last and a game counts as downloaded
-only when all four files are there, so such a leftover is never offered and the next download replaces
-it.
-
-A downloaded game is also a row of the **Library**: the index lists `/storygames/<index_name>` as one
-item, under the title and author from the game's own `meta.json`, and selecting that row opens the same
-game page. Adding or removing a game marks the index stale, and deleting the row in the Library deletes
-the whole game.
-
-**Recent books.** Launching a game records it in the recent-books store, so it appears among the
-«недавно открытые» rows at the top of the Recent tab and in the home screen's continue-reading slot. A
-downloaded game is recorded under its own directory and follows the book rules; a game played from the
-`___temp` workspace is recorded under that workspace, so it is one card. Either card starts the game in
-the runtime reader while its files are intact, while a Library row still opens the game page. Adding a
-game played from the workspace to the library moves the card to the game's own directory and removes the
-temporary copy. The game's cover is copied beside it in both locations, so the card shows it.
-
-**Still planned:** persisting progress and game parameters, and a separate games grouping in the
-Library.
+* **A tag screen.** Listing the tag catalogue works, but listing the games that carry a tag does not:
+  the service's JSON API has no working tag filter, and its HTML route filters without paginating
+  (`docs/storygames/ARCHITECTURE.md` §2.3).
+* **Substring search.** The JSON API has no search endpoint; the HTML search page does not paginate
+  either (§2.4).
+* **Accounts during browsing** become relevant only with Phase 3.
 
 **Why a built-in section rather than a plugin catalogue.** The SD-plugin path below could list the
 same games with no new firmware, and it is the cheaper route for a generic catalogue. It was not taken
@@ -95,29 +91,46 @@ contract without removing any of the firmware work.
 * The home screen's library slot already swaps between Plugins and OPDS
   (`src/activities/home/HomeActivity.h`).
 
-**Open question:** whether КвестБук accounts are needed during browsing, which pulls Phase 3 forward.
-
 ---
 
-## Phase 2 — Storygame runtime
+## 🚧 Phase 2 — Storygame runtime
 
 **Goal:** Play a downloaded storygame on the device.
-**Status:** 🚧 in progress.
+**Status:** 🚧 in progress. The game plays; progress is not saved.
 
 **Shipped so far.** The runtime is a native reimplementation of the game's declarative platform
-framework, not a JS interpreter: `lib/QuestBook/StorygameGame` loads `game.hdr`/`game.idgame.dat`;
-`StorygameEngine` evaluates the `k`/`r`/`s` conditions and runs the ~18 task classes over an integer
-parameter array; `StorygamePayload` parses each paragraph payload with the vendored expat; and
-`StorygameReaderActivity` draws one paragraph's BBCode-lowered text and choices as one scrollable
-column with a reading-position bar, and shows the character sheet on a left swipe or its own sheet
-button. Play is wired into `StorygameDetailsActivity` and launches that reader (importing the game into
-the `___temp` workspace first when it is not on the card). Every launch that reaches the reader's first
-frame also records the game in the recent-books store.
+framework, not a JS interpreter:
+
+* `lib/QuestBook/StorygameGame` loads `game.hdr`/`game.idx`/`game.dat` and serves paragraph payloads on
+  demand.
+* `StorygameEngine` evaluates the `k`/`r`/`s` conditions (including a hand-written integer expression
+  evaluator for `s`), runs the ~18 task classes over an integer parameter array, lowers BBCode, and
+  builds the character sheet.
+* `StorygamePayload` parses each paragraph payload with the vendored expat.
+* `StorygameReaderActivity` draws one paragraph's formatted text and choices as one scrollable column
+  with a reading-position bar, hyphens long words when the reader's hyphenation setting is on, and
+  shows the character sheet on a left swipe, the left direction, or its own sheet button.
+* Play is wired into `StorygameDetailsActivity` and launches that reader, importing the game into the
+  `___temp` workspace first when it is not on the card. Every launch that reaches the reader's first
+  frame also records the game in the recent-books store.
+
+The runtime and the format are described in
+[docs/contributing/architecture.md](docs/contributing/architecture.md#storygames) and
+[docs/file-formats.md](docs/file-formats.md#storygames-on-the-sd-card); the design record with the
+corpus measurements is [docs/storygames/ARCHITECTURE.md](docs/storygames/ARCHITECTURE.md).
 
 **Still planned:**
 
-* Persist progress and game parameters, so a game resumes where it stopped.
-* Give games their own grouping in the Library, once there is a play state to remember.
+* **Persist progress and game parameters, so a game resumes where it stopped.** This is the phase's
+  remaining work. The state is `{current paragraph, parameter array, steps, lastarticle}`; the open
+  decision is where it lives — a sixth file in the game's own directory (`state.bin`), the
+  `/.crosspoint/` cache root, or a КвестБук account in Phase 3. The format, its version and its
+  invalidation rule follow
+  [generated-files-cache.md](.agents/rules/generated-files-cache.md#cache-file-format-versioning) and
+  must be added to `docs/file-formats.md` when they land.
+* **Give games their own grouping in the Library**, once there is a play state to remember.
+* **Paragraph images.** The converter drops them and leaves the format's image flag reserved; adding
+  them needs a delivery, scaling and presentation decision for small panels.
 
 **What already exists and should be reused rather than rebuilt:**
 
@@ -125,12 +138,6 @@ frame also records the game in the recent-books store.
   (`lib/expat/`, `lib/XmlParserUtils/XmlParserUtils.h`), now also by `StorygamePayload`.
 * **Chapter/page layout and text rendering** remain shared with the EPUB reader in the long term; the
   storygame reader currently lays out its own paragraph column.
-
-**Open decision — progress persistence.** Play state is not saved yet: a new game always starts from
-the entry paragraph, and `save`/`achi` tasks are no-ops offline. The state format and where to store it
-(per-game under `/storygames/`, the existing `/.crosspoint/` caches, or a КвестБук account in Phase 3)
-is the phase's remaining work. Persistent-format and invalidation rules follow
-[generated-files-cache.md](.agents/rules/generated-files-cache.md) when it lands.
 
 **Planned prerequisite:** moving built-in hyphenation data to the SD card, to free flash budget as the
 runtime grows (German hyphenation alone is about 200 KB).
@@ -169,6 +176,15 @@ These are not phases of their own, but they are needed and unowned:
   upstream names. Renaming them is planned, but there is **no cache migration path** and the image tag
   is validated during OTA and SD-card updates, so any rename must handle both deliberately. See the
   code-identifier table in [AGENTS.md](AGENTS.md#naming-and-branding).
+* **The server converter's ownership.** The converter that produces `/playtale/` documents lives on
+  quest-book.ru and its source is not in this repository. Its output format is versioned separately
+  from the on-device container, so a change to it needs a documented owner and a compatibility review
+  (`docs/storygames/ARCHITECTURE.md` §8, Appendix C).
+* **TLS posture for КвестБук.** Both transfers call `setInsecure()`; there is no CA bundle and no
+  pinning. That is a deliberate leftover, not a decision (`docs/storygames/ARCHITECTURE.md` §2.6, §8).
+* **Response compression.** The service gzips when asked, and the firmware neither asks nor handles
+  it. Worth revisiting with the memory cost measured, not assumed (`docs/storygames/ARCHITECTURE.md`
+  §4.11).
 
 ---
 

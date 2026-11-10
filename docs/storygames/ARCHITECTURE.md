@@ -1,29 +1,49 @@
-# КвестБук integration and storygame runtime — architecture draft
+# КвестБук integration and storygame runtime — architecture
 
-> **Status: draft for review.** Most of this document describes a design that is **not implemented**.
-> It is a plan, not a record of current behaviour. What ships: the catalogue, the game page and its
-> download (`QuestBookCatalogActivity`, `StorygameDetailsActivity`, `lib/QuestBook/StorygameImporter.*`),
-> and the storygame runtime and reader that Play launches (`lib/QuestBook/StorygameEngine.*`,
-> `StorygameGame.*`, `StorygamePayload.*`, `src/activities/reader/StorygameReaderActivity.*`). The byte
-> layout those files are written in now lives in [file-formats.md](../file-formats.md), because it is
-> current behaviour rather than a plan. This section says what those screens do today and what is still
-> unbuilt; once further parts ship, they must move to the documents that describe current behaviour, and
-> this text must be reduced to whatever is still unbuilt. See the "Documents follow code" rule in
-> `AGENTS.md`.
+> **Status: shipped, except where a section says otherwise.** The catalogue, the game page, the
+> download/import, the on-SD container, the rules runtime, the reader and the library/recents
+> integration all exist in the firmware. What remains planned is progress persistence, the tag screen,
+> substring search, paragraph images, accounts and compression; each is marked where it appears below
+> and tracked in `ROADMAP.md`.
+>
+> This document is the **design record**: it explains why the format and the runtime have the shape
+> they have, with the measurements that drove the decisions. It is deliberately not the byte
+> specification — the layout the firmware reads and writes today is in
+> [file-formats.md](../file-formats.md#storygames-on-the-sd-card), because that is current behaviour
+> rather than a plan. Section §4 below still carries the format's rationale and the source-format
+> analysis; where a §4 paragraph describes a proposal that changed while shipping, the note on the
+> paragraph says what shipped. The subsystem's place in the firmware is described in
+> [contributing/architecture.md](../contributing/architecture.md#storygames).
+>
+> The implemented pieces, in one list:
+>
+> | Piece | Source |
+> | --- | --- |
+> | Catalogue (lists `new` and `editorial`, paging, no covers in rows) | `src/activities/browser/QuestBookCatalogActivity.*`, `lib/QuestBook/QuestBookListParser.*` |
+> | Game page (name, author, tags, stars, counts, scrolling description, cover, Play / Add / Remove) | `src/activities/browser/StorygameDetailsActivity.*` |
+> | Converted-document import into `game.hdr`/`game.idx`/`game.dat`/`meta.json` | `lib/QuestBook/StorygameImporter.*` |
+> | On-SD container, paths, "is this a game?" | `lib/QuestBook/StorygameFormat.h`, `StorygameStore.*`, `StorygameMeta.h` |
+> | Rules runtime: conditions, ~18 task classes, `s` expression evaluator, BBCode lowering, character sheet | `lib/QuestBook/StorygameEngine.*`, `StorygamePayload.*`, `StorygameModel.h` |
+> | On-demand paragraph loading from the tree | `lib/QuestBook/StorygameGame.*` |
+> | Reader: one scrolling column, choices, character sheet wipe, hyphenation, reading-position bar | `src/activities/reader/StorygameReaderActivity.*` |
+> | Library row per game, recents card, dispatch, delete | `lib/LibraryIndex/LibraryBuilder.cpp`, `src/activities/ActivityManager.cpp`, `src/activities/library/LibraryListActivity.cpp` |
+>
+> Not shipped: progress/parameter persistence (`ROADMAP.md` Phase 2), tag screen and search (§2.3,
+> §2.4), paragraph images (§3.1), accounts (`ROADMAP.md` Phase 3), response compression (§4.11).
 
-This document covers two connected pieces of planned work:
+This document covers two connected pieces of shipped work:
 
-1. **The КвестБук catalogue** — finding a game on quest-book.ru, reading its page, and downloading it
-   (roadmap Phase 1).
-2. **The storygame runtime** — playing a downloaded game on the device (roadmap Phase 2).
+1. **The КвестБук catalogue** — finding a game on quest-book.ru, reading its page, and downloading it.
+2. **The storygame runtime** — playing a downloaded game on the device.
 
-Both were planned in `ROADMAP.md` before the game format was studied. This draft replaces the
+Both were planned in `ROADMAP.md` before the game format was studied. This document replaces the
 guesses in those phases with measurements taken from the live service and from 35 downloaded games.
 
-A third piece emerged from the study and is now a prerequisite for the first two: **a server-side
-converter** on quest-book.ru that re-emits each game in a compact, directly indexable form (§4).
-Because the platform is under the project's control, the format and the memory problem can be solved
-once, on the server, instead of on every device.
+Format research also produced a prerequisite for both: **a server-side converter** on quest-book.ru
+that re-emits each game in a compact, directly indexable form (§4). Because the platform is under the
+project's control, the format and the memory problem could be solved once, on the server, instead of
+on every device. That converter is what the firmware consumes today; its source is not in this
+repository (see Appendix C).
 
 Evidence conventions used below:
 
@@ -44,10 +64,11 @@ natively.
 
 Consequences, expanded in the sections below:
 
-- No JavaScript engine is required. `ROADMAP.md` records the scripting engine as Phase 2's critical
-  path ("nothing suitable is vendored today"); that constraint is removed.
+- No JavaScript engine is required. `ROADMAP.md` used to record a scripting engine as Phase 2's
+  critical path ("nothing suitable is vendored today"); that constraint is removed, and the shipped
+  runtime has no scripting dependency at all.
 - Instead, a small **task interpreter** for ~18 declarative operation classes and a small
-  **expression evaluator** for one condition type are required.
+  **expression evaluator** for one condition type are required. Both are shipped (§5.1, §5.3).
 - Because the format is declarative, the server can **re-emit a game in an indexed form** (§4), so a
   paragraph lookup is an array index rather than a parse — and the device needs no game-format parser
   at all.
@@ -458,16 +479,23 @@ Two properties of the source format make this cheap, and both were verified rath
 
 ### 4.2 Files on the device
 
+> **Shipped.** The current tree is `game.hdr`, `game.idx`, `game.dat`, `meta.json` and an optional
+> `cover.bmp` — five files, no `state.bin`. Player state is **not persisted yet**; the file listed
+> below as `state.bin` is the planned shape for that work, not a file the firmware writes today. The
+> authoritative layout, with every record field and the commit protocol, is
+> [file-formats.md](../file-formats.md#storygames-on-the-sd-card).
+
 ```
 /<library>/storygames/<index_name>/
   game.hdr      header: start paragraph, parameter tables, functions, flags, record counts
   game.idx      paragraph index, fixed stride
   game.dat      paragraph payloads, back to back
   meta.json     catalogue fields needed for offline display (title, author, tags, description)
-  state.bin     player state: vars, current paragraph, steps, lastarticle
   cover.bmp     the game page's cover: a 1-bit BMP of at most 128x192 (~3 KB when full size).
                 Read by the game page and by the recent-books card; written by Add to Library or by
                 Play, whenever the game has none there yet (§6.3)
+  state.bin     NOT WRITTEN. The planned player state (vars, current paragraph, steps,
+                lastarticle), owned by the progress-persistence work in ROADMAP.md §Phase 2
 ```
 
 The tree above is the **permanent** game layout. Catalogue **Play** also uses the same game-content files
@@ -547,28 +575,28 @@ converter regression cannot break existing clients.
 ### 4.4 `game.hdr`
 
 > **Shipped.** The byte layout the importer writes is documented in
-> [file-formats.md](../file-formats.md), because it is current behaviour. It follows the table below
-> with three differences, which that document states concretely: **no `Platform` field** (the runtime
-> reimplements the handlers, so nothing carried a mitril flag), the **names are not one blob** (each
-> record carries an absolute offset and a length into a streamed region), and the record strides are
-> fixed at 16/16/32 bytes so every stride divides the 512-byte sector.
+> [file-formats.md](../file-formats.md#gamehdr), because it is current behaviour. It follows the table
+> below with three differences, which that document states concretely: **no `Platform` field** (the
+> runtime reimplements the handlers, so nothing carried a mitril flag), the **names are not one blob**
+> (each record carries an absolute offset and a length into a streamed region), and the record strides
+> are fixed at 16/16/32 bytes so every stride divides the 512-byte sector.
 
 Everything needed before the first paragraph renders. Modeled on the existing `CLX1` header rather
 than invented: magic + format version + explicit section offsets and sizes, all sections 512-aligned
 so reads are aligned by construction
 [C: `lib/LibraryIndex/LibraryFormat.h:9-21`, `:71-92`].
 
-| Field group | Contents |
-| --- | --- |
-| Identity | magic, `formatVersion`, flags, the source `<book guid>` |
-| Platform | whether a `mitril` bootstrap was present |
-| Counts | `groupCount`, `itemCount`, `paragraphCount`, `functionCount` (from `<counts g i p f>` in the import document) |
-| Start | `startParagraph` — the entry ordinal extracted from the framework (§3.2) |
-| Triggers | the ordinal of `_mitril_triggers`, or absent (§3.4) |
-| Groups | per group: name, type (`k`/`r`), `visible`, `limit`, and the **contiguous ordinal range** of its items |
-| Params | per param: type (`k`/`r`), owning group ordinal, start value, limit, name |
-| Functions | per function: ordinal, name, and its task list (§4.5) |
-| Names | one string blob holding group and item names, for the character sheet |
+| Field group | Contents | Shipped as |
+| --- | --- | --- |
+| Identity | magic, `formatVersion`, flags, the source `<book guid>` | `HeaderCore.magic` `"QBG1"`, `formatVersion` 1, `flags` 0, `bookGuid[40]` |
+| Platform | whether a `mitril` bootstrap was present | **dropped** — nothing needed it |
+| Counts | `groupCount`, `itemCount`, `paragraphCount`, `functionCount` (from `<counts g i p f>` in the import document) | four `u32` fields |
+| Start | `startParagraph` — the entry ordinal extracted from the framework (§3.2) | `u32`, checked against `paragraphCount` at import |
+| Triggers | the ordinal of `_mitril_triggers`, or absent (§3.4) | `i32`, `-1` when absent |
+| Groups | per group: name, type (`k`/`r`), `visible`, `limit`, and the **contiguous ordinal range** of its items | `GroupRecord`, 16 bytes |
+| Params | per param: type (`k`/`r`), owning group ordinal, start value, limit, name | `ParamRecord`, 16 bytes |
+| Functions | per function: ordinal, name, and its task list (§4.5) | `FunctionRecord`, 32 bytes, payload in the header's streamed region |
+| Names | one string blob holding group and item names, for the character sheet | per-record offset+length into the streamed region, cut at 512 bytes on a UTF-8 boundary |
 
 Two deliberate choices:
 
@@ -780,11 +808,12 @@ One fixed-size record per paragraph, addressed by ordinal with no key column and
 | length | u32 | payload length for this paragraph |
 | flags | u16 | duplicated from the payload header, so a list view need not read the payload |
 | reserved | u16 | keeps the record 16 bytes |
+| reserved2 | u32 | 0 in version 1 |
 
 **Stride 16** — chosen for the same reason the library index uses 128: 16 divides 512, so 32 records
 fill a sector exactly, every record read is 512-aligned by construction, and no record ever straddles
-a buffer boundary [C: `lib/LibraryIndex/LibraryFormat.h:17-21`]. Paragraph *k* is at
-`recordStart + 16k`.
+a buffer boundary [C: `lib/LibraryIndex/LibraryFormat.h:17-21`]. Paragraph *k* is at `16k` in the file,
+which starts at offset 0 — the index is its own file, so its records begin at the first sector.
 
 Cost: 878 paragraphs × 16 = **14 048 bytes** at the measured worst case, against 25.5 KB for a keyed
 design — because the ordinal *is* the key [M]. `length` also tells the runtime how much buffer a
@@ -913,8 +942,8 @@ row carries the storygame glyph instead of the generic file icon.
 ### 4.10 What the device does at import
 
 > **Shipped.** The sequence below follows `lib/QuestBook/StorygameImporter.cpp`. The authoritative account
-> of what is written, and of the checks that accept a document, is
-> [file-formats.md](../file-formats.md).
+> of what is written, of every acceptance rule, and of the heap the tables cost is
+> [file-formats.md](../file-formats.md#the-import-document).
 
 1. Open `/playtale/`, stream it with a bounded buffer, and write `game.hdr`, `game.idx` and
    `game.dat` in one forward pass (offsets are known as payloads are written, so no second pass).
@@ -980,18 +1009,18 @@ The conclusion is not "databases are wrong" but "this is an indexed container, n
 
 ### 5.1 What must be reimplemented
 
-| Component | Source of truth | Notes |
+| Component | Source of truth | Shipped as |
 | --- | --- | --- |
-| Condition evaluation | `game_tpl.xml:156-231` | `k`, `r`, `{or,c}`, and `s` |
-| Task interpreter | `game_tpl.xml:255-929` | 18 classes observed |
-| Task wrapper semantics | `game_tpl.xml:962-983` | what `scriptWrap` does around a task list |
-| BBCode lowering | `game_tpl.xml:1189-1226` | 12 constructs, all observed |
-| Item-change diff | `game_tpl.xml:931-960` | drives the character sheet; visible groups only |
-| Charsheet data | `game_tpl.xml:997-1063` | must be built natively, not as HTML |
-| Start/save semantics | `game_tpl.xml:1233-1258` | offline: always "no save found" |
+| Condition evaluation | `game_tpl.xml:156-231` | `Engine::evaluateConditions`/`evaluateExpr`: `k`, `r`, `{or,c}`, `crit`, `not`, and `s` |
+| Task interpreter | `game_tpl.xml:255-929` | `Engine::executeTask`, every class in Appendix D including `rng`/`rrg`/`div` |
+| Task wrapper semantics | `game_tpl.xml:962-983` | what `scriptWrap` does around a task list — folded into `runTasks` |
+| BBCode lowering | `game_tpl.xml:1189-1226` | `Engine::lowerBbCode`: `[b] [i] [u] [sup] [list] [*] [player] [url=] [color=]`, `===`/`==`, `--`, newlines |
+| Item-change diff | `game_tpl.xml:931-960` | **not shipped** — the reader redraws the sheet from current values, so no per-step diff is kept |
+| Charsheet data | `game_tpl.xml:997-1063` | `Engine::charsheet`: visible groups holding a non-zero value, built as data rather than HTML |
+| Start/save semantics | `game_tpl.xml:1233-1258` | "no save found" — every game starts fresh (§5.4) |
 
 The remaining ~60 % of `game_tpl.xml` is DOM chrome, animation, and server calls that the device
-replaces with its own rendering and its own save file.
+replaces with its own rendering; the save half is still unbuilt (§5.4).
 
 ### 5.2 Rendering requirements from real games
 
@@ -999,9 +1028,13 @@ replaces with its own rendering and its own save file.
   headings, `--`, and newlines (§1.4). `[url=…]` and `[color=…]` are rare: the first can be shown as
   its text, the second as plain text, rather than requiring styling on-device.
 - **Spoilers**: 46 uses in 6 games. A spoiler is text hidden behind a heading until the reader opens
-  it. The reference engine ignores the attribute entirely — it is the web portal that renders it
-  [C: `STORYGAME_TECH.md` §6.1] — so this is a device-side presentation decision with no reference
-  behaviour to copy. A list row per spoiler, opened by Confirm, is the natural fit.
+  it, and the reference engine ignores the attribute entirely — it is the web portal that renders it
+  [C: `STORYGAME_TECH.md` §6.1] — so there is no reference behaviour to copy. **Shipped:** the reader
+  draws the spoiler heading as a bold line directly above its text in the same column
+  (`StorygameReaderActivity::rebuildParagraphLayout`), i.e. the text is always visible and the heading
+  is a label rather than a closed drawer. A collapsed, Confirm-opened variant would need a per-block
+  interaction state the column does not have; the column's own scrolling is the only interaction on
+  this screen outside choices and the character sheet.
 - **Paragraph images are deferred.** Although source games may contain `<img>`, v1 conversion
   drops these elements and their URLs (§4.6). Supporting them later requires a separate design for
   image delivery, resizing and rendering on small device displays; predictable source URLs alone do
@@ -1059,18 +1092,30 @@ vendoring anything.
 **Recommendation:** decide explicitly between (a) vendoring `tinyexpr` with the three adaptations,
 and (b) a small purpose-written evaluator. The trade is a well-tested third-party parser plus a
 licence notice, a keyword-operator pass, an allocator change and per-expression caching, against
-full control and no dependency for a grammar already known to be closed. This document does not make
-the call; it records that the three suggested candidates are all unusable on this build as-is, and
-that the C original is the only one worth considering.
+full control and no dependency for a grammar already known to be closed. This document records that
+the three suggested candidates were all unusable on this build as-is, and that the C original was the
+only one worth considering.
+
+> **Decided and shipped:** option (b). `lib/QuestBook/StorygameEngine.cpp` carries a
+> `TextEvaluator` struct — a recursive-descent parser over the `k<ordinal>`/`r<ordinal>` grammar with
+> the six comparisons, integer `+ - * / %`, `and`/`or`/`not` (and `&&`/`||`/`!`), parentheses bounded
+> at depth 64, and division by zero treated as a syntax error. It allocates nothing, uses `int32_t`
+> throughout, and is covered by `test/storygame_engine`. No third-party expression library is added.
 
 ### 5.4 Save state
 
-The reference model is `{article, savedata, steps, lastarticle}` uploaded after every transition
-[C: `game_tpl.xml:1139-1156`]. Offline, the device writes the same shape locally. Storage should
-follow the existing per-book cache conventions under `/.crosspoint/` rather than introducing a new
-root [C: `AGENTS.md` naming rules; `docs/file-formats.md`].
+> **Not implemented — this is the remaining plan.** Nothing is written today: `Engine::startGame()`
+> seeds every parameter from its declared `start` value, enters the start paragraph, and a closed game
+> loses its progress. The shape below is what that behaviour needs, not a shipped file. The planned
+> location is a sixth file in the game's own directory (`state.bin`, §4.2), because the state belongs
+> to the game and must disappear with it, while `/.crosspoint/` holds derived data a cache clear may
+> remove. The choice, its format version and its invalidation rule are question 1 in §8, and the byte
+> layout belongs in [file-formats.md](../file-formats.md) once it exists.
 
-Two semantics must be preserved:
+The reference model is `{article, savedata, steps, lastarticle}` uploaded after every transition
+[C: `game_tpl.xml:1139-1156`]. Offline, the device would write the same shape locally.
+
+Two semantics a future implementation must preserve:
 
 - `vars.steps` counts paragraph entries and is incremented on each non-bootstrap entry.
 - A restored save must **not** re-run the paragraph's `preload` script, or its effects are applied
@@ -1274,7 +1319,7 @@ retried on a later visit rather than showing a broken image forever.
 > the shared workspace `/<library>/storygames/___temp/` and opens the reader from there, so a catalogue
 > Play does not create a library item. The importer's exact behaviour (streaming, the counts check, the
 > rejection rules) and the byte layout it writes are current behaviour, documented in
-> [file-formats.md](../file-formats.md).
+> [file-formats.md](../file-formats.md#storygames-on-the-sd-card).
 
 The game page exposes two distinct actions. Both fetch the converted `/playtale/` document using
 `index_name` (§2.5, §4.3), then import it into the on-device file layout (§4.2). They differ in where
@@ -1407,44 +1452,57 @@ excluded from v1. The mitigation is to implement exactly the twelve BBCode const
 
 ## 8. Open questions
 
-| # | Question | Blocks |
+Split by whether they still block anything. The first table is what is genuinely open today; the
+second records decisions so they are not reopened by accident.
+
+**Still open** (each is also tracked in `ROADMAP.md`):
+
+| # | Question | What it blocks |
 | --- | --- | --- |
-| 1 | ~~How a multi-file game appears in `CLX1`: one canonical file, or a directory-as-item rule (§4.9)~~ **Decided and shipped:** the directory is the item (§4.9) | — |
-| 2 | Who owns and maintains the server converter, and how its format version is tracked against the platform framework (§4.1) | Everything downstream |
-| 3 | JSON API for listing games by tag (§2.3) | Tag screen results beyond one page |
-| 4 | JSON API for substring search (§2.4) | The search screen |
-| 5 | ~~Catalogue cover handling: keep the current no-cover experience, re-download per view, or add a cache keyed by `game_id`? This is separate from paragraph images, which are omitted from v1 (§4.6).~~ **Decided:** the service converts the cover to a 1-bit BMP of at most 128×192 (`/online/cover/<index_name>/?w=&h=`), the device caches it under `/.crosspoint/qbcover/` keyed by `md5(cover)`, and Download will keep a copy beside the game (§6.3). Separate from paragraph images, which are omitted from v1 (§4.6). | — |
-| 6 | TLS posture for a first-party service: keep `setInsecure()`, add a CA bundle, or pin | Security review |
-| 7 | ~~Expression evaluator: vendor `tinyexpr` with adaptations, or write the small evaluator (§5.3)~~ **Decided and shipped:** a small handwritten recursive-descent evaluator in `lib/QuestBook/StorygameEngine`; no third-party engine is added | — |
-| 8 | Compression: `uzlib` + 32 KB ring, a server switch to raw deflate, or neither (§4.11) | Download flow, memory |
-| 9 | ~~Game file root under the library (§4.2)~~ **Decided and shipped:** permanent games use `/<library>/storygames/<index_name>/`; catalogue Play imports into the shared `/<library>/storygames/___temp/` workspace and is never a library item (§6.3) | — |
-| 10 | ~~Home-screen placement for the КвестБук entry (§6.6)~~ **Decided:** the first constant entry of the home menu | — |
-| 11 | ~~Whether the storygame screen reuses the reader's paginated layout or needs its own view (§5.2)~~ **Decided and shipped:** its own activity (`StorygameReaderActivity`), a vertically swipe-scrollable paragraph+choices column, not the paginated book reader | — |
-| 12 | Should `STORYGAME_TECH.md` be translated to English and corrected to match this study? | Documentation |
+| 1 | **Progress and parameter persistence.** Format, and where it lives: a sixth file in the game directory (`state.bin`, §4.2/§5.4), the `/.crosspoint/` cache root, or a КвестБук account (Phase 3). Needs its own versioning and invalidation rule. | A game resuming where it stopped; `save` tasks becoming meaningful; the "give games their own grouping" work |
+| 2 | **Who owns and maintains the server converter**, and how its output version is tracked against the platform framework (§4.1, Appendix C). The source is not in this repository. | Any change to the document format; compatibility review when the platform's handlers change |
+| 3 | **JSON API for listing games by tag** (§2.3). No working tag filter exists; the HTML route filters but does not paginate. | The tag screen, beyond one page of results |
+| 4 | **JSON API for substring search** (§2.4). | The search screen |
+| 5 | **TLS posture for a first-party service**: keep `setInsecure()`, add a CA bundle, or pin. Both КвестБук transfers currently call it. | A security review before accounts ship |
+| 6 | **Compression.** The service gzips on request; the firmware neither asks nor handles the response. `uzlib` + a 32 KB ring, a server switch to raw deflate, or neither (§4.11). | Download time and bytes, not correctness |
+| 7 | **Paragraph images.** v1 conversion drops `<img>` and leaves flag bit 2 reserved. Supporting them needs a delivery, scaling and presentation decision (§3.1, §5.2). | Any game whose content depends on images |
+| 8 | **`STORYGAME_TECH.md`** is a Russian description of the platform written before this study; parts of it predate the shipped runtime. Whether to translate it, correct it, or fold it into this document is undecided. | Documentation only |
+
+**Decided** — kept so they are not relitigated:
+
+| # | Question | Decision |
+| --- | --- | --- |
+| D1 | How a multi-file game appears in `CLX1` (§4.9) | The directory is the item. **Shipped.** |
+| D2 | Catalogue cover handling (§6.3) | The service converts to a 1-bit BMP of at most 128×192; the device caches under `/.crosspoint/qbcover/` keyed by `md5(cover)` and keeps a copy beside the game. **Shipped.** |
+| D3 | Expression evaluator (§5.3) | A small handwritten recursive-descent evaluator inside `StorygameEngine`; no third-party engine. **Shipped.** |
+| D4 | Game file root under the library (§4.2) | `/<library>/storygames/<index_name>/`; catalogue Play imports into the shared `___temp` workspace and never creates a library item. **Shipped.** |
+| D5 | Home-screen placement of the КвестБук entry (§6.6) | The first constant entry of the home menu. **Shipped.** |
+| D6 | The game screen's layout (§5.2) | Its own activity, a vertically scrollable paragraph+choices column, not the paginated book reader. **Shipped.** |
+| D7 | Whether the device needs a scripting engine (§1.1) | No: the format is declarative and the framework is reimplemented natively. **Shipped.** |
+| D8 | Whether the converted format is JSON or XML (§4.6) | XML: the vendored JSON reader drops strings over 2 KB and 3.26 % of text fields exceed that. **Shipped.** |
+| D9 | Whether an embedded database is warranted (§4.12) | No: the play path is one fixed-stride lookup. **Shipped.** |
 
 ---
 
-## 9. Suggested sequencing
+## 9. Sequencing, and what it turned out to be
 
-1. **Catalogue only** — `QuestBookCatalogActivity` and the game page. Useful on its own, no runtime,
-   no server dependency. Validates the catalogue contract and the memory plan. **Shipped:** the
-   catalogue (two list kinds, paging), the game page and its download/import (§6.3).
-2. **Settle the remaining format question** — who owns the converter (question 2), now that how a game
-   appears in `CLX1` is decided and shipped (§4.9). It is cheap to decide now and expensive to change
-   later.
-3. **Server converter** — implement §4.4–§4.8 on quest-book.ru and publish the XML document at
-   `/playtale/`, alongside the existing `/data/` XML.
-4. **Device loader** — stream the document into `game.hdr`/`game.idx`/`game.dat`, verify, register the
-   game in the library. **Shipped** (`lib/QuestBook/StorygameImporter.*`, §4.9).
-5. **Minimal runtime** — text, choices, conditions, tasks, saves. Enough to play a simple game.
-6. **Rendering extras** — BBCode, spoilers and character sheet. Paragraph images are deferred to a
-   later enhancement and are not part of the initial converted format or runtime.
-7. **Tags and search** — once questions 3 and 4 are answered.
+The plan this study proposed, with its outcome next to it:
 
-Steps 3–5 are where host-side tests pay off: the corpus is downloadable, the format is declarative,
-and the reference implementation in `docs/storygames/examples/` can generate expected results for
-comparison.
-That makes the runtime testable without hardware, which is unusual for this project.
+| Step | Planned | Outcome |
+| --- | --- | --- |
+| 1 | Catalogue and game page, no runtime | **Shipped.** Two list kinds with paging, the game page, the cover, the description viewport |
+| 2 | Settle the format owner (question 2) | **Still open.** The converter exists on the service but is not in this repository |
+| 3 | Server converter publishing `/playtale/` | **Shipped on the service.** Its source is not vendored (Appendix C) |
+| 4 | Device loader: stream into the three files, verify, register in the library | **Shipped** (`StorygameImporter`, §4.9) |
+| 5 | Minimal runtime: text, choices, conditions, tasks | **Shipped** (`StorygameEngine`, `StorygamePayload`, `StorygameGame`) |
+| 6 | Rendering extras: BBCode, spoilers, character sheet | **Shipped** (`StorygameEngine::lowerBbCode`, `StorygameReaderActivity`). Paragraph images deferred |
+| 7 | Tags and search | **Not started**, blocked on questions 3 and 4 |
+| — | Progress persistence | **Not started.** The remaining work of `ROADMAP.md` Phase 2 |
+
+The prediction that steps 3–5 would be host-testable held: the engine, the payload parser and the
+format checks all run under `test/` with no hardware, and the corpus in
+`docs/storygames/examples/` supplies real inputs. That is where a change to the rules belongs before
+it is tried on a device.
 
 ---
 
@@ -1492,21 +1550,30 @@ Recorded because they changed the plan:
 
 ## Appendix C — The converter
 
-`playtale.php` in `docs/storygames/examples/` is the converter. It is PHP 5.3 compatible, takes a game
-XML and writes the `/playtale/` document described in §4.3 and §4.6. The response root is
-`<storygame v="1">`.
+> **Not in this repository.** The converter is a server-side script on quest-book.ru and its source is
+> not vendored here. It was developed alongside this study; the PHP prototype that used to live in
+> `docs/storygames/examples/` was removed in `acd12756` when the service took the work over. What stays
+> in the tree are the **inputs and outputs** the format was designed against, which is what a device-side
+> change needs:
+>
+> | File | What it is |
+> | --- | --- |
+> | `docs/storygames/examples/gamedata-example1.xml`, `-example2.xml`, `-example19568.xml` | source game XML as the service serves it from `.../data/` |
+> | `docs/storygames/examples/playtale-example1.xml`, `-example3.xml`, `-example19568.xml` | the converted document for the same games, the shape the importer accepts |
+> | `docs/storygames/examples/storygames-list-new-example.json` | one captured catalogue page |
+> | `docs/storygames/examples/game_tpl.xml` | the reference platform framework the runtime reimplements |
+>
+> The converted examples are the practical specification-tests: `playtale-example19568.xml` is 537 KB
+> with `g="4" i="42" p="410" f="4"` and four function task lists, and it exercises nested `if`, function
+> calls and a triggers paragraph; `playtale-example1.xml` is 95 KB with `g="12" i="53" p="67" f="0"` and
+> no functions. Any importer change should still accept both.
 
-```
-php playtale.php <input.xml> [output.xml] [options]
-```
+The route is `GET /online/<index_name>/playtale/` and the response root is `<storygame v="1">`, as
+§4.3 and §4.6 describe. The document's attribute vocabulary and every acceptance rule the firmware
+applies to it are in
+[file-formats.md](../file-formats.md#the-import-document), because those are current behaviour.
 
-With no output path it writes to stdout. The options (`--name=`, `--author=`, `--index=`, `--tags=`, `--desc=`, `--game_id=`) fill the
-`<meta>` section. `--author=` supplies `author_name`; the converter recovers `game_id` and `index`
-from the bootstrap when they are not given. Cover and popularity/rating fields (`--cover=`,
-`--likes=`, `--dislikes=`, `--stars=`, `--level=`, `--created=`) are not required in the on-device
-metadata contract.
-
-What it does, in order:
+What the converter does, in order — recorded so a reimplementation has the algorithm:
 
 | Step | What it does |
 | --- | --- |
@@ -1533,12 +1600,18 @@ to a declarative shape; the start paragraph and `rawSetup` are extractable mecha
 are valid JSON in all 3 395 observed cases; and all 530 nested `if` tasks are base64 around a
 three-key object.
 
+`<meta>` carries `game_id` and `index_name`; the captured documents omit `author_name`, which is why
+the importer merges the catalogue row the page already holds into `meta.json` (§4.10). Cover and
+popularity/rating fields are not part of the on-device metadata contract, so the converter need not
+emit them.
+
 What the converter does **not** do, and the service around it must:
 
-- Serve the document over HTTP, and choose the route (proposed: an additive `/playtale/`).
 - Keep the converter/runtime implementation compatible with platform framework changes. There is
   no handler fingerprint in the converted header; changes are reviewed and handled manually when
   needed (§4.4).
+- Keep compatibility with the coverage endpoint (`/online/cover/<index_name>/?w=&h=`, §6.3), which is
+  the second half of the same server-side work.
 
 ## Appendix D — Task and condition schema
 
